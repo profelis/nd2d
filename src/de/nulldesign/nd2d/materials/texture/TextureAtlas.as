@@ -47,11 +47,11 @@ package de.nulldesign.nd2d.materials.texture {
 		 * @param sheetWidth
 		 * @param sheetHeight
 		 * @param xmlData
-		 * @param fps
+		 * @param defaultFPS
 		 * @param spritesPackedWithoutSpace set to true to get rid of pixel bleeding for packed atlases without spaces: http://www.nulldesign.de/2011/08/30/nd2d-pixel-bleeding/
 		 */
-		public function TextureAtlas(sheetWidth:Number, sheetHeight:Number, xmlData:XML, xmlFormat:String, fps:uint, spritesPackedWithoutSpace:Boolean = false) {
-			this.fps = fps;
+		public function TextureAtlas(sheetWidth:Number, sheetHeight:Number, xmlData:XML, xmlFormat:String, defaultFPS:uint, spritesPackedWithoutSpace:Boolean = false) {
+			this.defaultFPS = defaultFPS;
 			this.spritesPackedWithoutSpace = spritesPackedWithoutSpace;
 			this._sheetWidth = sheetWidth;
 			this._sheetHeight = sheetHeight;
@@ -62,9 +62,7 @@ package de.nulldesign.nd2d.materials.texture {
 		}
 
 		override public function addAnimation(name:String, keyFrames:Array, loop:Boolean):void {
-
 			if(keyFrames[i] is String) {
-
 				// make indices out of names
 				var keyFramesIndices:Array = [];
 
@@ -73,7 +71,6 @@ package de.nulldesign.nd2d.materials.texture {
 				}
 
 				animationMap[name] = new SpriteSheetAnimation(keyFramesIndices, loop);
-
 			} else {
 				animationMap[name] = new SpriteSheetAnimation(keyFrames, loop);
 			}
@@ -84,7 +81,6 @@ package de.nulldesign.nd2d.materials.texture {
 		 * @param value
 		 */
 		protected function parse(value:XML, xmlFormat:String):void {
-
 			var parser:ATextureAtlasParser;
 
 			switch(xmlFormat) {
@@ -107,8 +103,7 @@ package de.nulldesign.nd2d.materials.texture {
 		}
 
 		override public function clone():ASpriteSheetBase {
-
-			var t:TextureAtlas = new TextureAtlas(_sheetWidth, _sheetHeight, null, null, fps, spritesPackedWithoutSpace);
+			var t:TextureAtlas = new TextureAtlas(_sheetWidth, _sheetHeight, null, null, defaultFPS, spritesPackedWithoutSpace);
 
 			t.animationMap = animationMap;
 			t.activeAnimation = activeAnimation;
@@ -116,7 +111,7 @@ package de.nulldesign.nd2d.materials.texture {
 			t.offsets = offsets;
 			t.frameNameToIndex = frameNameToIndex;
 			t.uvRects = uvRects;
-			t.frame = frame;
+			t.frame = _frame;
 
 			return t;
 		}

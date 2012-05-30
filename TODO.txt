@@ -1,3 +1,4 @@
+- move/bundle SpriteSheet to Texture2D and get rid of cloning, update frame in Sprite2D
 - multiple worlds test
 - Dynamic TextureAtlas. Packing algorithm: http://www.codeproject.com/KB/web-image/rectanglepacker.aspx. font from bmp / font from textfield? new Font2D class! with textureatlas http://ge.runcode.us/q/get-bounds-of-filters-applied-to-flash-sprite-within-sprite http://www.blackpawn.com/texts/lightmaps/
 - Sprite2DBatch with multiple textures 4?

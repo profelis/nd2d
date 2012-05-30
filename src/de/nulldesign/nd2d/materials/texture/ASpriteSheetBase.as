@@ -32,9 +32,8 @@ package de.nulldesign.nd2d.materials.texture {
 
 	import de.nulldesign.nd2d.events.SpriteSheetAnimationEvent;
 	import de.nulldesign.nd2d.materials.texture.SpriteSheetAnimation;
-
+	
 	import flash.events.EventDispatcher;
-
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	import flash.utils.Dictionary;
@@ -50,9 +49,8 @@ package de.nulldesign.nd2d.materials.texture {
 
 		protected var spritesPackedWithoutSpace:Boolean;
 
-		protected var ctime:Number = 0.0;
-		protected var otime:Number = 0.0;
-		protected var interp:Number = 0.0;
+		protected var lastTime:Number = 0.0;
+		protected var interpolation:Number = 0.0;
 
 		protected var triggerEventOnLastFrame:Boolean = false;
 
@@ -60,20 +58,14 @@ package de.nulldesign.nd2d.materials.texture {
 
 		public var frameUpdated:Boolean = true;
 
-		protected var fps:uint;
+		public var fps:uint;
+		protected var defaultFPS:uint;
 
-		protected var _spriteWidth:Number;
-		protected var _spriteHeight:Number;
+		public var spriteWidth:Number;
+		public var spriteHeight:Number;
+
 		protected var _sheetWidth:Number;
 		protected var _sheetHeight:Number;
-
-		public function get spriteWidth():Number {
-			return _spriteWidth;
-		}
-
-		public function get spriteHeight():Number {
-			return _spriteHeight;
-		}
 
 		protected var _frame:uint = int.MAX_VALUE;
 
@@ -82,14 +74,14 @@ package de.nulldesign.nd2d.materials.texture {
 		}
 
 		public function set frame(value:uint):void {
-			if(frame != value) {
-				_frame = value;
+			if(_frame != value) {
+				_frame = value % frames.length;
 				frameUpdated = true;
 
-				if(frames.length - 1 >= _frame) {
-					_spriteWidth = frames[_frame].width;
-					_spriteHeight = frames[_frame].height;
-				}
+				var rect:Rectangle = frames[_frame];
+
+				spriteWidth = rect.width;
+				spriteHeight = rect.height;
 			}
 		}
 
@@ -101,60 +93,65 @@ package de.nulldesign.nd2d.materials.texture {
 		}
 
 		public function ASpriteSheetBase() {
-
 		}
 
-		public function update(t:Number):void {
-
-			if(!activeAnimation) return;
-
-			var prevFrameIdx:int = frameIdx;
-
-			ctime = t;
-
-			// Update the timer part, to get time based animation
-			interp += fps * (ctime - otime);
-			if(interp >= 1.0) {
-				frameIdx++;
-				interp = 0;
+		public function update(timeSinceStartInSeconds:Number):void {
+			if(!activeAnimation) {
+				return;
 			}
 
-			if(activeAnimation.loop) {
-				frameIdx = frameIdx % activeAnimation.numFrames;
-			} else {
-				frameIdx = Math.min(frameIdx, activeAnimation.numFrames - 1);
+			// time based animation
+			interpolation += fps * (timeSinceStartInSeconds - lastTime);
+			lastTime = timeSinceStartInSeconds;
+
+			// there is nothing to do
+			if(interpolation < 1.0) {
+				return;
 			}
 
-			frame = activeAnimation.frames[frameIdx];
+			// allow frame skip
+			frameIdx += interpolation;
+			interpolation = 0;
 
-			otime = ctime;
-
-			// skipped frames
-			if(triggerEventOnLastFrame && (frameIdx == activeAnimation.numFrames - 1 || frameIdx < prevFrameIdx)) {
-				if(!activeAnimation.loop) {
-					triggerEventOnLastFrame = false;
+			// last frame finished
+			if(frameIdx >= activeAnimation.numFrames) {
+				if(triggerEventOnLastFrame) {
+					dispatchEvent(new SpriteSheetAnimationEvent(SpriteSheetAnimationEvent.ANIMATION_FINISHED));
 				}
-				dispatchEvent(new SpriteSheetAnimationEvent(SpriteSheetAnimationEvent.ANIMATION_FINISHED));
+
+				if(!activeAnimation.loop) {
+					frame = activeAnimation.frames[activeAnimation.numFrames - 1];
+					stopCurrentAnimation();
+					return;
+				}
 			}
+
+			frameIdx %= activeAnimation.numFrames;
+			frame = activeAnimation.frames[frameIdx];
 		}
 
 		public function stopCurrentAnimation():void {
 			activeAnimation = null;
 		}
 
-		public function playAnimation(name:String, startIdx:uint = 0, restart:Boolean = false, triggerEventOnLastFrame:Boolean = false):void {
+		public function playAnimation(name:String, startIdx:uint = 0, restart:Boolean = false, fps:uint = 0, triggerEventOnLastFrame:Boolean = false):void {
+			if(!animationMap[name]) {
+				return;
+			}
 
+			this.fps = (fps > 0 ? fps : defaultFPS);
 			this.triggerEventOnLastFrame = triggerEventOnLastFrame;
 
 			if(restart || activeAnimation != animationMap[name]) {
-				frameIdx = startIdx;
+				interpolation = 0;
+
 				activeAnimation = animationMap[name];
-				frame = activeAnimation.frames[0];
+				frameIdx = startIdx % activeAnimation.numFrames;
+				frame = activeAnimation.frames[frameIdx];
 			}
 		}
 
 		public function addAnimation(name:String, keyFrames:Array, loop:Boolean):void {
-
 		}
 
 		public function clone():ASpriteSheetBase {
@@ -162,7 +159,7 @@ package de.nulldesign.nd2d.materials.texture {
 		}
 
 		public function getOffsetForFrame():Point {
-			return offsets[frame];
+			return offsets[_frame];
 		}
 
 		/**
@@ -171,7 +168,7 @@ package de.nulldesign.nd2d.materials.texture {
 		 * @return
 		 */
 		public function getDimensionForFrame(frameIdx:int = -1):Rectangle {
-			return frames[frameIdx > -1 ? frameIdx : frame];
+			return frames[frameIdx > -1 ? frameIdx : _frame];
 		}
 
 		public function getIndexForFrame(name:String):uint {
@@ -183,12 +180,11 @@ package de.nulldesign.nd2d.materials.texture {
 		}
 
 		public function getUVRectForFrame(textureWidth:Number, textureHeight:Number):Rectangle {
-
-			if(uvRects[frame]) {
-				return uvRects[frame];
+			if(uvRects[_frame]) {
+				return uvRects[_frame];
 			}
 
-			var rect:Rectangle = frames[frame].clone();
+			var rect:Rectangle = frames[_frame].clone();
 			var texturePixelOffset:Point = new Point((textureWidth - _sheetWidth) / 2.0, (textureHeight - _sheetHeight) / 2.0);
 
 			rect.x += texturePixelOffset.x;
@@ -207,7 +203,7 @@ package de.nulldesign.nd2d.materials.texture {
 			rect.width /= textureWidth;
 			rect.height /= textureHeight;
 
-			uvRects[frame] = rect;
+			uvRects[_frame] = rect;
 
 			return rect;
 		}
