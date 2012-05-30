@@ -69,6 +69,9 @@ package de.nulldesign.nd2d.materials {
 
 		protected var constantsPerSprite:uint = 7; // matrix, colorMultiplier, colorOffset, uvoffset
 		protected var constantsPerMatrix:uint = 4;
+		protected const constants:Vector.<Number> = new Vector.<Number>(12, true);
+
+		protected const offsetFactor:Number = 1.0 / 255.0;
 
 		protected const BATCH_SIZE:uint = 126 / constantsPerSprite;
 		protected var batchLen:uint = 0;
@@ -153,7 +156,7 @@ package de.nulldesign.nd2d.materials {
 		protected function drawCurrentBatch(context:Context3D):void {
 			context.drawTriangles(indexBuffer, 0, batchLen * 2);
 			batchLen = 0;
-			++drawCalls;
+			drawCalls++;
 		}
 
 		protected function processAndRenderNodes(context:Context3D, childList:Node2D):void {
@@ -163,26 +166,28 @@ package de.nulldesign.nd2d.materials {
 
 			var childNode:Node2D;
 			var child:Sprite2D;
-			const colorMultiplierAndOffset:Vector.<Number> = new Vector.<Number>(8, true);
-			const uvoffset:Vector.<Number> = new Vector.<Number>(4, true);
-			const offsetFactor:Number = 1.0 / 255.0;
+
 			currentNodeIsTinted = nodeTinted || childList.nodeIsTinted;
 
 			for(childNode = childList; childNode; childNode = childNode.next) {
+				if(childNode.invalidateColors) {
+					childNode.updateColors();
+				}
+
+				if(childNode.invalidateMatrix) {
+					childNode.updateLocalMatrix();
+					childNode.updateWorldMatrix();
+					childNode.invalidateMatrix = true;
+				}
+
+				if(childNode.parent.invalidateMatrix) {
+					childNode.updateWorldMatrix();
+					childNode.invalidateMatrix = true;
+				}
+
 				child = childNode as Sprite2D;
 
 				if(child) {
-					if(child.invalidateColors) {
-						child.updateColors();
-					}
-
-					if(child.invalidateMatrix) {
-						child.updateLocalMatrix();
-					}
-
-					// TODO: Matrix operations are slow in AS3, check if parent changed
-					child.updateWorldMatrix();
-
 					currentNodeIsTinted = nodeTinted || child.nodeIsTinted;
 
 					if(currentNodeIsTinted != previousTintedState) {
@@ -210,57 +215,40 @@ package de.nulldesign.nd2d.materials {
 						clipSpaceMatrix.append(viewProjectionMatrix);
 					}
 
-					colorMultiplierAndOffset[0] = child.combinedColorTransform.redMultiplier;
-					colorMultiplierAndOffset[1] = child.combinedColorTransform.greenMultiplier;
-					colorMultiplierAndOffset[2] = child.combinedColorTransform.blueMultiplier;
-					colorMultiplierAndOffset[3] = child.combinedColorTransform.alphaMultiplier;
-					colorMultiplierAndOffset[4] = child.combinedColorTransform.redOffset * offsetFactor;
-					colorMultiplierAndOffset[5] = child.combinedColorTransform.greenOffset * offsetFactor;
-					colorMultiplierAndOffset[6] = child.combinedColorTransform.blueOffset * offsetFactor;
-					colorMultiplierAndOffset[7] = child.combinedColorTransform.alphaOffset * offsetFactor;
+					constants[0] = child.combinedColorTransform.redMultiplier;
+					constants[1] = child.combinedColorTransform.greenMultiplier;
+					constants[2] = child.combinedColorTransform.blueMultiplier;
+					constants[3] = child.combinedColorTransform.alphaMultiplier;
 
-					uvoffset[0] = uvOffsetAndScale.x;
-					uvoffset[1] = uvOffsetAndScale.y;
-					uvoffset[2] = uvOffsetAndScale.width;
-					uvoffset[3] = uvOffsetAndScale.height;
+					constants[4] = child.combinedColorTransform.redOffset * offsetFactor;
+					constants[5] = child.combinedColorTransform.greenOffset * offsetFactor;
+					constants[6] = child.combinedColorTransform.blueOffset * offsetFactor;
+					constants[7] = child.combinedColorTransform.alphaOffset * offsetFactor;
+
+					constants[8] = uvOffsetAndScale.x;
+					constants[9] = uvOffsetAndScale.y;
+					constants[10] = uvOffsetAndScale.width;
+					constants[11] = uvOffsetAndScale.height;
 
 					context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX,
 							batchLen * constantsPerSprite, clipSpaceMatrix, true);
 
 					context.setProgramConstantsFromVector(Context3DProgramType.VERTEX,
 							batchLen * constantsPerSprite + constantsPerMatrix,
-							colorMultiplierAndOffset);
+							constants, 3);
 
-					context.setProgramConstantsFromVector(Context3DProgramType.VERTEX,
-							batchLen * constantsPerSprite + constantsPerMatrix + 2,
-							uvoffset);
-
-					++batchLen;
+					batchLen++;
 
 					numTris += 2;
 
 					if(batchLen == BATCH_SIZE) {
 						drawCurrentBatch(context);
 					}
-
-					processAndRenderNodes(context, child.childFirst);
-				} else {
-					// let's try to process the childs...
-
-					if(childNode.invalidateColors) {
-						childNode.updateColors();
-					}
-
-					if(childNode.invalidateMatrix) {
-						childNode.updateLocalMatrix();
-					}
-
-					// TODO: Matrix operations are slow in AS3, check if parent changed
-					childNode.updateWorldMatrix();
-
-					processAndRenderNodes(context, childNode.childFirst);
 				}
 
+				processAndRenderNodes(context, childNode.childFirst);
+
+				childNode.invalidateMatrix = false;
 				previousTintedState = currentNodeIsTinted;
 			}
 		}

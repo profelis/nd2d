@@ -100,8 +100,6 @@ package de.nulldesign.nd2d.display {
 		}
 
 		override internal function drawNode(context:Context3D, camera:Camera2D, parentMatrixChanged:Boolean, statsObject:StatsObject):void {
-			var myMatrixChanged:Boolean = false;
-
 			if(!visible) {
 				return;
 			}
@@ -110,16 +108,18 @@ package de.nulldesign.nd2d.display {
 				updateColors();
 			}
 
-			if(invalidateMatrix) {
-				updateLocalMatrix();
-				myMatrixChanged = true;
-			}
+			if(parentMatrixChanged || invalidateMatrix) {
+				if(invalidateMatrix) {
+					updateLocalMatrix();
+					invalidateMatrix = true;
+				}
 
-			if(parentMatrixChanged || myMatrixChanged) {
 				updateWorldMatrix();
 			}
 
 			draw(context, camera);
+
+			invalidateMatrix = false;
 
 			statsObject.totalDrawCalls += drawCalls;
 			statsObject.totalTris += numTris;
