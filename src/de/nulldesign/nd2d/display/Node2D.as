@@ -965,6 +965,92 @@ package de.nulldesign.nd2d.display {
 			child2.next = swap;
 		}
 
+		/**
+		 * Recursive merge sort implementation is faster in AS3
+		 */
+		internal function merge(sortFunction:Function, sortDirection:int, left:Node2D, count:uint, first:Boolean = false):Node2D {
+			if(!left || !left.next) {
+				return left;
+			}
+
+			var next:Node2D = null;
+			var last:Node2D = null;
+			var right:Node2D = left;
+			var result:Node2D = null;
+
+			// find halfway
+			var half:uint = count >> 1;
+
+			for(var i:uint = 0; i < half; i++) {
+				right = right.next;
+			}
+
+			// separate left from right
+			right.prev.next = null;
+
+			// divide
+			left = merge(sortFunction, sortDirection, left, half);
+			right = merge(sortFunction, sortDirection, right, count - half);
+
+			// merge
+			while(left || right) {
+				if(!left) {
+					next = right;
+					right = right.next;
+				} else if(!right || sortFunction(left, right) * sortDirection < 0) {
+					next = left;
+					left = left.next;
+				} else {
+					next = right;
+					right = right.next;
+				}
+
+				if(!result) {
+					result = next;
+				} else {
+					last.next = next;
+				}
+
+				next.prev = last;
+				last = next;
+			}
+
+			if(first) {
+				childFirst = result;
+				childLast = last;
+			}
+
+			return result;
+		}
+
+		public function compareY(node1:Node2D, node2:Node2D):int {
+			if(node1._y > node2._y) {
+				return 1;
+			} else if(node1._y < node2._y) {
+				return -1;
+			}
+
+			return 0;
+		}
+
+		public const sortAscending:int = -1;
+		public const sortDescending:int = 1;
+
+		/**
+		 * Fast merge sort based on compare function.
+		 * 
+		 * Pass your own compare function or use the build-in
+		 * Y-sort which is faster because it avoids getters.
+		 * 
+		 *   mergeSort(compareY, sortDescending)
+		 * 
+		 * @param sortFunction
+		 * @param sortDirection         sortAscending or sortDescending
+		 */
+		public function mergeSort(sortFunction:Function, sortDirection:int = sortDescending):void {
+			merge(sortFunction, sortDirection, childFirst, childCount, true);
+		}
+
 		public function removeAllChildren():void {
 			while(childFirst) {
 				removeChild(childFirst);
