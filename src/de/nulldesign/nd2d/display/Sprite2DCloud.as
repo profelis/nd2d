@@ -60,7 +60,7 @@ package de.nulldesign.nd2d.display {
 	 * Limitations:
 	 * <ul>
 	 * <li>Mouseevents are disabled and won't work for childs</li>
-	 * <li>Reordering childs (add, remove) is very expensive. Try to avoid it! A Sprite2DBatch might work better in this case</li>
+	 * <li>Add/remove to/at the end is very fast but reordering childs (sort, add/remove) is very expensive. Try to avoid it! A Sprite2DBatch might work better in this case</li>
 	 * <li>Subchilds are not rendered. The cloud will only render it's own childs, you can't nest nodes deeper with a cloud.</li>
 	 * <li>rotationX,Y won't work for Sprite2DCloud childs</li>
 	 * </ul>
@@ -103,9 +103,7 @@ package de.nulldesign.nd2d.display {
 		protected var vertexBuffer:VertexBuffer3D;
 		protected var mVertexBuffer:Vector.<Number>;
 		protected var mIndexBuffer:Vector.<uint>;
-		protected var uvInited:Boolean = false;
 		protected var maxCapacity:uint;
-		protected var isInvalidatedColors:Boolean = false;
 
 		protected var clipSpaceMatrix:Matrix3D = new Matrix3D();
 
@@ -143,11 +141,10 @@ package de.nulldesign.nd2d.display {
 
 		public function invalidateChilds(child:Node2D):void {
 			for(var node:Node2D = child; node; node = node.next) {
-				node.invalidateColors = true;
+				node.invalidateUV = true;
 				node.invalidateMatrix = true;
+				node.invalidateVisibility = true;
 			}
-
-			uvInited = false;
 		}
 
 		override public function addChild(child:Node2D):Node2D {
@@ -170,8 +167,6 @@ package de.nulldesign.nd2d.display {
 						sprite.setTexture(texture);
 					}
 				}
-
-				uvInited = false;
 
 				return child;
 			}
@@ -200,13 +195,13 @@ package de.nulldesign.nd2d.display {
 		override public function swapChildren(child1:Node2D, child2:Node2D):void {
 			super.swapChildren(child1, child2);
 
-			child1.invalidateColors = true;
+			child1.invalidateUV = true;
 			child1.invalidateMatrix = true;
+			child1.invalidateVisibility = true;
 
-			child2.invalidateColors = true;
+			child2.invalidateUV = true;
 			child2.invalidateMatrix = true;
-
-			uvInited = false;
+			child2.invalidateVisibility = true;
 		}
 
 		override public function handleDeviceLoss():void {
@@ -246,6 +241,11 @@ package de.nulldesign.nd2d.display {
 
 			var myMatrixChanged:Boolean = false;
 
+			if(invalidateColors) {
+				updateColors();
+				invalidateColors = true;
+			}
+
 			if(invalidateMatrix) {
 				updateLocalMatrix();
 				myMatrixChanged = true;
@@ -257,13 +257,10 @@ package de.nulldesign.nd2d.display {
 
 			draw(context, camera);
 
+			invalidateColors = false;
+
 			statsObject.totalDrawCalls += drawCalls;
 			statsObject.totalTris += numTris;
-		}
-
-		override public function updateColors() : void {
-			super.updateColors();
-			isInvalidatedColors = true;
 		}
 
 		override protected function draw(context:Context3D, camera:Camera2D):void {
@@ -305,32 +302,17 @@ package de.nulldesign.nd2d.display {
 			const halfTextureWidth:Number = texture.textureWidth >> 1;
 			const halfTextureHeight:Number = texture.textureHeight >> 1;
 
-    		if(invalidateColors) {
-				updateColors();
-				isInvalidatedColors = true;
-			}
-
 			for(node = childFirst; node; node = node.next) {
 				child = node as Sprite2D;
-
 				spriteSheet = child.spriteSheet;
 
-				isChildInvalidatedColors = false;
-				if(child.invalidateColors && !isInvalidatedColors) {
-					child.updateColors();
-					isChildInvalidatedColors = true;
-				}
-
-				var initUV:Boolean = !uvInited;
-
-				if(spriteSheet && (initUV || spriteSheet.frameUpdated)) {
+				if(spriteSheet && (child.invalidateUV || spriteSheet.frameUpdated)) {
+					child.invalidateUV = true;
 					spriteSheet.frameUpdated = false;
 					uvOffsetAndScale = spriteSheet.getUVRectForFrame(texture.textureWidth, texture.textureHeight);
-					
-					initUV = true;
 				}
 
-				if(initUV) {
+				if(child.invalidateUV) {
 					// v1
 					mVertexBuffer[vIdx + 2] = uvOffsetAndScale.width * uv1.u + uvOffsetAndScale.x;
 					mVertexBuffer[vIdx + 3] = uvOffsetAndScale.height * uv1.v + uvOffsetAndScale.y;
@@ -391,7 +373,11 @@ package de.nulldesign.nd2d.display {
 					somethingChanged = true;
 				}
 
-				if(isInvalidatedColors || isChildInvalidatedColors || child.invalidateVisibility) {
+				if(invalidateColors || child.invalidateColors || child.invalidateVisibility) {
+					if(child.invalidateColors) {
+						child.updateColors();
+					}
+
 					rMultiplier = child.combinedColorTransform.redMultiplier;
 					gMultiplier = child.combinedColorTransform.greenMultiplier;
 					bMultiplier = child.combinedColorTransform.blueMultiplier;
@@ -446,11 +432,10 @@ package de.nulldesign.nd2d.display {
 
 				vIdx += 48;
 
-				child.invalidateMatrix = child.invalidateVisibility = false;
+				child.invalidateUV = false;
+				child.invalidateMatrix = false;
+				child.invalidateVisibility = false;
 			}
-
-			uvInited = true;
-			isInvalidatedColors = false;
 
 			if(!vertexBuffer) {
 				vertexBuffer = context.createVertexBuffer(mVertexBuffer.length / numFloatsPerVertex, numFloatsPerVertex);

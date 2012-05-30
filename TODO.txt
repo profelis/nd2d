@@ -1,5 +1,4 @@
 - multiple worlds test
-- Sprite2DCloud - addChildAt - invalidation not THAT agressive if possible?
 - Dynamic TextureAtlas. Packing algorithm: http://www.codeproject.com/KB/web-image/rectanglepacker.aspx. font from bmp / font from textfield? new Font2D class! with textureatlas http://ge.runcode.us/q/get-bounds-of-filters-applied-to-flash-sprite-within-sprite http://www.blackpawn.com/texts/lightmaps/
 - Sprite2DBatch with multiple textures 4?
 - iPhone retina management (assetloader, positions)

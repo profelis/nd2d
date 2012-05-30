@@ -33,7 +33,7 @@ package de.nulldesign.nd2d.display {
 	import de.nulldesign.nd2d.materials.BlendModePresets;
 	import de.nulldesign.nd2d.utils.NodeBlendMode;
 	import de.nulldesign.nd2d.utils.StatsObject;
-
+	
 	import flash.display.Stage;
 	import flash.display3D.Context3D;
 	import flash.events.Event;
@@ -155,6 +155,14 @@ package de.nulldesign.nd2d.display {
 		public var invalidateMatrix:Boolean = true;
 
 		/**
+		 * Currently only used by Sprite2DCloud
+		 * @private
+		 */
+		public var invalidateUV:Boolean = true;
+
+		/**
+		 * Currently only used by Sprite2DCloud
+		 * We use it as the lite version of invalidateColors
 		 * @private
 		 */
 		public var invalidateVisibility:Boolean = true;
@@ -261,13 +269,11 @@ package de.nulldesign.nd2d.display {
 
 		public function set visible(value:Boolean):void {
 			if(_visible != value) {
-				if(parent) {
-					if(!value && parent is Sprite2DCloud) {
-						Sprite2DCloud(parent).invalidateChilds(this.next);
-					}
+				if(this.parent) {
+					var parent:Node2D = this.parent;
 
 					// move to visible/invisible queue
-					parent.unlinkChild(this);
+					parent.removeChild(this);
 					_visible = value;
 					parent.addChild(this);
 				}
@@ -977,6 +983,7 @@ package de.nulldesign.nd2d.display {
 			var last:Node2D = null;
 			var right:Node2D = left;
 			var result:Node2D = null;
+			var invalidate:Node2D = null;
 
 			// find halfway
 			var half:uint = count >> 1;
@@ -1000,6 +1007,10 @@ package de.nulldesign.nd2d.display {
 				} else if(!right || sortFunction(left, right) * sortDirection < 0) {
 					next = left;
 					left = left.next;
+
+					if(right && !invalidate) {
+						invalidate = next;
+					}
 				} else {
 					next = right;
 					right = right.next;
@@ -1013,6 +1024,10 @@ package de.nulldesign.nd2d.display {
 
 				next.prev = last;
 				last = next;
+			}
+
+			if(invalidate && this is Sprite2DCloud) {
+				Sprite2DCloud(this).invalidateChilds(invalidate);
 			}
 
 			if(first) {
