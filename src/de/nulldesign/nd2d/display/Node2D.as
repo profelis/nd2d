@@ -1153,6 +1153,10 @@ package de.nulldesign.nd2d.display {
 			for(child = childInvisibleFirst; child; child = child.next) {
 				child.dispose();
 			}
+
+			if(parent) {
+				parent.removeChild(this);
+			}
 		}
 	}
 }
