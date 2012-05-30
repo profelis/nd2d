@@ -83,10 +83,9 @@ package de.nulldesign.nd2d.display {
 		}
 
 		override internal function stepNode(elapsed:Number, timeSinceStartInSeconds:Number):void {
-
 			this.timeSinceStartInSeconds = timeSinceStartInSeconds;
 
-			for each(var child:Node2D in children) {
+			for(var child:Node2D = childFirst; child; child = child.next) {
 				child.stepNode(elapsed, timeSinceStartInSeconds);
 			}
 
@@ -97,8 +96,7 @@ package de.nulldesign.nd2d.display {
 		}
 
 		override internal function drawNode(context:Context3D, camera:Camera2D, parentMatrixChanged:Boolean, statsObject:StatsObject):void {
-
-			for each(var child:Node2D in children) {
+			for(var child:Node2D = childFirst; child; child = child.next) {
 				child.drawNode(context, camera, false, statsObject);
 			}
 

@@ -47,12 +47,12 @@ package de.nulldesign.nd2d.materials {
 
 		protected const DEFAULT_VERTEX_SHADER:String =
 				"m44 op, va0, vc[va2.x]             \n" + // vertex * clipspace[idx]
-						"mov vt0, va1                       \n" + // save uv in temp register
-						"mul vt0.xy, vt0.xy, vc[va2.w].zw   \n" + // mult with uv-scale
-						"add vt0.xy, vt0.xy, vc[va2.w].xy   \n" + // add uv offset
-						"mov v0, vt0                        \n" + // copy uv
-						"mov v1, vc[va2.y]	                \n" + // copy colorMultiplier[idx]
-						"mov v2, vc[va2.z]	                \n"; // copy colorOffset[idx]
+				"mov vt0, va1                       \n" + // save uv in temp register
+				"mul vt0.xy, vt0.xy, vc[va2.w].zw   \n" + // mult with uv-scale
+				"add vt0.xy, vt0.xy, vc[va2.w].xy   \n" + // add uv offset
+				"mov v0, vt0                        \n" + // copy uv
+				"mov v1, vc[va2.y]                  \n" + // copy colorMultiplier[idx]
+				"mov v2, vc[va2.z]                  \n";  // copy colorOffset[idx]
 
 		/*
 		 protected const DEFAULT_VERTEX_SHADER:String =
@@ -64,8 +64,8 @@ package de.nulldesign.nd2d.materials {
 
 		protected const DEFAULT_FRAGMENT_SHADER:String =
 				"tex ft0, v0, fs0 <TEXTURE_SAMPLING_OPTIONS>  \n" + // sample texture from interpolated uv coords
-						"mul ft0, ft0, v1                               \n" + // mult with colorMultiplier
-						"add oc, ft0, v2                               \n"; // add with colorOffset
+				"mul ft0, ft0, v1                             \n" + // mult with colorMultiplier
+				"add oc, ft0, v2                              \n";  // add with colorOffset
 
 		protected var constantsPerSprite:uint = 7; // matrix, colorMultiplier, colorOffset, uvoffset
 		protected var constantsPerMatrix:uint = 4;
@@ -82,7 +82,6 @@ package de.nulldesign.nd2d.materials {
 		}
 
 		override protected function generateBufferData(context:Context3D, faceList:Vector.<Face>):void {
-
 			if(vertexBuffer) {
 				return;
 			}
@@ -114,7 +113,6 @@ package de.nulldesign.nd2d.materials {
 		}
 
 		override protected function prepareForRender(context:Context3D):void {
-
 			context.setProgram(shaderData.shader);
 			context.setBlendFactors(blendMode.src, blendMode.dst);
 			context.setTextureAt(0, texture.getTexture(context));
@@ -123,13 +121,16 @@ package de.nulldesign.nd2d.materials {
 			context.setVertexBufferAt(2, vertexBuffer, 4, Context3DVertexBufferFormat.FLOAT_4); // idx
 		}
 
-		public function renderBatch(context:Context3D, faceList:Vector.<Face>, childList:Vector.<Node2D>):void {
-
+		public function renderBatch(context:Context3D, faceList:Vector.<Face>, childList:Node2D):void {
 			drawCalls = 0;
 			numTris = 0;
 			batchLen = 0;
 			currentNodeIsTinted = nodeTinted;
 			previousTintedState = currentNodeIsTinted;
+
+			if(!childList) {
+				return;
+			}
 
 			generateBufferData(context, faceList);
 			prepareForRender(context);
@@ -137,8 +138,7 @@ package de.nulldesign.nd2d.materials {
 			processAndRenderNodes(context, childList);
 
 			if(batchLen != 0) {
-				context.drawTriangles(indexBuffer, 0, batchLen * 2);
-				++drawCalls;
+				drawCurrentBatch(context);
 			}
 
 			clearAfterRender(context);
@@ -156,29 +156,31 @@ package de.nulldesign.nd2d.materials {
 			++drawCalls;
 		}
 
-		protected function processAndRenderNodes(context:Context3D, childList:Vector.<Node2D>):void {
-
-			if(!childList || childList.length == 0) return;
+		protected function processAndRenderNodes(context:Context3D, childList:Node2D):void {
+			if(!childList) {
+				return;
+			}
 
 			var childNode:Node2D;
 			var child:Sprite2D;
 			const colorMultiplierAndOffset:Vector.<Number> = new Vector.<Number>(8, true);
 			const uvoffset:Vector.<Number> = new Vector.<Number>(4, true);
-			var i:int = -1;
-			const n:int = childList.length;
 			const offsetFactor:Number = 1.0 / 255.0;
-			currentNodeIsTinted = nodeTinted || childList[0].nodeIsTinted;
+			currentNodeIsTinted = nodeTinted || childList.nodeIsTinted;
 
-			while(++i < n) {
-
-				childNode = childList[i];
+			for(childNode = childList; childNode; childNode = childNode.next) {
 				child = childNode as Sprite2D;
 
-				if(child && child.visible) {
+				if(child) {
+					if(child.invalidateColors) {
+						child.updateColors();
+					}
 
-					if(child.invalidateColors) child.updateColors();
-					if(child.invalidateMatrix) child.updateLocalMatrix();
+					if(child.invalidateMatrix) {
+						child.updateLocalMatrix();
+					}
 
+					// TODO: Matrix operations are slow in AS3, check if parent changed
 					child.updateWorldMatrix();
 
 					currentNodeIsTinted = nodeTinted || child.nodeIsTinted;
@@ -190,8 +192,8 @@ package de.nulldesign.nd2d.materials {
 
 					var uvOffsetAndScale:Rectangle = new Rectangle(0.0, 0.0, 1.0, 1.0);
 
+					// TODO: Matrix operations are slow in AS3, move calculation to shader
 					if(spriteSheet) {
-
 						uvOffsetAndScale = child.spriteSheet.getUVRectForFrame(texture.textureWidth, texture.textureHeight);
 
 						var offset:Point = child.spriteSheet.getOffsetForFrame();
@@ -201,7 +203,6 @@ package de.nulldesign.nd2d.materials {
 						clipSpaceMatrix.appendTranslation(offset.x, offset.y, 0.0);
 						clipSpaceMatrix.append(child.worldModelMatrix);
 						clipSpaceMatrix.append(viewProjectionMatrix);
-
 					} else {
 						clipSpaceMatrix.identity();
 						clipSpaceMatrix.appendScale(texture.textureWidth >> 1, texture.textureHeight >> 1, 1.0);
@@ -242,19 +243,22 @@ package de.nulldesign.nd2d.materials {
 						drawCurrentBatch(context);
 					}
 
-					processAndRenderNodes(context, child.children);
-
-				} else if(childNode.visible) {
-
+					processAndRenderNodes(context, child.childFirst);
+				} else {
 					// let's try to process the childs...
 
-					if(childNode.invalidateColors) childNode.updateColors();
-					if(childNode.invalidateMatrix) childNode.updateLocalMatrix();
+					if(childNode.invalidateColors) {
+						childNode.updateColors();
+					}
 
-					// TODO check if parent matrix changed?
+					if(childNode.invalidateMatrix) {
+						childNode.updateLocalMatrix();
+					}
+
+					// TODO: Matrix operations are slow in AS3, check if parent changed
 					childNode.updateWorldMatrix();
 
-					processAndRenderNodes(context, childNode.children);
+					processAndRenderNodes(context, childNode.childFirst);
 				}
 
 				previousTintedState = currentNodeIsTinted;
@@ -275,14 +279,12 @@ package de.nulldesign.nd2d.materials {
 		}
 
 		override protected function addVertex(context:Context3D, buffer:Vector.<Number>, v:Vertex, uv:UV, face:Face):void {
-
 			fillBuffer(buffer, v, uv, face, VERTEX_POSITION, 2);
 			fillBuffer(buffer, v, uv, face, VERTEX_UV, 2);
 			fillBuffer(buffer, v, uv, face, VERTEX_IDX, 4);
 		}
 
 		override protected function fillBuffer(buffer:Vector.<Number>, v:Vertex, uv:UV, face:Face, semanticsID:String, floatFormat:int):void {
-
 			if(semanticsID == VERTEX_IDX) {
 				// first float will be used for matrix index
 				buffer.push(face.idx * constantsPerSprite);
@@ -292,7 +294,6 @@ package de.nulldesign.nd2d.materials {
 				buffer.push(face.idx * constantsPerSprite + constantsPerMatrix + 1);
 				// third uv offset idx
 				buffer.push(face.idx * constantsPerSprite + constantsPerMatrix + 2);
-
 			} else {
 				super.fillBuffer(buffer, v, uv, face, semanticsID, floatFormat);
 			}

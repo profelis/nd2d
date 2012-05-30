@@ -87,14 +87,14 @@ package de.nulldesign.nd2d.display {
 
 		protected const DEFAULT_VERTEX_SHADER:String =
 				"m44 op, va0, vc0   \n" + // vertex * clipspace
-						"mov v0, va1		\n" + // copy uv
-						"mov v1, va2		\n" + // copy colorMultiplier
-						"mov v2, va3		\n"; // copy colorOffset
+				"mov v0, va1        \n" + // copy uv
+				"mov v1, va2        \n" + // copy colorMultiplier
+				"mov v2, va3        \n";  // copy colorOffset
 
 		protected const DEFAULT_FRAGMENT_SHADER:String =
-				"tex ft0, v0, fs0 <TEXTURE_SAMPLING_OPTIONS>\n" + // sample texture from interpolated uv coords
-						"mul ft0, ft0, v1\n" + // mult with colorMultiplier
-						"add oc, ft0, v2\n";  // add with colorOffset
+				"tex ft0, v0, fs0 <TEXTURE_SAMPLING_OPTIONS>  \n" + // sample texture from interpolated uv coords
+				"mul ft0, ft0, v1                             \n" + // mult with colorMultiplier
+				"add oc, ft0, v2                              \n";  // add with colorOffset
 
 		protected const FRAGMENT_SHADER_SHORT:String = "tex oc, v0, fs0 <TEXTURE_SAMPLING_OPTIONS>\n";
 
@@ -110,7 +110,6 @@ package de.nulldesign.nd2d.display {
 		protected var clipSpaceMatrix:Matrix3D = new Matrix3D();
 
 		public function Sprite2DCloud(maxCapacity:uint, textureObject:Texture2D) {
-
 			texture = textureObject;
 			faceList = TextureHelper.generateQuadFromDimensions(2, 2);
 
@@ -135,39 +134,43 @@ package de.nulldesign.nd2d.display {
 		}
 
 		override public function get numTris():uint {
-			return children.length * 2;
+			return childCount << 1;
 		}
 
 		override public function get drawCalls():uint {
-			return 1;
+			return (childCount ? 1 : 0);
 		}
 
-		override public function addChildAt(child:Node2D, idx:uint):Node2D {
+		public function invalidateChilds(child:Node2D):void {
+			for(var node:Node2D = child; node; node = node.next) {
+				node.invalidateColors = true;
+				node.invalidateMatrix = true;
+			}
 
+			uvInited = false;
+		}
+
+		override public function addChild(child:Node2D):Node2D {
 			if(child is Sprite2DCloud) {
 				throw new Error("You can't nest Sprite2DClouds");
 			}
 
-			if(children.length < maxCapacity || getChildIndex(child) != -1) {
+			if(childCount < maxCapacity) {
+				super.addChild(child);
 
-				super.addChildAt(child, idx);
-
-				var c:Sprite2D = child as Sprite2D;
+				var sprite:Sprite2D = child as Sprite2D;
 
 				// distribute spritesheets to sprites
-				if(spriteSheet && !c.spriteSheet) {
-					c.setSpriteSheet(spriteSheet.clone());
+				if(sprite) {
+					if(spriteSheet && !sprite.spriteSheet) {
+						sprite.setSpriteSheet(spriteSheet.clone());
+					}
+
+					if(texture && !sprite.texture) {
+						sprite.setTexture(texture);
+					}
 				}
 
-				if(texture && !c.texture) {
-					c.setTexture(texture);
-				}
-
-				for(var i:int = 0; i < children.length; i++) {
-					c = children[i] as Sprite2D;
-					c.invalidateColors = true;
-					c.invalidateMatrix = true;
-				}
 				uvInited = false;
 
 				return child;
@@ -176,35 +179,34 @@ package de.nulldesign.nd2d.display {
 			return null;
 		}
 
-		override public function removeChildAt(idx:uint):void {
+		override public function removeChild(child:Node2D):void {
+			invalidateChilds(child.next);
 
-			if(idx < children.length) {
-				super.removeChildAt(idx);
+			super.removeChild(child);
+		}
+		
+		override public function insertChildBefore(child1:Node2D, child2:Node2D):void {
+			super.insertChildBefore(child1, child2);
 
-				var c:Sprite2D;
-				for(var i:int = 0; i < children.length; i++) {
-					c = children[i] as Sprite2D;
-					c.invalidateColors = true;
-					c.invalidateMatrix = true;
-				}
+			invalidateChilds(child1.next);
+		}
+		
+		override public function insertChildAfter(child1:Node2D, child2:Node2D):void {
+			super.insertChildAfter(child1, child2);
 
-				uvInited = false;
-			}
+			invalidateChilds(child1.next);
 		}
 
 		override public function swapChildren(child1:Node2D, child2:Node2D):void {
 			super.swapChildren(child1, child2);
+
 			child1.invalidateColors = true;
 			child1.invalidateMatrix = true;
-			if(Sprite2D(child1).spriteSheet) {
-				Sprite2D(child1).spriteSheet.frameUpdated = true;
-			}
 
 			child2.invalidateColors = true;
 			child2.invalidateMatrix = true;
-			if(Sprite2D(child2).spriteSheet) {
-				Sprite2D(child2).spriteSheet.frameUpdated = true;
-			}
+
+			uvInited = false;
 		}
 
 		override public function handleDeviceLoss():void {
@@ -214,10 +216,8 @@ package de.nulldesign.nd2d.display {
 			shaderData = null;
 			vertexBuffer = null;
 			indexBuffer = null;
-			uvInited = false;
 
-			for each(var c:Sprite2D in children)
-				c.invalidateColors = c.invalidateMatrix = true;
+			invalidateChilds(childFirst);
 		}
 
 		override public function dispose():void {
@@ -240,7 +240,6 @@ package de.nulldesign.nd2d.display {
 		}
 
 		override internal function drawNode(context:Context3D, camera:Camera2D, parentMatrixChanged:Boolean, statsObject:StatsObject):void {
-
 			if(!visible) {
 				return;
 			}
@@ -257,6 +256,7 @@ package de.nulldesign.nd2d.display {
 			}
 
 			draw(context, camera);
+
 			statsObject.totalDrawCalls += drawCalls;
 			statsObject.totalTris += numTris;
 		}
@@ -267,8 +267,9 @@ package de.nulldesign.nd2d.display {
 		}
 
 		override protected function draw(context:Context3D, camera:Camera2D):void {
-
-			if(children.length == 0) return;
+			if(!childFirst) {
+				return;
+			}
 
 			clipSpaceMatrix.identity();
 			clipSpaceMatrix.append(worldModelMatrix);
@@ -291,9 +292,8 @@ package de.nulldesign.nd2d.display {
 			var rot:Number;
 			var cr:Number;
 			var sr:Number;
-			var i:int = -1;
+			var node:Node2D;
 			var child:Sprite2D;
-			const n:uint = children.length;
 			var sx:Number;
 			var sy:Number;
 			var pivotX: Number, pivotY: Number;
@@ -302,17 +302,16 @@ package de.nulldesign.nd2d.display {
 			var atlasOffset:Point = new Point();
 			const offsetFactor:Number = 1.0 / 255.0;
 			var isChildInvalidatedColors : Boolean = false;
-			const halfTextureWidth : Number = texture.textureWidth >> 1;
-			const halfTextureHeight : Number = texture.textureHeight >> 1;
+			const halfTextureWidth:Number = texture.textureWidth >> 1;
+			const halfTextureHeight:Number = texture.textureHeight >> 1;
 
     		if(invalidateColors) {
 				updateColors();
 				isInvalidatedColors = true;
 			}
 
-			while(++i < n) {
-
-				child = Sprite2D(children[i]);
+			for(node = childFirst; node; node = node.next) {
+				child = node as Sprite2D;
 
 				spriteSheet = child.spriteSheet;
 
@@ -320,27 +319,6 @@ package de.nulldesign.nd2d.display {
 				if(child.invalidateColors && !isInvalidatedColors) {
 					child.updateColors();
 					isChildInvalidatedColors = true;
-				}
-
-				if(child.visible) {
-					rMultiplier = child.combinedColorTransform.redMultiplier;
-					gMultiplier = child.combinedColorTransform.greenMultiplier;
-					bMultiplier = child.combinedColorTransform.blueMultiplier;
-					aMultiplier = child.combinedColorTransform.alphaMultiplier;
-					rOffset = child.combinedColorTransform.redOffset * offsetFactor;
-					gOffset = child.combinedColorTransform.greenOffset * offsetFactor;
-					bOffset = child.combinedColorTransform.blueOffset * offsetFactor;
-					aOffset = child.combinedColorTransform.alphaOffset * offsetFactor;
-				} else {
-					// fake visibility, it's faster
-					rMultiplier = 0.0;
-					gMultiplier = 0.0;
-					bMultiplier = 0.0;
-					aMultiplier = 0.0;
-					rOffset = 0.0;
-					gOffset = 0.0;
-					bOffset = 0.0;
-					aOffset = 0.0;
 				}
 
 				var initUV:Boolean = !uvInited;
@@ -414,6 +392,14 @@ package de.nulldesign.nd2d.display {
 				}
 
 				if(isInvalidatedColors || isChildInvalidatedColors || child.invalidateVisibility) {
+					rMultiplier = child.combinedColorTransform.redMultiplier;
+					gMultiplier = child.combinedColorTransform.greenMultiplier;
+					bMultiplier = child.combinedColorTransform.blueMultiplier;
+					aMultiplier = child.combinedColorTransform.alphaMultiplier;
+					rOffset = child.combinedColorTransform.redOffset * offsetFactor;
+					gOffset = child.combinedColorTransform.greenOffset * offsetFactor;
+					bOffset = child.combinedColorTransform.blueOffset * offsetFactor;
+					aOffset = child.combinedColorTransform.alphaOffset * offsetFactor;
 
 					// v1
 					mVertexBuffer[vIdx + 4] = rMultiplier;
@@ -476,7 +462,6 @@ package de.nulldesign.nd2d.display {
 			}
 
 			if(!indexBuffer) {
-
 				var refIdx:uint = 0;
 				var iIdx:uint = 0;
 				var idx:int = -1;
@@ -508,7 +493,7 @@ package de.nulldesign.nd2d.display {
 
 			context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, clipSpaceMatrix, true);
 
-			context.drawTriangles(indexBuffer, 0, 2 * children.length);
+			context.drawTriangles(indexBuffer, 0, childCount << 1);
 
 			context.setTextureAt(0, null);
 

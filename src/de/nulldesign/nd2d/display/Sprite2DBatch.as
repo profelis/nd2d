@@ -78,41 +78,28 @@ package de.nulldesign.nd2d.display {
 			this.spriteSheet = value;
 		}
 
-		override public function addChildAt(child:Node2D, idx:uint):Node2D {
-
+		override public function addChild(child:Node2D):Node2D {
 			if(child is Sprite2DBatch) {
 				throw new Error("You can't nest Sprite2DBatches");
 			}
 
-			var c:Sprite2D = child as Sprite2D;
+			var sprite:Sprite2D = child as Sprite2D;
 
 			// distribute spritesheets to sprites
-			if(c && spriteSheet && !c.spriteSheet) {
-				c.setSpriteSheet(spriteSheet.clone());
+			if(sprite) {
+				if(spriteSheet && !sprite.spriteSheet) {
+					sprite.setSpriteSheet(spriteSheet.clone());
+				}
+
+				if(texture && !sprite.texture) {
+					sprite.setTexture(texture);
+				}
 			}
 
-			if(c && texture && !c.texture) {
-				c.setTexture(texture);
-			}
-
-			return super.addChildAt(child, idx);
-		}
-
-		override internal function stepNode(elapsed:Number, timeSinceStartInSeconds:Number):void {
-
-			this.timeSinceStartInSeconds = timeSinceStartInSeconds;
-
-			step(elapsed);
-
-			for each(var child:Node2D in children) {
-				child.stepNode(elapsed, timeSinceStartInSeconds);
-			}
-
-			// don't refresh own spritesheet
+			return super.addChild(child);
 		}
 
 		override internal function drawNode(context:Context3D, camera:Camera2D, parentMatrixChanged:Boolean, statsObject:StatsObject):void {
-
 			var myMatrixChanged:Boolean = false;
 
 			if(!visible) {
@@ -133,6 +120,7 @@ package de.nulldesign.nd2d.display {
 			}
 
 			draw(context, camera);
+
 			statsObject.totalDrawCalls += drawCalls;
 			statsObject.totalTris += numTris;
 
@@ -145,13 +133,12 @@ package de.nulldesign.nd2d.display {
 		}
 
 		override protected function draw(context:Context3D, camera:Camera2D):void {
-
 			material.blendMode = blendMode;
 			material.modelMatrix = worldModelMatrix;
 			material.viewProjectionMatrix = camera.getViewProjectionMatrix(false);
 			material.texture = texture;
 			material.spriteSheet = spriteSheet;
-			material.renderBatch(context, faceList, children);
+			material.renderBatch(context, faceList, childFirst);
 		}
 
 		override public function dispose():void {

@@ -166,7 +166,22 @@ package de.nulldesign.nd2d.display {
 
 		public var hasPremultipliedAlphaTexture:Boolean = true;
 
-		public var children:Vector.<Node2D> = new Vector.<Node2D>();
+		/**
+		 * Visible childs
+		 */
+		public var childCount:uint = 0;
+		public var childFirst:Node2D = null;
+		public var childLast:Node2D = null;
+
+		/**
+		 * Invisible childs
+		 */
+		public var childInvisibleCount:uint = 0;
+		public var childInvisibleFirst:Node2D = null;
+		public var childInvisibleLast:Node2D = null;
+
+		public var prev:Node2D = null;
+		public var next:Node2D = null;
 
 		public var isBatchNode:Boolean = false;
 
@@ -245,13 +260,24 @@ package de.nulldesign.nd2d.display {
 		}
 
 		public function set visible(value:Boolean):void {
-			if (_visible != value && value) {
-				invalidateMatrix = true;				
-			}
-			
 			if(_visible != value) {
+				if(parent) {
+					if(!value && parent is Sprite2DCloud) {
+						Sprite2DCloud(parent).invalidateChilds(this.next);
+					}
+
+					// move to visible/invisible queue
+					parent.unlinkChild(this);
+					_visible = value;
+					parent.addChild(this);
+				}
+
 				_visible = value;
 				invalidateVisibility = true;
+
+				if(value) {
+					invalidateMatrix = true;
+				}
 			}
 		}
 
@@ -479,7 +505,7 @@ package de.nulldesign.nd2d.display {
 		}
 
 		public function get numChildren():uint {
-			return children.length;
+			return childCount + childInvisibleCount;
 		}
 
 		public function Node2D() {
@@ -503,7 +529,6 @@ package de.nulldesign.nd2d.display {
 		 * @private
 		 */
 		public function updateWorldMatrix():void {
-
 			worldModelMatrix.identity();
 			worldModelMatrix.append(localModelMatrix);
 
@@ -516,7 +541,6 @@ package de.nulldesign.nd2d.display {
 		 * @private
 		 */
 		public function updateColors():void {
-
 			invalidateColors = false;
 
 			if(hasPremultipliedAlphaTexture) {
@@ -549,7 +573,7 @@ package de.nulldesign.nd2d.display {
 					combinedColorTransform.blueOffset != 0.0 ||
 					combinedColorTransform.alphaOffset != 0.0);
 
-			for each(var child:Node2D in children) {
+			for(var child:Node2D = childFirst; child; child = child.next) {
 				child.updateColors();
 			}
 		}
@@ -594,6 +618,7 @@ package de.nulldesign.nd2d.display {
 					} else {
 						mouseEvents.push(new MouseEvent(mouseEventType, false, false, localMouse.x, localMouse.y, null, false, false, false, (mouseEventType == MouseEvent.MOUSE_DOWN), 0));
 					}
+
 					result = this;
 
 				} else if(oldMouseInNodeState) {
@@ -607,8 +632,10 @@ package de.nulldesign.nd2d.display {
 			}
 
 			var subChildMouseNode:Node2D;
-			for(var i:Number = children.length - 1; i >= 0; --i) {
-				subChildMouseNode = children[i].processMouseEvent(mousePosition, mouseEventType, cameraViewProjectionMatrix, isTouchEvent, touchPointID);
+
+			for(var child:Node2D = childLast; child; child = child.prev) {
+				subChildMouseNode = child.processMouseEvent(mousePosition, mouseEventType, cameraViewProjectionMatrix, isTouchEvent, touchPointID);
+
 				if(subChildMouseNode) {
 					result = subChildMouseNode;
 					break;
@@ -634,13 +661,12 @@ package de.nulldesign.nd2d.display {
 
 			var halfWidth:Number = _width >> 1;
 			var halfHeight:Number = _height >> 1;
+
 			return (_mouseX >= -halfWidth && _mouseX <= halfWidth && _mouseY >= -halfHeight && _mouseY <= halfHeight);
 		}
 
 		internal function setStageAndCamRef(value:Stage, cameraValue:Camera2D):void {
-
 			if(_stage != value) {
-
 				camera = cameraValue;
 
 				if(value) {
@@ -651,7 +677,7 @@ package de.nulldesign.nd2d.display {
 					_stage = value;
 				}
 
-				for each(var child:Node2D in children) {
+				for(var child:Node2D = childFirst; child; child = child.next) {
 					child.setStageAndCamRef(value, cameraValue);
 				}
 			}
@@ -661,20 +687,26 @@ package de.nulldesign.nd2d.display {
 		 * @private
 		 */
 		internal function stepNode(elapsed:Number, timeSinceStartInSeconds:Number):void {
-
 			this.timeSinceStartInSeconds = timeSinceStartInSeconds;
 
 			step(elapsed);
 
-			for each(var child:Node2D in children) {
+			for(var child:Node2D = childFirst; child; child = child.next) {
 				child.stepNode(elapsed, timeSinceStartInSeconds);
 			}
 		}
 
 		public function handleDeviceLoss():void {
-			for each(var child:Node2D in children) {
+			var child:Node2D;
+
+			for(child = childFirst; child; child = child.next) {
 				child.handleDeviceLoss();
 			}
+
+			for(child = childInvisibleFirst; child; child = child.next) {
+				child.handleDeviceLoss();
+			}
+
 			// extend in extended classes
 		}
 
@@ -682,7 +714,6 @@ package de.nulldesign.nd2d.display {
 		 * @private
 		 */
 		internal function drawNode(context:Context3D, camera:Camera2D, parentMatrixChanged:Boolean, statsObject:StatsObject):void {
-
 			var myMatrixChanged:Boolean = false;
 
 			if(!_visible) {
@@ -707,7 +738,7 @@ package de.nulldesign.nd2d.display {
 			statsObject.totalDrawCalls += drawCalls;
 			statsObject.totalTris += numTris;
 
-			for each(var child:Node2D in children) {
+			for(var child:Node2D = childFirst; child; child = child.next) {
 				child.drawNode(context, camera, myMatrixChanged, statsObject);
 			}
 		}
@@ -720,20 +751,34 @@ package de.nulldesign.nd2d.display {
 			// overwrite in extended classes
 		}
 
-		public function setChildIndex(child:Node2D, index:int):void {
-			var child2:Node2D = getChildAt(index);
-			if(child2 != null) swapChildren(child, child2);
+		internal function unlinkChild(child:Node2D):void {
+			if(child.prev) {
+				child.prev.next = child.next;
+			} else {
+				if(child._visible) {
+					childFirst = child.next;
+				} else {
+					childInvisibleFirst = child.next;
+				}
+			}
+
+			if(child.next) {
+				child.next.prev = child.prev;
+			} else {
+				if(child._visible) {
+					childLast = child.prev;
+				} else {
+					childInvisibleLast = child.prev;
+				}
+			}
+
+			child.prev = null;
+			child.next = null;
 		}
 
 		public function addChild(child:Node2D):Node2D {
-			return addChildAt(child, children.length);
-		}
-
-		public function addChildAt(child:Node2D, idx:uint):Node2D {
-
-			var existingIdx:int = getChildIndex(child);
-			if(existingIdx != -1) {
-				removeChildAt(existingIdx);
+			if(child.parent && child.parent != this) {
+				child.parent.removeChild(child);
 			}
 
 			if(isBatchNode) {
@@ -741,56 +786,208 @@ package de.nulldesign.nd2d.display {
 			}
 
 			child.parent = this;
-			child.setStageAndCamRef(_stage, camera);
-			children.splice(idx, 0, child);
+
+			if(child._visible) {
+				child.setStageAndCamRef(_stage, camera);
+
+				if(childLast) {
+					child.prev = childLast;
+					childLast.next = child;
+					childLast = child;
+				} else {
+					childFirst = child;
+					childLast = child;
+				}
+
+				childCount++;
+			} else {
+				if(childInvisibleLast) {
+					child.prev = childInvisibleLast;
+					childInvisibleLast.next = child;
+					childInvisibleLast = child;
+				} else {
+					childInvisibleFirst = child;
+					childInvisibleLast = child;
+				}
+
+				childInvisibleCount++;
+			}
+
 			return child;
 		}
 
 		public function removeChild(child:Node2D):void {
+			if(child.parent != this) {
+				return;
+			}
 
-			var idx:int = children.indexOf(child);
+			unlinkChild(child);
 
-			if(idx >= 0) {
-				removeChildAt(idx);
+			child.parent = null;
+			child.setStageAndCamRef(null, null);
+			child.isBatchNode = false;
+
+			if(child._visible) {
+				childCount--;
+			} else {
+				childInvisibleCount--;
 			}
 		}
 
-		public function removeChildAt(idx:uint):void {
-			if(idx < children.length) {
-				children[idx].parent = null;
-				children[idx].setStageAndCamRef(null, null);
-				children.splice(idx, 1);
-			}
-		}
-
-		public function getChildAt(idx:uint):Node2D {
-			if(idx < children.length) {
-				return children[idx];
+		/**
+		 * Insert or move child1 before child2
+		 * @return
+		 */
+		public function insertChildBefore(child1:Node2D, child2:Node2D):void {
+			if(child2.parent != this) {
+				return;
 			}
 
-			return null;
+			if(child1._visible != child2._visible) {
+				// TODO: Throw error, can't mix visible/invisible queue?
+				return;
+			}
+
+			if(child1.parent != this) {
+				addChild(child1);
+			}
+
+			unlinkChild(child1);
+
+			if(child2.prev) {
+				child2.prev.next = child1;
+			} else {
+				if(child1._visible) {
+					childFirst = child1;
+				} else {
+					childInvisibleFirst = child1;
+				}
+			}
+
+			child1.prev = child2.prev;
+			child1.next = child2;
+			child2.prev = child1;
 		}
 
-		public function getChildIndex(child:Node2D):int {
-			return children.indexOf(child);
+		/**
+		 * Insert or move child1 after child2
+		 * @return
+		 */
+		public function insertChildAfter(child1:Node2D, child2:Node2D):void {
+			if(child2.parent != this) {
+				return;
+			}
+
+			if(child1._visible != child2._visible) {
+				// TODO: Throw error, can't mix visible/invisible queue?
+				return;
+			}
+
+			if(child1.parent != this) {
+				addChild(child1);
+			}
+
+			unlinkChild(child1);
+
+			if(child2.next) {
+				child2.next.prev = child1;
+			} else {
+				if(child1._visible) {
+					childLast = child1;
+				} else {
+					childInvisibleLast = child1;
+				}
+			}
+
+			child1.prev = child2;
+			child1.next = child2.next;
+			child2.next = child1;
 		}
 
 		public function swapChildren(child1:Node2D, child2:Node2D):void {
-			var idx1:uint = getChildIndex(child1);
-			var idx2:uint = getChildIndex(child2);
-			children[idx1] = child2;
-			children[idx2] = child1;
+			if(child1.parent != this || child2.parent != this) {
+				return;
+			}
+
+			if(child1._visible != child2._visible) {
+				// TODO: Throw error, can't mix visible/invisible queue?
+				return;
+			}
+
+			if(child1.prev) {
+				child1.prev.next = child2;
+			} else {
+				if(child2._visible) {
+					childFirst = child2;
+				} else {
+					childInvisibleFirst = child2;
+				}
+			}
+
+			if(child2.prev) {
+				child2.prev.next = child1;
+			} else {
+				if(child1._visible) {
+					childFirst = child1;
+				} else {
+					childInvisibleFirst = child1;
+				}
+			}
+
+			if(child1.next) {
+				child1.next.prev = child2;
+			} else {
+				if(child2._visible) {
+					childLast = child2;
+				} else {
+					childInvisibleLast = child2;
+				}
+			}
+
+			if(child2.next) {
+				child2.next.prev = child1;
+			} else {
+				if(child1._visible) {
+					childLast = child1;
+				} else {
+					childInvisibleLast = child1;
+				}
+			}
+
+			var swap:Node2D;
+
+			swap = child1.prev;
+			child1.prev = child2.prev;
+			child2.prev = swap;
+
+			swap = child1.next;
+			child1.next = child2.next;
+			child2.next = swap;
 		}
 
 		public function removeAllChildren():void {
-			while(children.length > 0) {
-				removeChildAt(0);
+			while(childFirst) {
+				removeChild(childFirst);
+			}
+
+			while(childInvisibleFirst) {
+				removeChild(childInvisibleFirst);
 			}
 		}
 
 		public function getChildByTag(value:int):Node2D {
-			for each(var child:Node2D in children) {
-				if(child.tag == value) return child;
+			var child:Node2D;
+
+			for(child = childFirst; child; child = child.next) {
+				if(child.tag == value) {
+					return child;
+				}
+			}
+
+			for(child = childInvisibleFirst; child; child = child.next) {
+				if(child.tag == value) {
+					return child;
+				}
 			}
 
 			return null;
@@ -802,12 +999,12 @@ package de.nulldesign.nd2d.display {
 		 * @return
 		 */
 		public function localToGlobal(p:Point):Point {
-
 			var clipSpaceMat:Matrix3D = new Matrix3D();
 			clipSpaceMat.append(worldModelMatrix);
 			clipSpaceMat.append(camera.getViewProjectionMatrix());
 
 			var v:Vector3D = clipSpaceMat.transformVector(new Vector3D(p.x, p.y, 0.0));
+
 			return new Point((v.x + 1.0) * 0.5 * camera.sceneWidth, (-v.y + 1.0) * 0.5 * camera.sceneHeight);
 		}
 
@@ -817,7 +1014,6 @@ package de.nulldesign.nd2d.display {
 		 * @return
 		 */
 		public function globalToLocal(p:Point):Point {
-
 			var clipSpaceMat:Matrix3D = new Matrix3D();
 			clipSpaceMat.append(worldModelMatrix);
 			clipSpaceMat.append(camera.getViewProjectionMatrix());
@@ -844,12 +1040,20 @@ package de.nulldesign.nd2d.display {
 		public function localToWorld(p:Point):Point {
 			var clipSpaceMat:Matrix3D = new Matrix3D();
 			clipSpaceMat.append(worldModelMatrix);
+
 			var v:Vector3D = clipSpaceMat.transformVector(new Vector3D(p.x, p.y, 0.0));
+
 			return new Point(v.x, v.y);
 		}
 
 		public function dispose():void {
-			for each(var child:Node2D in children) {
+			var child:Node2D;
+
+			for(child = childFirst; child; child = child.next) {
+				child.dispose();
+			}
+
+			for(child = childInvisibleFirst; child; child = child.next) {
 				child.dispose();
 			}
 		}
