@@ -176,39 +176,6 @@ package de.nulldesign.nd2d.display {
 				texture.texture = null;
 		}
 
-		override public function set parent(value:Node2D):void {
-			_parent = value;
-
-			// if we are in a batch. get the spritesheet / texture from our batch and pass it to our children
-			// TODO: this needs to be optimized. Better and easier batch, texture, spritesheet reference handling!!!
-			if(_parent && isBatchNode) {
-
-				var batchTexture:Texture2D;
-				var batchSpriteSheet:ASpriteSheetBase;
-				var currentNode:Node2D = _parent;
-				var currentNodeAsSprite:Sprite2DBatch = _parent as Sprite2DBatch;
-
-				while(currentNode && !batchTexture) {
-
-					if(currentNodeAsSprite) {
-						batchTexture = currentNodeAsSprite.texture;
-						batchSpriteSheet = currentNodeAsSprite.spriteSheet;
-					}
-
-					currentNode = currentNode.parent;
-					currentNodeAsSprite = currentNode as Sprite2DBatch;
-				}
-
-				if(batchSpriteSheet && !spriteSheet) {
-					setSpriteSheet(batchSpriteSheet.clone());
-				}
-
-				if(batchTexture && !texture) {
-					setTexture(batchTexture);
-				}
-			}
-		}
-
 		override protected function draw(context:Context3D, camera:Camera2D):void {
 
 			material.blendMode = blendMode;

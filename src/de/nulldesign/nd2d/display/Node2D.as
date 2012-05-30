@@ -191,7 +191,7 @@ package de.nulldesign.nd2d.display {
 		public var prev:Node2D = null;
 		public var next:Node2D = null;
 
-		public var isBatchNode:Boolean = false;
+		public var batchParent:Sprite2DBatch = null;
 
 		public var nodeIsTinted:Boolean = false;
 
@@ -223,17 +223,10 @@ package de.nulldesign.nd2d.display {
 		}
 
 		/**
+		 * [read-only] Use addChild() instead
 		 * @private
 		 */
-		protected var _parent:Node2D;
-
-		public function get parent():Node2D {
-			return _parent;
-		}
-
-		public function set parent(value:Node2D):void {
-			_parent = value;
-		}
+		public var parent:Node2D;
 
 		/**
 		 * @private
@@ -787,8 +780,8 @@ package de.nulldesign.nd2d.display {
 				child.parent.removeChild(child);
 			}
 
-			if(isBatchNode) {
-				child.isBatchNode = isBatchNode;
+			if(batchParent) {
+				batchParent.addBatchParent(child);
 			}
 
 			child.parent = this;
@@ -827,11 +820,14 @@ package de.nulldesign.nd2d.display {
 				return;
 			}
 
+			if(batchParent) {
+				batchParent.removeBatchParent(child);
+			}
+
 			unlinkChild(child);
 
 			child.parent = null;
 			child.setStageAndCamRef(null, null);
-			child.isBatchNode = false;
 
 			if(child._visible) {
 				childCount--;

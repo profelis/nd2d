@@ -63,7 +63,6 @@ package de.nulldesign.nd2d.display {
 			material = new Sprite2DBatchMaterial();
 			faceList = TextureHelper.generateQuadFromDimensions(2, 2);
 			texture = textureObject;
-			isBatchNode = true;
 		}
 
 		override public function get numTris():uint {
@@ -78,10 +77,8 @@ package de.nulldesign.nd2d.display {
 			this.spriteSheet = value;
 		}
 
-		override public function addChild(child:Node2D):Node2D {
-			if(child is Sprite2DBatch) {
-				throw new Error("You can't nest Sprite2DBatches");
-			}
+		public function addBatchParent(child:Node2D):void {
+			child.batchParent = this;
 
 			var sprite:Sprite2D = child as Sprite2D;
 
@@ -90,11 +87,43 @@ package de.nulldesign.nd2d.display {
 				if(spriteSheet && !sprite.spriteSheet) {
 					sprite.setSpriteSheet(spriteSheet.clone());
 				}
-
+				
 				if(texture && !sprite.texture) {
 					sprite.setTexture(texture);
 				}
 			}
+
+			var node:Node2D;
+
+			for(node = child.childFirst; node; node = node.next) {
+				addBatchParent(node);
+			}
+
+			for(node = child.childInvisibleFirst; node; node = node.next) {
+				addBatchParent(node);
+			}
+		}
+
+		public function removeBatchParent(child:Node2D):void {
+			child.batchParent = null;
+
+			var node:Node2D;
+
+			for(node = child.childFirst; node; node = node.next) {
+				removeBatchParent(node);
+			}
+
+			for(node = child.childInvisibleFirst; node; node = node.next) {
+				removeBatchParent(node);
+			}
+		}
+
+		override public function addChild(child:Node2D):Node2D {
+			if(child is Sprite2DBatch) {
+				throw new Error("You can't nest Sprite2DBatches");
+			}
+
+			addBatchParent(child);
 
 			return super.addChild(child);
 		}
