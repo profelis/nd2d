@@ -93,13 +93,7 @@ package de.nulldesign.nd2d.display {
 				}
 			}
 
-			var node:Node2D;
-
-			for(node = child.childFirst; node; node = node.next) {
-				addBatchParent(node);
-			}
-
-			for(node = child.childInvisibleFirst; node; node = node.next) {
+			for(var node:Node2D = child.childFirst; node; node = node.next) {
 				addBatchParent(node);
 			}
 		}
@@ -107,13 +101,7 @@ package de.nulldesign.nd2d.display {
 		public function removeBatchParent(child:Node2D):void {
 			child.batchParent = null;
 
-			var node:Node2D;
-
-			for(node = child.childFirst; node; node = node.next) {
-				removeBatchParent(node);
-			}
-
-			for(node = child.childInvisibleFirst; node; node = node.next) {
+			for(var node:Node2D = child.childFirst; node; node = node.next) {
 				removeBatchParent(node);
 			}
 		}

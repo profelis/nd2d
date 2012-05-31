@@ -174,19 +174,9 @@ package de.nulldesign.nd2d.display {
 
 		public var hasPremultipliedAlphaTexture:Boolean = true;
 
-		/**
-		 * Visible childs
-		 */
 		public var childCount:uint = 0;
 		public var childFirst:Node2D = null;
 		public var childLast:Node2D = null;
-
-		/**
-		 * Invisible childs
-		 */
-		public var childInvisibleCount:uint = 0;
-		public var childInvisibleFirst:Node2D = null;
-		public var childInvisibleLast:Node2D = null;
 
 		public var prev:Node2D = null;
 		public var next:Node2D = null;
@@ -262,15 +252,6 @@ package de.nulldesign.nd2d.display {
 
 		public function set visible(value:Boolean):void {
 			if(_visible != value) {
-				if(this.parent) {
-					var parent:Node2D = this.parent;
-
-					// move to visible/invisible queue
-					parent.removeChild(this);
-					_visible = value;
-					parent.addChild(this);
-				}
-
 				_visible = value;
 				invalidateVisibility = true;
 
@@ -286,7 +267,7 @@ package de.nulldesign.nd2d.display {
 			if(_alpha != value) {
 				_alpha = value;
 				invalidateColors = true;
-				visible = _alpha > 0.0;
+				visible = (_alpha > 0.0);
 			}
 		}
 
@@ -504,7 +485,7 @@ package de.nulldesign.nd2d.display {
 		}
 
 		public function get numChildren():uint {
-			return childCount + childInvisibleCount;
+			return childCount;
 		}
 
 		public function Node2D() {
@@ -702,10 +683,6 @@ package de.nulldesign.nd2d.display {
 				child.handleDeviceLoss();
 			}
 
-			for(child = childInvisibleFirst; child; child = child.next) {
-				child.handleDeviceLoss();
-			}
-
 			// extend in extended classes
 		}
 
@@ -754,21 +731,13 @@ package de.nulldesign.nd2d.display {
 			if(child.prev) {
 				child.prev.next = child.next;
 			} else {
-				if(child._visible) {
-					childFirst = child.next;
-				} else {
-					childInvisibleFirst = child.next;
-				}
+				childFirst = child.next;
 			}
 
 			if(child.next) {
 				child.next.prev = child.prev;
 			} else {
-				if(child._visible) {
-					childLast = child.prev;
-				} else {
-					childInvisibleLast = child.prev;
-				}
+				childLast = child.prev;
 			}
 
 			child.prev = null;
@@ -785,32 +754,18 @@ package de.nulldesign.nd2d.display {
 			}
 
 			child.parent = this;
+			child.setStageAndCamRef(_stage, camera);
 
-			if(child._visible) {
-				child.setStageAndCamRef(_stage, camera);
-
-				if(childLast) {
-					child.prev = childLast;
-					childLast.next = child;
-					childLast = child;
-				} else {
-					childFirst = child;
-					childLast = child;
-				}
-
-				childCount++;
+			if(childLast) {
+				child.prev = childLast;
+				childLast.next = child;
+				childLast = child;
 			} else {
-				if(childInvisibleLast) {
-					child.prev = childInvisibleLast;
-					childInvisibleLast.next = child;
-					childInvisibleLast = child;
-				} else {
-					childInvisibleFirst = child;
-					childInvisibleLast = child;
-				}
-
-				childInvisibleCount++;
+				childFirst = child;
+				childLast = child;
 			}
+
+			childCount++;
 
 			return child;
 		}
@@ -829,11 +784,7 @@ package de.nulldesign.nd2d.display {
 			child.parent = null;
 			child.setStageAndCamRef(null, null);
 
-			if(child._visible) {
-				childCount--;
-			} else {
-				childInvisibleCount--;
-			}
+			childCount--;
 		}
 
 		/**
@@ -842,11 +793,6 @@ package de.nulldesign.nd2d.display {
 		 */
 		public function insertChildBefore(child1:Node2D, child2:Node2D):void {
 			if(child2.parent != this) {
-				return;
-			}
-
-			if(child1._visible != child2._visible) {
-				// TODO: Throw error, can't mix visible/invisible queue?
 				return;
 			}
 
@@ -859,11 +805,7 @@ package de.nulldesign.nd2d.display {
 			if(child2.prev) {
 				child2.prev.next = child1;
 			} else {
-				if(child1._visible) {
-					childFirst = child1;
-				} else {
-					childInvisibleFirst = child1;
-				}
+				childFirst = child1;
 			}
 
 			child1.prev = child2.prev;
@@ -880,11 +822,6 @@ package de.nulldesign.nd2d.display {
 				return;
 			}
 
-			if(child1._visible != child2._visible) {
-				// TODO: Throw error, can't mix visible/invisible queue?
-				return;
-			}
-
 			if(child1.parent != this) {
 				addChild(child1);
 			}
@@ -894,11 +831,7 @@ package de.nulldesign.nd2d.display {
 			if(child2.next) {
 				child2.next.prev = child1;
 			} else {
-				if(child1._visible) {
-					childLast = child1;
-				} else {
-					childInvisibleLast = child1;
-				}
+				childLast = child1;
 			}
 
 			child1.prev = child2;
@@ -911,49 +844,28 @@ package de.nulldesign.nd2d.display {
 				return;
 			}
 
-			if(child1._visible != child2._visible) {
-				// TODO: Throw error, can't mix visible/invisible queue?
-				return;
-			}
-
 			if(child1.prev) {
 				child1.prev.next = child2;
 			} else {
-				if(child2._visible) {
-					childFirst = child2;
-				} else {
-					childInvisibleFirst = child2;
-				}
+				childFirst = child2;
 			}
 
 			if(child2.prev) {
 				child2.prev.next = child1;
 			} else {
-				if(child1._visible) {
-					childFirst = child1;
-				} else {
-					childInvisibleFirst = child1;
-				}
+				childFirst = child1;
 			}
 
 			if(child1.next) {
 				child1.next.prev = child2;
 			} else {
-				if(child2._visible) {
-					childLast = child2;
-				} else {
-					childInvisibleLast = child2;
-				}
+				childLast = child2;
 			}
 
 			if(child2.next) {
 				child2.next.prev = child1;
 			} else {
-				if(child1._visible) {
-					childLast = child1;
-				} else {
-					childInvisibleLast = child1;
-				}
+				childLast = child1;
 			}
 
 			var swap:Node2D;
@@ -1022,7 +934,7 @@ package de.nulldesign.nd2d.display {
 				last = next;
 			}
 
-			if(invalidate && this is Sprite2DCloud) {
+			if(invalidate && (this is Sprite2DCloud)) {
 				Sprite2DCloud(this).invalidateChilds(invalidate);
 			}
 
@@ -1044,8 +956,8 @@ package de.nulldesign.nd2d.display {
 			return 0;
 		}
 
-		public const sortAscending:int = -1;
-		public const sortDescending:int = 1;
+		public const SORT_ASC:int = -1;
+		public const SORT_DESC:int = 1;
 
 		/**
 		 * Fast merge sort based on compare function.
@@ -1053,12 +965,12 @@ package de.nulldesign.nd2d.display {
 		 * Pass your own compare function or use the build-in
 		 * Y-sort which is faster because it avoids getters.
 		 * 
-		 *   mergeSort(compareY, sortDescending)
+		 *   mergeSort(compareY, SORT_DESC)
 		 * 
 		 * @param sortFunction
-		 * @param sortDirection         sortAscending or sortDescending
+		 * @param sortDirection         SORT_ASC or SORT_DESC
 		 */
-		public function mergeSort(sortFunction:Function, sortDirection:int = sortDescending):void {
+		public function mergeSort(sortFunction:Function, sortDirection:int = SORT_DESC):void {
 			merge(sortFunction, sortDirection, childFirst, childCount, true);
 		}
 
@@ -1066,22 +978,10 @@ package de.nulldesign.nd2d.display {
 			while(childFirst) {
 				removeChild(childFirst);
 			}
-
-			while(childInvisibleFirst) {
-				removeChild(childInvisibleFirst);
-			}
 		}
 
 		public function getChildByTag(value:int):Node2D {
-			var child:Node2D;
-
-			for(child = childFirst; child; child = child.next) {
-				if(child.tag == value) {
-					return child;
-				}
-			}
-
-			for(child = childInvisibleFirst; child; child = child.next) {
+			for(var child:Node2D = childFirst; child; child = child.next) {
 				if(child.tag == value) {
 					return child;
 				}
@@ -1144,13 +1044,7 @@ package de.nulldesign.nd2d.display {
 		}
 
 		public function dispose():void {
-			var child:Node2D;
-
-			for(child = childFirst; child; child = child.next) {
-				child.dispose();
-			}
-
-			for(child = childInvisibleFirst; child; child = child.next) {
+			for(var child:Node2D = childFirst; child; child = child.next) {
 				child.dispose();
 			}
 

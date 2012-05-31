@@ -378,14 +378,25 @@ package de.nulldesign.nd2d.display {
 						child.updateColors();
 					}
 
-					rMultiplier = child.combinedColorTransform.redMultiplier;
-					gMultiplier = child.combinedColorTransform.greenMultiplier;
-					bMultiplier = child.combinedColorTransform.blueMultiplier;
-					aMultiplier = child.combinedColorTransform.alphaMultiplier;
-					rOffset = child.combinedColorTransform.redOffset * offsetFactor;
-					gOffset = child.combinedColorTransform.greenOffset * offsetFactor;
-					bOffset = child.combinedColorTransform.blueOffset * offsetFactor;
-					aOffset = child.combinedColorTransform.alphaOffset * offsetFactor;
+					if(child.visible) {
+						rMultiplier = child.combinedColorTransform.redMultiplier;
+						gMultiplier = child.combinedColorTransform.greenMultiplier;
+						bMultiplier = child.combinedColorTransform.blueMultiplier;
+						aMultiplier = child.combinedColorTransform.alphaMultiplier;
+						rOffset = child.combinedColorTransform.redOffset * offsetFactor;
+						gOffset = child.combinedColorTransform.greenOffset * offsetFactor;
+						bOffset = child.combinedColorTransform.blueOffset * offsetFactor;
+						aOffset = child.combinedColorTransform.alphaOffset * offsetFactor;
+					} else {
+						rMultiplier = 0.0;
+						gMultiplier = 0.0;
+						bMultiplier = 0.0;
+						aMultiplier = 0.0;
+						rOffset = 0.0;
+						gOffset = 0.0;
+						bOffset = 0.0;
+						aOffset = 0.0;
+					}
 
 					// v1
 					mVertexBuffer[vIdx + 4] = rMultiplier;

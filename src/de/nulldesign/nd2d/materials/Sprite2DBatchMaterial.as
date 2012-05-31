@@ -170,6 +170,10 @@ package de.nulldesign.nd2d.materials {
 			currentNodeIsTinted = nodeTinted || childList.nodeIsTinted;
 
 			for(childNode = childList; childNode; childNode = childNode.next) {
+				if(!childNode.visible) {
+					continue;
+				}
+
 				if(childNode.invalidateColors) {
 					childNode.updateColors();
 				}
