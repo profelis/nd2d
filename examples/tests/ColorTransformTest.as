@@ -38,8 +38,8 @@ package tests {
 	import de.nulldesign.nd2d.display.Sprite2DBatch;
 	import de.nulldesign.nd2d.display.Sprite2DCloud;
 	import de.nulldesign.nd2d.materials.BlendModePresets;
-	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
+	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 
 	import flash.display.Sprite;
 	import flash.events.Event;
@@ -73,8 +73,6 @@ package tests {
 
 			var sheet:TextureSheet = new TextureSheet(tex, 24, 32);
 			sheet.addAnimation("blah", [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], true, 10);
-
-			tex.setSheet(sheet);
 
 			// normal
 			s = addChild(new Sprite2D(tex)) as Sprite2D;
@@ -244,3 +242,5 @@ package tests {
 		}
 	}
 }
+
+

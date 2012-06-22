@@ -36,9 +36,9 @@ package tests {
 
 	import de.nulldesign.nd2d.display.Scene2D;
 	import de.nulldesign.nd2d.display.Sprite2D;
-	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
 	import de.nulldesign.nd2d.materials.texture.TextureOption;
+	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 
 	import flash.display.Sprite;
 	import flash.events.Event;
@@ -157,8 +157,9 @@ package tests {
 				tex = Texture2D.textureFromBitmapData(new crateTexture().bitmapData);
 			} else {
 				tex = Texture2D.textureFromBitmapData(new spriteTexture().bitmapData);
-				tex.setSheet(new TextureSheet(tex, 24, 32));
-				tex.sheet.addAnimation("blah", [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], true, 2);
+
+				var sheet:TextureSheet = new TextureSheet(tex, 24, 32);
+				sheet.addAnimation("blah", [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], true, 2);
 			}
 
 			s = new Sprite2D(tex);
@@ -244,3 +245,5 @@ package tests {
 
 	}
 }
+
+

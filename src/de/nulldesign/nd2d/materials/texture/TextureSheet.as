@@ -70,6 +70,9 @@ package de.nulldesign.nd2d.materials.texture {
 					(spriteWidth) / texture.textureWidth,
 					(spriteHeight) / texture.textureHeight);
 			}
+
+			// distribute to texture
+			texture.setSheet(this);
 		}
 
 		override public function addAnimation(name:String, keyFrames:Array, loop:Boolean = true, fps:int = 1):void {
@@ -77,3 +80,4 @@ package de.nulldesign.nd2d.materials.texture {
 		}
 	}
 }
+

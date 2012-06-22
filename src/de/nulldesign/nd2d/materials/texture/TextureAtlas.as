@@ -54,6 +54,9 @@ package de.nulldesign.nd2d.materials.texture {
 				offsets = xmlParser.offsets;
 				uvRects = xmlParser.uvRects;
 				frameNameToIndex = xmlParser.frameNameToIndex;
+
+				// distribute to texture
+				texture.setSheet(this);
 			}
 		}
 
@@ -73,3 +76,5 @@ package de.nulldesign.nd2d.materials.texture {
 		}
 	}
 }
+
+

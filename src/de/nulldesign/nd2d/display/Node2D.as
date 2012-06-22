@@ -611,17 +611,16 @@ package de.nulldesign.nd2d.display {
 		public function updateColors():void {
 			invalidateColors = false;
 
+			combinedColorTransform.redMultiplier = _colorTransform.redMultiplier;
+			combinedColorTransform.greenMultiplier = _colorTransform.greenMultiplier;
+			combinedColorTransform.blueMultiplier = _colorTransform.blueMultiplier;
+			combinedColorTransform.alphaMultiplier = _colorTransform.alphaMultiplier * _alpha;
+
 			// premultiply alpha
 			if(hasPremultipliedAlphaTexture) {
-				combinedColorTransform.alphaMultiplier = _colorTransform.alphaMultiplier * _alpha;
-				combinedColorTransform.redMultiplier = _colorTransform.redMultiplier * combinedColorTransform.alphaMultiplier;
-				combinedColorTransform.greenMultiplier = _colorTransform.greenMultiplier * combinedColorTransform.alphaMultiplier;
-				combinedColorTransform.blueMultiplier = _colorTransform.blueMultiplier * combinedColorTransform.alphaMultiplier;
-			} else {
-				combinedColorTransform.redMultiplier = _colorTransform.redMultiplier;
-				combinedColorTransform.greenMultiplier = _colorTransform.greenMultiplier;
-				combinedColorTransform.blueMultiplier = _colorTransform.blueMultiplier;
-				combinedColorTransform.alphaMultiplier = _colorTransform.alphaMultiplier * _alpha;
+				combinedColorTransform.redMultiplier *= combinedColorTransform.alphaMultiplier;
+				combinedColorTransform.greenMultiplier *= combinedColorTransform.alphaMultiplier;
+				combinedColorTransform.blueMultiplier *= combinedColorTransform.alphaMultiplier;
 			}
 
 			combinedColorTransform.redOffset = _colorTransform.redOffset * offsetFactor;
@@ -1175,3 +1174,5 @@ package de.nulldesign.nd2d.display {
 		}
 	}
 }
+
+

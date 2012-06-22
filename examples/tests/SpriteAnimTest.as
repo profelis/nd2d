@@ -33,8 +33,8 @@ package tests {
 	import de.nulldesign.nd2d.display.Scene2D;
 	import de.nulldesign.nd2d.display.Sprite2D;
 	import de.nulldesign.nd2d.events.SpriteAnimationEvent;
-	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
+	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 
 	import flash.events.Event;
 
@@ -56,8 +56,6 @@ package tests {
 			sheet.addAnimation("right", [3, 4, 5], true, 5);
 			sheet.addAnimation("down", [6, 7, 8], true, 5);
 			sheet.addAnimation("left", [9, 10, 11], true, 5);
-
-			tex.setSheet(sheet);
 
 			s = new Sprite2D(tex);
 			s.animation.play("up", 0, 1);
@@ -84,3 +82,4 @@ package tests {
 
 	}
 }
+

@@ -38,8 +38,8 @@ package tests {
 	import de.nulldesign.nd2d.display.Sprite2D;
 	import de.nulldesign.nd2d.display.Sprite2DBatch;
 	import de.nulldesign.nd2d.display.Sprite2DCloud;
-	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
+	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 
 	import flash.events.Event;
 	import flash.geom.ColorTransform;
@@ -98,8 +98,6 @@ package tests {
 
 			sheet = new TextureSheet(tex, 24, 32);
 			sheet.addAnimation("blah", [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], true, 5);
-
-			tex.setSheet(sheet);
 		}
 
 		private function onTestSelect(e:Event):void {
@@ -190,13 +188,13 @@ package tests {
 						case 10:
 						case 11:  {
 							var rndTex:Texture2D = Texture2D.textureFromBitmapData(new spriteTexture().bitmapData, false);
+
+							// optional, just makes it more obvious
 							var c:ColorTransform = new ColorTransform();
 							c.redMultiplier = Math.random();
 							c.greenMultiplier = Math.random();
 							c.blueMultiplier = Math.random();
 							rndTex.bitmap.colorTransform(rndTex.bitmap.rect, c);
-
-							rndTex.setSheet(sheet);
 
 							s = new Sprite2D(rndTex);
 							addChild(s);
@@ -261,3 +259,5 @@ package tests {
 		}
 	}
 }
+
+

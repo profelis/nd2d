@@ -30,8 +30,8 @@
 
 package de.nulldesign.nd2d.display {
 
-	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
+	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 
 	import flashx.textLayout.formats.TextAlign;
 
@@ -81,7 +81,8 @@ package de.nulldesign.nd2d.display {
 
 			super(maxTextLen, fontTexture);
 
-			fontTexture.setSheet(new TextureSheet(fontTexture, charWidth, charHeight));
+			// auto distributes to texture
+			new TextureSheet(fontTexture, charWidth, charHeight);
 		}
 
 		override protected function step(elapsed:Number):void {
@@ -142,3 +143,4 @@ package de.nulldesign.nd2d.display {
 		}
 	}
 }
+

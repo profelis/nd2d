@@ -36,8 +36,8 @@ package tests {
 	import de.nulldesign.nd2d.display.Sprite2D;
 	import de.nulldesign.nd2d.display.Sprite2DBatch;
 	import de.nulldesign.nd2d.materials.BlendModePresets;
-	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
+	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 	import de.nulldesign.nd2d.utils.NumberUtil;
 	import de.nulldesign.nd2d.utils.ParticleSystemPreset;
 
@@ -183,8 +183,6 @@ package tests {
 			}
 
 			sheet.addAnimation("wave", ar, true, 20);
-
-			plantTex.setSheet(sheet);
 
 			plantSprites = new Sprite2DBatch(plantTex);
 			addChild(plantSprites);
@@ -336,3 +334,5 @@ package tests {
 		}
 	}
 }
+
+

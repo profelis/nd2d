@@ -33,8 +33,8 @@ package tests {
 	import de.nulldesign.nd2d.display.Scene2D;
 	import de.nulldesign.nd2d.display.Sprite2D;
 	import de.nulldesign.nd2d.display.Sprite2DBatch;
-	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
+	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 	import de.nulldesign.nd2d.utils.NumberUtil;
 
 	import flash.events.Event;
@@ -59,7 +59,6 @@ package tests {
 			addChild(batchNode);
 
 			var sheet:TextureSheet = new TextureSheet(tex, 780 / 10, 208 / 4);
-			tex.setSheet(sheet);
 
 			for(var i:int = 0; i < 40; i++) {
 				var s:Sprite2D = new Sprite2D();
@@ -84,3 +83,5 @@ package tests {
 		}
 	}
 }
+
+

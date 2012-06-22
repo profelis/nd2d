@@ -71,12 +71,10 @@ package {
 			var tex1:Texture2D = Texture2D.textureFromBitmapData(new spriteTexture().bitmapData);
 			var sheet1:TextureSheet = new TextureSheet(tex1, 24, 32);
 			sheet1.addAnimation("blah", [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], true, 10);
-			tex1.setSheet(sheet1);
 
 			var tex2:Texture2D = Texture2D.textureFromBitmapData(new spriteTexture().bitmapData);
 			var sheet2:TextureSheet = new TextureSheet(tex2, 24, 32);
 			sheet2.addAnimation("blah", [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], true, 10);
-			tex2.setSheet(sheet2);
 
 			var s1:Sprite2D = new Sprite2D(tex1);
 			s1.position = new Vector3D(100.0, 100.0);
@@ -93,3 +91,5 @@ package {
 		}
 	}
 }
+
+

@@ -36,8 +36,8 @@ package tests {
 	import de.nulldesign.nd2d.display.Scene2D;
 	import de.nulldesign.nd2d.display.Sprite2D;
 	import de.nulldesign.nd2d.display.Sprite2DCloud;
-	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
+	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 
 	import flash.events.Event;
 	import flash.events.MouseEvent;
@@ -65,7 +65,6 @@ package tests {
 			sheet.addAnimation("right", [3, 4, 5], true, 10);
 			sheet.addAnimation("down", [6, 7, 8], true, 10);
 			sheet.addAnimation("left", [9, 10, 11], true, 10);
-			tex.setSheet(sheet);
 
 			spriteCloud = new Sprite2DCloud(numSprites, tex);
 
@@ -161,3 +160,4 @@ package tests {
 
 	}
 }
+

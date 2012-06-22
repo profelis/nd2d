@@ -34,8 +34,8 @@ package tests {
 	import de.nulldesign.nd2d.display.Scene2D;
 	import de.nulldesign.nd2d.display.Sprite2D;
 	import de.nulldesign.nd2d.display.Sprite2DBatch;
-	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
+	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 
 	public class BatchTest extends Scene2D {
 
@@ -58,8 +58,6 @@ package tests {
 
 			var sheet:TextureSheet = new TextureSheet(tex2, 24, 32);
 			sheet.addAnimation("up", [6, 7, 8], true, 5);
-
-			tex2.setSheet(sheet);
 
 			batch = new Sprite2DBatch(tex);
 			addChild(batch);

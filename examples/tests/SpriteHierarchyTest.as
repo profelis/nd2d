@@ -33,8 +33,8 @@ package tests {
 	import de.nulldesign.nd2d.display.Scene2D;
 	import de.nulldesign.nd2d.display.Sprite2D;
 	import de.nulldesign.nd2d.materials.BlendModePresets;
-	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
+	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 
 	import flash.events.MouseEvent;
 	import flash.geom.Vector3D;
@@ -78,7 +78,6 @@ package tests {
 
 			var sheet:TextureSheet = new TextureSheet(tex2, 24, 32);
 			sheet.addAnimation("up", [6, 7, 8], true, 5);
-			tex2.setSheet(sheet);
 
 			s3 = new Sprite2D(tex2);
 			s3.animation.play("up");
@@ -142,3 +141,5 @@ package tests {
 		}
 	}
 }
+
+
