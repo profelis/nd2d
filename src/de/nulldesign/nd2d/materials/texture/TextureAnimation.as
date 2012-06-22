@@ -28,39 +28,20 @@
  * THE SOFTWARE.
  */
 
-package de.nulldesign.nd2d.materials.shader {
+package de.nulldesign.nd2d.materials.texture {
 
-	import flash.display3D.Context3D;
-	import flash.utils.Dictionary;
+	public class TextureAnimation {
 
-	public class ShaderCache {
+		public var fps:int;
+		public var loop:Boolean;
+		public var frames:Array;
+		public var numFrames:uint;
 
-		private static var cache:Dictionary = new Dictionary(true);
-
-		public function ShaderCache() {
-		}
-
-		public static function getShader(context:Context3D, commonShaderString:String, vertexShaderString:String, fragmentShaderString:String, numFloatsPerVertex:uint, textureOptions:uint):Shader2D {
-			var shaders:Dictionary = cache[context];
-
-			if(!shaders) {
-				shaders = cache[context] = new Dictionary(true);
-			}
-
-			var key:String = textureOptions + commonShaderString + vertexShaderString + fragmentShaderString;
-			var shader:Shader2D = shaders[key];
-
-			if(shader) {
-				return shader;
-			}
-
-			shader = shaders[key] = new Shader2D(context, commonShaderString, vertexShaderString, fragmentShaderString, numFloatsPerVertex, textureOptions);
-
-			return shader;
-		}
-
-		public static function handleDeviceLoss():void {
-			cache = new Dictionary(true);
+		public function TextureAnimation(frames:Array, loop:Boolean = true, fps:int = 1) {
+			this.fps = fps;
+			this.loop = loop;
+			this.frames = frames;
+			this.numFrames = frames.length;
 		}
 	}
 }

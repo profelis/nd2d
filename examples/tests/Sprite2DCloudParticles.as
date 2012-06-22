@@ -13,60 +13,62 @@ package tests {
 
 	public class Sprite2DCloudParticles extends Scene2D {
 
-        [Embed(source="/assets/twirl.jpg")]
-        private var twirlBmp:Class;
+		[Embed(source="/assets/twirl.jpg")]
+		private var twirlBmp:Class;
 
-        private var spriteCloud:Node2D;
+		private var spriteCloud:Node2D;
 
-        /**
-         * Sprite2DCloudParticles
-         * @author Lars Gerckens (lars@nulldesign,de)
-         * Date: 05.10.11 15:38
-         */
-        public function Sprite2DCloudParticles() {
-            addEventListener(Event.ADDED_TO_STAGE, addedToStage);
-        }
+		/**
+		 * Sprite2DCloudParticles
+		 * @author Lars Gerckens (lars@nulldesign,de)
+		 * Date: 05.10.11 15:38
+		 */
+		public function Sprite2DCloudParticles() {
+			mouseEnabled = false;
 
-        protected function addedToStage(e:Event):void {
+			addEventListener(Event.ADDED_TO_STAGE, addedToStage);
+		}
 
-            removeEventListener(Event.ADDED_TO_STAGE, addedToStage);
+		protected function addedToStage(e:Event):void {
+			removeEventListener(Event.ADDED_TO_STAGE, addedToStage);
 
-            var maxParticles:uint = 1000;
-            var s:Sprite2D;
+			var maxParticles:uint = 1000;
+			var s:Sprite2D;
 
-            spriteCloud = new Sprite2DCloud(maxParticles, Texture2D.textureFromBitmapData(new twirlBmp().bitmapData));
-            spriteCloud.blendMode = BlendModePresets.ADD_PREMULTIPLIED_ALPHA;
+			spriteCloud = new Sprite2DCloud(maxParticles, Texture2D.textureFromBitmapData(new twirlBmp().bitmapData));
+			spriteCloud.blendMode = BlendModePresets.ADD_PREMULTIPLIED_ALPHA;
 
-            for(var i:int = 0; i < maxParticles; i++) {
-                s = new Sprite2D();
-                s.alpha = i / maxParticles;
-                s.vx = NumberUtil.rndMinMax(-5.0, 5.0);
-                s.vy = NumberUtil.rndMinMax(-5.0, 5.0);
-                s.scaleX = s.scaleY = 1.0;
-                spriteCloud.addChild(s);
-            }
+			for(var i:int = 0; i < maxParticles; i++) {
+				s = new Sprite2D();
+				s.x = stage.mouseX;
+				s.y = stage.mouseY;
+				s.alpha = i / maxParticles;
+				s.vx = NumberUtil.rndMinMax(-5.0, 5.0);
+				s.vy = NumberUtil.rndMinMax(-5.0, 5.0);
+				s.scaleX = s.scaleY = 1.0;
+				spriteCloud.addChild(s);
+			}
 
-            addChild(spriteCloud);
-        }
+			addChild(spriteCloud);
+		}
 
+		override protected function step(elapsed:Number):void {
+			for(var child:Node2D = spriteCloud.childFirst; child; child = child.next) {
+				child.x += child.vx;
+				child.y += child.vy;
+				child.alpha -= 0.01;
+				child.rotation += 20.0;
+				child.scaleX -= 0.01;
+				child.scaleY -= 0.01;
+				child.tint = ColorUtil.mixColors(0xFF0099, 0x0099FF, child.alpha);
 
-        override protected function step(elapsed:Number):void {
-            for each (var child:Node2D in spriteCloud.children) {
-                child.x += child.vx;
-                child.y += child.vy;
-                child.alpha -= 0.01;
-                child.rotation += 20.0;
-                child.scaleX -= 0.01;
-                child.scaleY -= 0.01;
-                child.tint = ColorUtil.mixColors(0xFF0099, 0x0099FF, child.alpha);
-
-                if(child.alpha <= 0.0) {
-                    child.alpha = 1.0;
-                    child.x = stage.mouseX;
-                    child.y = stage.mouseY;
-                    child.scaleX = child.scaleY = 1.0;
-                }
-            }
-        }
-    }
+				if(child.alpha <= 0.0) {
+					child.alpha = 1.0;
+					child.x = stage.mouseX;
+					child.y = stage.mouseY;
+					child.scaleX = child.scaleY = 1.0;
+				}
+			}
+		}
+	}
 }

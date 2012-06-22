@@ -37,7 +37,8 @@ package de.nulldesign.nd2d.display {
 
 	/**
 	 * <p>Works the same as the Sprite2D, except that it has more triangles.</p>
-	 * You can modify the individual vertices to achieve distortion or wave effects.
+	 * You can modify the individual vertices to achieve distortion or wave
+	 * effects.
 	 */
 	public class Grid2D extends Sprite2D {
 
@@ -48,12 +49,10 @@ package de.nulldesign.nd2d.display {
 		public function Grid2D(stepsX:uint, stepsY:uint, textureObject:Texture2D = null) {
 			this.stepsX = stepsX;
 			this.stepsY = stepsY;
-			super(textureObject);
-			generateGrid();
-		}
 
-		override public function get numTris():uint {
-			return faceList.length;
+			super(textureObject);
+
+			generateGrid();
 		}
 
 		protected function generateGrid():void {
@@ -71,9 +70,11 @@ package de.nulldesign.nd2d.display {
 
 			var sx:Number = 2 / stepsX;
 			var sy:Number = 2 / stepsY;
+
 			for(i = 0; i <= stepsX; i++) {
 				ar.push([]);
 				uv.push([]);
+
 				for(j = 0; j <= stepsY; j++) {
 					var x:Number = i * sx - 1;
 					var y:Number = j * sy - 1;
@@ -87,13 +88,20 @@ package de.nulldesign.nd2d.display {
 				}
 			}
 
-			for(i = 1,m = ar.length; i < m; i++) {
-				for(var j:int = 1,n:int = ar[i].length; j < n; j++) {
+			for(i = 1, m = ar.length; i < m; i++) {
+				for(var j:int = 1, n:int = ar[i].length; j < n; j++) {
 					faceList.push(new Face(ar[i - 1][j - 1], ar[i - 1][j], ar[i][j], uv[i - 1][j - 1], uv[i - 1][j], uv[i][j]));
 					faceList.push(new Face(ar[i - 1][j - 1], ar[i][j], ar[i][j - 1], uv[i - 1][j - 1], uv[i][j], uv[i][j - 1]));
 				}
 			}
 
 		}
+
+		override public function dispose():void {
+			super.dispose();
+
+			vertexList = null;
+		}
+
 	}
 }

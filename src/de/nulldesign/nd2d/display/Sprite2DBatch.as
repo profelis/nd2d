@@ -31,50 +31,44 @@
 package de.nulldesign.nd2d.display {
 
 	import de.nulldesign.nd2d.geom.Face;
-	import de.nulldesign.nd2d.materials.texture.ASpriteSheetBase;
 	import de.nulldesign.nd2d.materials.Sprite2DBatchMaterial;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
-	import de.nulldesign.nd2d.utils.StatsObject;
 	import de.nulldesign.nd2d.utils.TextureHelper;
 
-	import flash.display.BitmapData;
 	import flash.display3D.Context3D;
 
 	/**
 	 * Sprite2DBatch
-	 * <p>Use a sprite cloud to batch sprites with the same Texture, SpriteSheet or TextureAtlas. The SpriteSheet or TextureAtlas is cloned and passed to each child. So you can control each child individually.</p>
+	 * <p>Use a sprite cloud to batch sprites with the same Texture, SpriteSheet
+	 * or TextureAtlas. The SpriteSheet or TextureAtlas is cloned and passed to
+	 * each child. So you can control each child individually.</p>
 	 *
-	 * <p>Similar to a Sprite2DCloud, the main difference it that the Batch supports nested nodes, while the cloud just draws it's own children and not the subchilds.
-	 * It uses less CPU resources and does more processing on the GPU than the Sprite2DCloud. Depending on your target system, it can be faster than the cloud.
-	 * It supports mouseevents for childs and adding or removing childs doesn't slow down the rendering, it's free.
+	 * <p>Similar to a Sprite2DCloud, the main difference it that the Batch
+	 * supports nested nodes, while the cloud just draws it's own children and
+	 * not the subchilds.
+	 * It uses less CPU resources and does more processing on the GPU than the
+	 * Sprite2DCloud. Depending on your target system, it can be faster than
+	 * the cloud.
+	 * It supports mouseevents for childs and adding or removing childs doesn't
+	 * slow down the rendering, it's free.
 	 * So in particular cases it could be faster.</p>
 	 *
-	 * <p>If you have a SpriteSheet or TextureAtlas for your batch, make sure to add animations BEFORE you add any childs to the batch, because the SpriteSheet/TextureAtlas get's cloned and is copied to each added child</p>
+	 * <p>If you have a SpriteSheet or TextureAtlas for your batch, make sure to
+	 * add animations BEFORE you add any childs to the batch, because the
+	 * SpriteSheet/TextureAtlas get's cloned and is copied to each added
+	 * child</p>
 	 */
 	public class Sprite2DBatch extends Node2D {
 
 		public var texture:Texture2D;
-		public var spriteSheet:ASpriteSheetBase;
 
-		private var material:Sprite2DBatchMaterial;
 		private var faceList:Vector.<Face>;
+		private var material:Sprite2DBatchMaterial;
 
 		public function Sprite2DBatch(textureObject:Texture2D) {
+			texture = textureObject;
 			material = new Sprite2DBatchMaterial();
 			faceList = TextureHelper.generateQuadFromDimensions(2, 2);
-			texture = textureObject;
-		}
-
-		override public function get numTris():uint {
-			return material.numTris;
-		}
-
-		override public function get drawCalls():uint {
-			return material.drawCalls;
-		}
-
-		public function setSpriteSheet(value:ASpriteSheetBase):void {
-			this.spriteSheet = value;
 		}
 
 		public function addBatchParent(child:Node2D):void {
@@ -82,15 +76,9 @@ package de.nulldesign.nd2d.display {
 
 			var sprite:Sprite2D = child as Sprite2D;
 
-			// distribute spritesheets to sprites
-			if(sprite) {
-				if(spriteSheet && !sprite.spriteSheet) {
-					sprite.setSpriteSheet(spriteSheet.clone());
-				}
-				
-				if(texture && !sprite.texture) {
-					sprite.setTexture(texture);
-				}
+			// distribute texture/sheet to sprites
+			if(sprite && texture && !sprite.texture) {
+				sprite.setTexture(texture);
 			}
 
 			for(var node:Node2D = child.childFirst; node; node = node.next) {
@@ -116,37 +104,32 @@ package de.nulldesign.nd2d.display {
 			return super.addChild(child);
 		}
 
-		override internal function drawNode(context:Context3D, camera:Camera2D, parentMatrixChanged:Boolean, statsObject:StatsObject):void {
+		override internal function drawNode(context:Context3D, camera:Camera2D):void {
 			if(!visible) {
 				return;
 			}
+
+			// can't use UV on the container
 
 			if(invalidateColors) {
 				updateColors();
 			}
 
-			if(parentMatrixChanged || invalidateMatrix) {
+			if(invalidateMatrix || parent.invalidateMatrix) {
 				if(invalidateMatrix) {
 					updateLocalMatrix();
-					invalidateMatrix = true;
 				}
 
 				updateWorldMatrix();
+
+				invalidateMatrix = true;
 			}
 
 			draw(context, camera);
 
-			invalidateMatrix = false;
-
-			statsObject.totalDrawCalls += drawCalls;
-			statsObject.totalTris += numTris;
-
 			// don't call draw on childs....
-		}
 
-		override public function handleDeviceLoss():void {
-			super.handleDeviceLoss();
-			material.handleDeviceLoss();
+			invalidateMatrix = false;
 		}
 
 		override protected function draw(context:Context3D, camera:Camera2D):void {
@@ -154,8 +137,14 @@ package de.nulldesign.nd2d.display {
 			material.modelMatrix = worldModelMatrix;
 			material.viewProjectionMatrix = camera.getViewProjectionMatrix(false);
 			material.texture = texture;
-			material.spriteSheet = spriteSheet;
+			material.usesColor = usesColor;
+			material.usesColorOffset = usesColorOffset;
 			material.renderBatch(context, faceList, childFirst);
+		}
+
+		override public function handleDeviceLoss():void {
+			super.handleDeviceLoss();
+			material.handleDeviceLoss();
 		}
 
 		override public function dispose():void {
@@ -168,6 +157,8 @@ package de.nulldesign.nd2d.display {
 				texture.dispose();
 				texture = null;
 			}
+
+			faceList = null;
 
 			super.dispose();
 		}

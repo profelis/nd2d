@@ -32,41 +32,55 @@ package tests {
 
 	import de.nulldesign.nd2d.display.Scene2D;
 	import de.nulldesign.nd2d.display.Sprite2D;
-	import de.nulldesign.nd2d.events.SpriteSheetAnimationEvent;
-	import de.nulldesign.nd2d.materials.texture.SpriteSheet;
+	import de.nulldesign.nd2d.events.SpriteAnimationEvent;
+	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
+
+	import flash.events.Event;
 
 	public class SpriteAnimTest extends Scene2D {
 
-        [Embed(source="/assets/spritechar1.png")]
-        private var spriteTexture:Class;
+		[Embed(source="/assets/spritechar1.png")]
+		private var spriteTexture:Class;
 
-        private var s:Sprite2D;
+		private var s:Sprite2D;
 
-        public function SpriteAnimTest() {
+		private var animCount:uint = 0;
 
-            var tex:Texture2D = Texture2D.textureFromBitmapData(new spriteTexture().bitmapData);
+		public function SpriteAnimTest() {
+			var tex:Texture2D = Texture2D.textureFromBitmapData(new spriteTexture().bitmapData);
 			//var tex:Texture2D = Texture2D.textureFromATF(new spriteTexture());
 
-            var sheet:SpriteSheet = new SpriteSheet(tex.bitmapWidth, tex.bitmapHeight, 24, 32, 5);
-            sheet.addAnimation("up", [0, 1, 2], true);
-            sheet.addAnimation("right", [3, 4, 5], true);
-            sheet.addAnimation("down", [6, 7, 8], true);
-            sheet.addAnimation("left", [9, 10, 11], true);
-            sheet.playAnimation("up", 0, true, true);
+			var sheet:TextureSheet = new TextureSheet(tex, 24, 32);
+			sheet.addAnimation("up", [0, 1, 2], true, 5);
+			sheet.addAnimation("right", [3, 4, 5], true, 5);
+			sheet.addAnimation("down", [6, 7, 8], true, 5);
+			sheet.addAnimation("left", [9, 10, 11], true, 5);
 
-            s = new Sprite2D(tex);
-            s.setSpriteSheet(sheet);
-			s.spriteSheet.addEventListener(SpriteSheetAnimationEvent.ANIMATION_FINISHED, function():void { trace("anim finished"); });
-            addChild(s);
-        }
+			tex.setSheet(sheet);
 
-        override protected function step(elapsed:Number):void {
+			s = new Sprite2D(tex);
+			s.animation.play("up", 0, 1);
+			s.animation.addEventListener(SpriteAnimationEvent.ANIMATION_FINISHED, animationCallback);
+			addChild(s);
+		}
 
-            s.x = stage.stageWidth / 2;
-            s.y = stage.stageHeight / 2;
+		protected function animationCallback(event:Event):void {
+			trace("anim finished", ++animCount);
+		}
 
-            //camera.zoom = 12.0 + Math.sin(getTimer() / 500) * 11.0;
-        }
-    }
+		override protected function step(elapsed:Number):void {
+			s.x = stage.stageWidth / 2;
+			s.y = stage.stageHeight / 2;
+
+			//camera.zoom = 12.0 + Math.sin(getTimer() / 500) * 11.0;
+		}
+
+		override public function dispose():void {
+			s.animation.removeEventListener(SpriteAnimationEvent.ANIMATION_FINISHED, animationCallback);
+
+			super.dispose();
+		}
+
+	}
 }

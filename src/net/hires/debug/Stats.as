@@ -6,33 +6,42 @@
  *
  * How to use:
  *
- *    addChild( new Stats() );
+ * addChild( new Stats() );
  *
- *    or
+ * or
  *
- *    addChild( new Stats( { bg: 0xffffff } );
+ * addChild( new Stats( { bg: 0xffffff } );
  *
  * version log:
  *
- *    09.10.22        2.2        Mr.doob            + FlipX of graph to be more logic.
- *                                            + Destroy on Event.REMOVED_FROM_STAGE (thx joshtynjala)
- *    09.03.28        2.1        Mr.doob            + Theme support.
- *    09.02.21        2.0        Mr.doob            + Removed Player version, until I know if it's really needed.
- *                                            + Added MAX value (shows Max memory used, useful to spot memory leaks)
- *                                            + Reworked text system / no memory leak (original reason unknown)
- *                                            + Simplified
- *    09.02.07        1.5        Mr.doob            + onRemovedFromStage() (thx huihuicn.xu)
- *    08.12.14        1.4        Mr.doob            + Code optimisations and version info on MOUSE_OVER
- *    08.07.12        1.3        Mr.doob            + Some speed and code optimisations
- *    08.02.15        1.2        Mr.doob            + Class renamed to Stats (previously FPS)
- *    08.01.05        1.2        Mr.doob            + Click changes the fps of flash (half up increases, half down decreases)
- *    08.01.04        1.1        Mr.doob            + Shameless ripoff of Alternativa's FPS look :P
- *                            Theo            + Log shape for MEM
- *                                            + More room for MS
- *     07.12.13        1.0        Mr.doob            + First version
- **/
+ * 09.10.22        2.2        Mr.doob            + FlipX of graph to be more logic.
+ * + Destroy on Event.REMOVED_FROM_STAGE (thx joshtynjala)
+ * 09.03.28        2.1        Mr.doob            + Theme support.
+ * 09.02.21        2.0        Mr.doob            + Removed Player version, until I
+ * know if it's really needed.
+ * + Added MAX value (shows Max memory used, useful to spot memory leaks)
+ * + Reworked text system / no memory leak (original reason unknown)
+ * + Simplified
+ * 09.02.07        1.5        Mr.doob            + onRemovedFromStage() (thx
+ * huihuicn.xu)
+ * 08.12.14        1.4        Mr.doob            + Code optimisations and version
+ * info on MOUSE_OVER
+ * 08.07.12        1.3        Mr.doob            + Some speed and code
+ * optimisations
+ * 08.02.15        1.2        Mr.doob            + Class renamed to Stats
+ * (previously FPS)
+ * 08.01.05        1.2        Mr.doob            + Click changes the fps of flash
+ * (half up increases, half down decreases)
+ * 08.01.04        1.1        Mr.doob            + Shameless ripoff of
+ * Alternativa's FPS look :P
+ * Theo            + Log shape for MEM
+ * + More room for MS
+ * 07.12.13        1.0        Mr.doob            + First version
+ */
 
 package net.hires.debug {
+
+	import de.nulldesign.nd2d.utils.Statistics;
 
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
@@ -46,157 +55,135 @@ package net.hires.debug {
 	import flash.utils.getTimer;
 
 	public class Stats extends Sprite {
-        protected const WIDTH:uint = 80;
-        protected const HEIGHT:uint = 100;
+		protected const WIDTH:uint = 80;
+		protected const HEIGHT:uint = 100;
 
-        protected var xml:XML;
+		protected var text:TextField;
+		protected var style:StyleSheet;
 
-        protected var text:TextField;
-        protected var style:StyleSheet;
+		protected var timer:uint;
+		protected var fps:uint;
+		protected var ms:uint;
+		protected var ms_prev:uint;
+		protected var mem:Number = 0.0;
+		protected var texture:Number = 0.0;
 
-        protected var timer:uint;
-        protected var fps:uint;
-        protected var ms:uint;
-        protected var ms_prev:uint;
-        protected var mem:Number;
-        protected var mem_max:Number;
+		protected var graph:Bitmap;
+		protected var rectangle:Rectangle;
 
-        protected var graph:Bitmap;
-        protected var rectangle:Rectangle;
-
-        protected var fps_graph:uint;
-        protected var mem_graph:uint;
-        protected var mem_max_graph:uint;
+		protected var fps_graph:uint;
+		protected var mem_graph:uint;
 
 		public var measuredFPS:Number = 0.0;
-        public var driverInfo:String;
-        protected var driverInfoToggle:Boolean = false;
+		public var driverInfo:String;
+		protected var driverInfoToggle:Boolean = false;
 
-        protected var theme:Object = {bg: 0x000033, fps: 0xffff00, ms: 0x00ff00, mem: 0x00ffff, memmax: 0xff0070, drawcalls: 0xFF9900, tris: 0x00AACC};
+		protected var theme:Object = {bg: 0x000033, fps: 0xffff00, mem: 0x00ffff, textures: 0x00ff00, sprites: 0xff0070, drawcalls: 0xff9900, tris: 0x00aacc};
 
-        /**
-         * <b>Stats</b> FPS, MS and MEM, all in one.
-         */
-        public function Stats():void {
+		/**
+		 * <b>Stats</b> FPS, MS and MEM, all in one.
+		 */
+		public function Stats():void {
+			style = new StyleSheet();
+			style.setStyle("xml", {fontSize: '9px', fontFamily: '_sans', leading: '-2px'});
+			style.setStyle("fps", {color: hex2css(theme.fps)});
+			style.setStyle("mem", {color: hex2css(theme.mem)});
+			style.setStyle("textures", {color: hex2css(theme.textures)});
+			style.setStyle("sprites", {color: hex2css(theme.sprites)});
+			style.setStyle("draws", {color: hex2css(theme.drawcalls)});
+			style.setStyle("tris", {color: hex2css(theme.tris)});
 
-            mem_max = 0;
+			text = new TextField();
+			text.width = WIDTH;
+			text.height = 120;
+			text.styleSheet = style;
+			text.condenseWhite = true;
+			text.selectable = false;
+			text.mouseEnabled = false;
+			text.wordWrap = true;
 
-            xml = <xml>
-                <fps>FPS:</fps>
-                <ms>MS:</ms>
-                <mem>MEM:</mem>
-                <memMax>MAX:</memMax>
-                <drawCalls>CALLS:</drawCalls>
-                <tris>TRIS:</tris>
-            </xml>;
+			graph = new Bitmap();
+			graph.y = 70;
 
-            style = new StyleSheet();
-            style.setStyle("xml", {fontSize: '9px', fontFamily: '_sans', leading: '-2px'});
-            style.setStyle("fps", {color: hex2css(theme.fps)});
-            style.setStyle("ms", {color: hex2css(theme.ms)});
-            style.setStyle("mem", {color: hex2css(theme.mem)});
-            style.setStyle("memMax", {color: hex2css(theme.memmax)});
-            style.setStyle("drawCalls", {color: hex2css(theme.drawcalls)});
-            style.setStyle("tris", {color: hex2css(theme.tris)});
+			rectangle = new Rectangle(WIDTH - 1, 0, 1, HEIGHT - 50);
 
-            text = new TextField();
-            text.width = WIDTH;
-            text.height = 120;
-            text.styleSheet = style;
-            text.condenseWhite = true;
-            text.selectable = false;
-            text.mouseEnabled = false;
-            text.wordWrap = true;
+			addEventListener(Event.ADDED_TO_STAGE, init, false, 0, true);
+			addEventListener(Event.REMOVED_FROM_STAGE, destroy, false, 0, true);
+		}
 
-            graph = new Bitmap();
-            graph.y = 70;
+		private function init(e:Event):void {
+			graphics.beginFill(theme.bg);
+			graphics.drawRect(0, 0, WIDTH, HEIGHT);
+			graphics.endFill();
 
-            rectangle = new Rectangle(WIDTH - 1, 0, 1, HEIGHT - 50);
+			addChild(text);
 
-            addEventListener(Event.ADDED_TO_STAGE, init, false, 0, true);
-            addEventListener(Event.REMOVED_FROM_STAGE, destroy, false, 0, true);
-        }
+			graph.bitmapData = new BitmapData(WIDTH, HEIGHT - 50, false, theme.bg);
+			addChild(graph);
 
-        private function init(e:Event):void {
-            graphics.beginFill(theme.bg);
-            graphics.drawRect(0, 0, WIDTH, HEIGHT);
-            graphics.endFill();
+			addEventListener(MouseEvent.CLICK, onClick);
+			//addEventListener(Event.ENTER_FRAME, update);
+		}
 
-            addChild(text);
+		private function destroy(e:Event):void {
+			graphics.clear();
 
-            graph.bitmapData = new BitmapData(WIDTH, HEIGHT - 50, false, theme.bg);
-            addChild(graph);
+			while(numChildren > 0) {
+				removeChildAt(0);
+			}
 
-            addEventListener(MouseEvent.CLICK, onClick);
-            //addEventListener(Event.ENTER_FRAME, update);
-        }
+			graph.bitmapData.dispose();
 
-        private function destroy(e:Event):void {
-            graphics.clear();
+			removeEventListener(MouseEvent.CLICK, onClick);
+			//removeEventListener(Event.ENTER_FRAME, update);
+		}
 
-            while(numChildren > 0)
-                removeChildAt(0);
+		public function update():void {
+			timer = getTimer();
 
-            graph.bitmapData.dispose();
+			if(timer - 1000 > ms_prev) {
+				ms_prev = timer;
+				mem = Number((System.totalMemory * 0.000000954).toFixed(3));
+				texture = Number((Statistics.texturesMem * 0.000000954).toFixed(3));
 
-            removeEventListener(MouseEvent.CLICK, onClick);
-            //removeEventListener(Event.ENTER_FRAME, update);
-        }
-
-        public function update(drawCalls:int, numTris:int):void {
-            timer = getTimer();
-
-            if(timer - 1000 > ms_prev) {
-                ms_prev = timer;
-                mem = Number((System.totalMemory * 0.000000954).toFixed(3));
-                mem_max = mem_max > mem ? mem_max : mem;
-
-                measuredFPS = fps;
+				measuredFPS = fps;
 				fps_graph = Math.min(graph.height, (fps / stage.frameRate) * graph.height);
-                mem_graph = Math.min(graph.height, Math.sqrt(Math.sqrt(mem * 5000))) - 2;
-                mem_max_graph = Math.min(graph.height, Math.sqrt(Math.sqrt(mem_max * 5000))) - 2;
+				mem_graph = Math.min(graph.height, Math.sqrt(Math.sqrt(mem * 5000))) - 2;
 
-                graph.bitmapData.scroll(-1, 0);
+				graph.bitmapData.scroll(-1, 0);
 
-                graph.bitmapData.fillRect(rectangle, theme.bg);
-                graph.bitmapData.setPixel(graph.width - 1, graph.height - fps_graph, theme.fps);
-                graph.bitmapData.setPixel(graph.width - 1, graph.height - ((timer - ms) >> 1), theme.ms);
-                graph.bitmapData.setPixel(graph.width - 1, graph.height - mem_graph, theme.mem);
-                graph.bitmapData.setPixel(graph.width - 1, graph.height - mem_max_graph, theme.memmax);
+				graph.bitmapData.fillRect(rectangle, theme.bg);
+				graph.bitmapData.setPixel(graph.width - 1, graph.height - fps_graph, theme.fps);
+				graph.bitmapData.setPixel(graph.width - 1, graph.height - mem_graph, theme.mem);
 
-                xml.fps = "FPS: " + fps + " / " + stage.frameRate;
-                xml.mem = "MEM: " + mem;
-                xml.memMax = "MAX: " + mem_max;
-                xml.drawCalls = "DRAW: " + drawCalls;
-                xml.tris = "TRIS: " + numTris;
+				fps = 0;
+			}
 
-                fps = 0;
-            }
+			if(driverInfoToggle) {
+				text.htmlText = "<xml><fps>" + driverInfo + "</fps></xml>";
+			} else {
+				text.htmlText = "<xml>" +
+					"<fps>fps: " + measuredFPS + "/" + stage.frameRate + "</fps>" +
+					"<mem>mem: " + mem + "</mem>" +
+					"<textures>tex: " + Statistics.textures + " (" + texture + ")</textures>" +
+					"<draws>draws: " + Statistics.drawCalls + "</draws>" +
+					"<sprites>sprites: " + Statistics.sprites + "</sprites>" +
+					"<tris>tris: " + Statistics.triangles + "</tris>" +
+					"</xml>";
+			}
 
-            fps++;
+			fps++;
+			ms = timer;
+		}
 
-            xml.ms = "MS: " + (timer - ms);
-            ms = timer;
+		private function onClick(e:MouseEvent):void {
+			driverInfoToggle = !driverInfoToggle;
+			graph.visible = !driverInfoToggle;
+		}
 
-            if(driverInfoToggle) {
-                text.htmlText = "<xml><fps>" + driverInfo + "</fps></xml>";
-            } else {
-                text.htmlText = xml;
-            }
-        }
-
-        private function onClick(e:MouseEvent):void {
-            //mouseY / height > .5 ? stage.frameRate-- : stage.frameRate++;
-            //xml.fps = "FPS: " + fps + " / " + stage.frameRate;
-            //text.htmlText = xml;
-            driverInfoToggle = !driverInfoToggle;
-            graph.visible = !driverInfoToggle;
-        }
-
-        // .. Utils
-
-        private function hex2css(color:int):String {
-            return "#" + color.toString(16);
-        }
-    }
+		// .. Utils
+		private function hex2css(color:int):String {
+			return "#" + color.toString(16);
+		}
+	}
 }

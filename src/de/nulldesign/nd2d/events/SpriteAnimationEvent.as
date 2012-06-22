@@ -32,11 +32,11 @@ package de.nulldesign.nd2d.events {
 
 	import flash.events.Event;
 
-	public class SpriteSheetAnimationEvent extends Event {
+	public class SpriteAnimationEvent extends Event {
 
 		public static const ANIMATION_FINISHED:String = "animationFinished";
 
-		public function SpriteSheetAnimationEvent(type:String) {
+		public function SpriteAnimationEvent(type:String) {
 			super(type);
 		}
 	}

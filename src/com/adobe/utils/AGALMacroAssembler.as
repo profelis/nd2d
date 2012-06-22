@@ -175,7 +175,10 @@ package com.adobe.utils
 			return source;
 		}
 			
-		public static const IDENTIFIER:RegExp 	= /((2d)|(3d)|[_a-zA-Z])+([_a-zA-Z0-9.]*)/
+		// ND2D/Rolf: it has problems with indexed identifiers like "vc[va2.x]"
+		//       we solved this by adding "[" and "]" to the regexp
+		//public static const IDENTIFIER:RegExp 	= /((2d)|(3d)|[_a-zA-Z])+([_a-zA-Z0-9.]*)/
+		public static const IDENTIFIER:RegExp = /((2d)|(3d)|[_a-zA-Z])+([_a-zA-Z0-9\[\].]*)/
 		public static const NUMBER:RegExp		= /[0-9]+(?:\.[0-9]*)?/
 		// Nasty regex, even by regex standards:   2 char ops                       1 char ops 
 		public static const OPERATOR:RegExp 	= /(==)|(!=)|(<=)|(>=)|(&&)|(\|\|)|[*=+-\/()\[\]{}!<>&|]/;
@@ -314,7 +317,13 @@ package com.adobe.utils
 			var s:String = types.substr( pos, end-pos ); 
 			switch( s ) {
 				case "i=i":
-					body = "mov "+tokens[pos+0]+", "+tokens[pos+2];
+					// ND2D/Rolf: optimize
+					if ( tokens[pos+0] == tokens[pos+2] ) {
+						body = " ";
+					}
+					else {
+						body = "mov "+tokens[pos+0]+", "+tokens[pos+2];
+					}
 					break;				
 				case "i=i+i":
 					body = basicOp( "add", tokens[pos+0], tokens[pos+2], tokens[pos+4] )
@@ -470,9 +479,13 @@ package com.adobe.utils
 						processed = true;
 					}
 					else {
-						var index:int = macro.args.indexOf( macro.body[i] );					
+						// ND2D/Rolf: check for the dot
+						var dot:int = macro.body[i].indexOf( "." );
+						if ( dot < 0 ) dot = macro.body[i].length;
+						
+						var index:int = macro.args.indexOf( macro.body[i].substr(0,dot) );
 						if ( index >= 0 ) {
-							body.push( args[2*index] );	// parameter substitution			
+							body.push( args[2*index] + macro.body[i].substr(dot) );	// parameter substitution
 							processed = true;
 						}
 					}
@@ -515,6 +528,15 @@ package com.adobe.utils
 				
 				agalVar.name = tokens[pos+3];
 				agalVar.target = tokens[pos+1];
+				
+				// ND2D/Rolf: allow nested aliases
+				var dot:int = agalVar.target.indexOf( "." );
+				if ( dot < 0 ) dot = agalVar.target.length;
+				
+				if ( aliases[ agalVar.target.substr(0,dot) ] != null ) {
+					agalVar.target = AGALVar(aliases[ agalVar.target.substr(0,dot) ]).target + agalVar.target.substr(dot);
+				}
+				
 				aliases[ agalVar.name ] = agalVar;
 				//trace( "alias name=" + agalVar.name + " target=" + agalVar.target ); 
 				

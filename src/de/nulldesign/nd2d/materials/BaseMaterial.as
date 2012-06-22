@@ -35,28 +35,21 @@ package de.nulldesign.nd2d.materials {
 	import de.nulldesign.nd2d.geom.Vertex;
 	import de.nulldesign.nd2d.materials.shader.Shader2D;
 	import de.nulldesign.nd2d.utils.NodeBlendMode;
-
-	import flash.display.Shader;
+	import de.nulldesign.nd2d.utils.Statistics;
 
 	import flash.display3D.Context3D;
-	import flash.display3D.Context3DVertexBufferFormat;
 	import flash.display3D.IndexBuffer3D;
 	import flash.display3D.VertexBuffer3D;
 	import flash.geom.Matrix3D;
 	import flash.utils.Dictionary;
 
-	public class AMaterial {
+	public class BaseMaterial {
 
-		// cameras view projectionmatrix
 		public var viewProjectionMatrix:Matrix3D;
 
-		// models modelmatrix
 		public var modelMatrix:Matrix3D;
 
 		public var clipSpaceMatrix:Matrix3D = new Matrix3D();
-
-		public var numTris:int = 0;
-		public var drawCalls:int = 0;
 
 		public var blendMode:NodeBlendMode = BlendModePresets.NORMAL_PREMULTIPLIED_ALPHA;
 
@@ -69,21 +62,24 @@ package de.nulldesign.nd2d.materials {
 		protected var mVertexBuffer:Vector.<Number>;
 
 		protected var shaderData:Shader2D;
-		protected var programConstVector:Vector.<Number> = new Vector.<Number>(4);
 
-		public var nodeTinted:Boolean = false;
-		protected var previousTintedState:Boolean = false;
+		public var usesUV:Boolean = false;
+		protected var lastUsesUV:Boolean = false;
+
+		public var usesColor:Boolean = false;
+		protected var lastUsesColor:Boolean = false;
+
+		public var usesColorOffset:Boolean = false;
+		protected var lastUsesColorOffset:Boolean = false;
 
 		public static const VERTEX_POSITION:String = "PB3D_POSITION";
 		public static const VERTEX_UV:String = "PB3D_UV";
 		public static const VERTEX_COLOR:String = "PB3D_COLOR";
 
-		public function AMaterial() {
-
+		public function BaseMaterial() {
 		}
 
 		protected function generateBufferData(context:Context3D, faceList:Vector.<Face>):void {
-
 			if(vertexBuffer) {
 				return;
 			}
@@ -105,7 +101,6 @@ package de.nulldesign.nd2d.materials {
 			// generate index + vertexbuffer
 			// integrated check if the vertex / uv combination is already in the buffer and skip these vertices
 			for(i = 0; i < numFaces; i++) {
-
 				face = faceList[i];
 
 				tmpUID = face.v1.uid + "." + face.uv1.uid;
@@ -153,25 +148,17 @@ package de.nulldesign.nd2d.materials {
 			vertexBuffer.uploadFromVector(mVertexBuffer, 0, numIndices);
 
 			if(!indexBuffer) {
-
 				const mIndexBuffer_length:int = mIndexBuffer.length;
+
 				indexBuffer = context.createIndexBuffer(mIndexBuffer_length);
 				indexBuffer.uploadFromVector(mIndexBuffer, 0, mIndexBuffer_length);
-
-				numTris = int(mIndexBuffer_length / 3);
 			}
 		}
 
 		protected function prepareForRender(context:Context3D):void {
-
-			if(previousTintedState != nodeTinted) {
-				shaderData = null;
-				initProgram(context);
-				previousTintedState = nodeTinted;
-			}
-
-			context.setProgram(shaderData.shader);
 			context.setBlendFactors(blendMode.src, blendMode.dst);
+
+			updateProgram(context);
 
 			if(needUploadVertexBuffer) {
 				needUploadVertexBuffer = false;
@@ -179,19 +166,15 @@ package de.nulldesign.nd2d.materials {
 			}
 		}
 
-		public function handleDeviceLoss():void {
-			indexBuffer = null;
-			vertexBuffer = null;
-			mIndexBuffer = null;
-			mVertexBuffer = null;
-			shaderData = null;
-			needUploadVertexBuffer = true;
-		}
-
 		public function render(context:Context3D, faceList:Vector.<Face>, startTri:uint, numTris:uint):void {
 			generateBufferData(context, faceList);
 			prepareForRender(context);
+
 			context.drawTriangles(indexBuffer, startTri * 3, numTris);
+
+			Statistics.drawCalls++;
+			Statistics.triangles += numTris - startTri;
+
 			clearAfterRender(context);
 		}
 
@@ -200,16 +183,22 @@ package de.nulldesign.nd2d.materials {
 			throw new Error("You have to implement clearAfterRender for your material");
 		}
 
+		protected function updateProgram(context:Context3D):void {
+			if(usesUV != lastUsesUV || usesColor != lastUsesColor || usesColorOffset != lastUsesColorOffset) {
+				shaderData = null;
+				initProgram(context);
+
+				lastUsesUV = usesUV;
+				lastUsesColor = usesColor;
+				lastUsesColorOffset = usesColorOffset;
+			}
+
+			context.setProgram(shaderData.shader);
+		}
+
 		protected function initProgram(context:Context3D):void {
 			// implement in concrete material
 			throw new Error("You have to implement initProgram for your material");
-		}
-
-		protected function refreshClipspaceMatrix():Matrix3D {
-			clipSpaceMatrix.identity();
-			clipSpaceMatrix.append(modelMatrix);
-			clipSpaceMatrix.append(viewProjectionMatrix);
-			return clipSpaceMatrix;
 		}
 
 		protected function addVertex(context:Context3D, buffer:Vector.<Number>, v:Vertex, uv:UV, face:Face):void {
@@ -218,35 +207,41 @@ package de.nulldesign.nd2d.materials {
 		}
 
 		protected function fillBuffer(buffer:Vector.<Number>, v:Vertex, uv:UV, face:Face, semanticsID:String, floatFormat:int):void {
-
 			if(semanticsID == VERTEX_POSITION) {
-
 				buffer.push(v.x, v.y);
 
-				if(floatFormat >= 3)
+				if(floatFormat >= 3) {
 					buffer.push(v.z);
+				}
 
-				if(floatFormat == 4)
+				if(floatFormat == 4) {
 					buffer.push(v.w);
-			}
-
-			if(semanticsID == VERTEX_UV) {
-
+				}
+			} else if(semanticsID == VERTEX_UV) {
 				buffer.push(uv.u, uv.v);
 
-				if(floatFormat == 3)
+				if(floatFormat == 3) {
 					buffer.push(0.0);
-
-				if(floatFormat == 4)
+				} else if(floatFormat == 4) {
 					buffer.push(0.0, 0.0);
-			}
-
-			if(semanticsID == VERTEX_COLOR) {
+				}
+			} else if(semanticsID == VERTEX_COLOR) {
 				buffer.push(v.r, v.g, v.b);
 
-				if(floatFormat == 4)
+				if(floatFormat == 4) {
 					buffer.push(v.a);
+				}
 			}
+		}
+
+		public function handleDeviceLoss():void {
+			shaderData = null;
+			indexBuffer = null;
+			vertexBuffer = null;
+			mIndexBuffer = null;
+			mVertexBuffer = null;
+
+			needUploadVertexBuffer = true;
 		}
 
 		public function dispose():void {
@@ -254,13 +249,20 @@ package de.nulldesign.nd2d.materials {
 				indexBuffer.dispose();
 				indexBuffer = null;
 			}
+
 			if(vertexBuffer) {
 				vertexBuffer.dispose();
 				vertexBuffer = null;
 			}
-			if(shaderData) {
-				shaderData = null;
-			}
+
+			blendMode = null;
+			shaderData = null;
+			mIndexBuffer = null;
+			mVertexBuffer = null;
+
+			modelMatrix = null;
+			clipSpaceMatrix = null;
+			viewProjectionMatrix = null;
 		}
 	}
 }

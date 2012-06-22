@@ -32,11 +32,11 @@ package tests {
 
 	import com.bit101.components.PushButton;
 
+	import de.nulldesign.nd2d.display.Node2D;
 	import de.nulldesign.nd2d.display.Scene2D;
 	import de.nulldesign.nd2d.display.Sprite2D;
-	import de.nulldesign.nd2d.display.Sprite2DBatch;
 	import de.nulldesign.nd2d.display.Sprite2DCloud;
-	import de.nulldesign.nd2d.materials.texture.SpriteSheet;
+	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
 
 	import flash.events.Event;
@@ -45,133 +45,119 @@ package tests {
 
 	public class MassiveSpriteCloudTest extends Scene2D {
 
-        [Embed(source="/assets/spritechar2.png")]
-        private var cubeTexture:Class;
+		[Embed(source="/assets/spritechar2.png")]
+		private var cubeTexture:Class;
 
-        private var sprites:Vector.<Sprite2D>;
-        private var spriteCloud:Sprite2DCloud;
+		private var spriteCloud:Sprite2DCloud;
 
-        private var numSprites:uint = 1600;
+		private var numSprites:uint = 1600;
 
-        private var addSpritesButton:PushButton;
+		private var addSpritesButton:PushButton;
 
-        public function MassiveSpriteCloudTest() {
+		public function MassiveSpriteCloudTest() {
+			backgroundColor = 0x666666;
+			mouseEnabled = false;
 
-            backgroundColor = 0x666666;
+			var tex:Texture2D = Texture2D.textureFromBitmapData(new cubeTexture().bitmapData);
 
-            sprites = new Vector.<Sprite2D>();
-            var tex:Texture2D = Texture2D.textureFromBitmapData(new cubeTexture().bitmapData);
-            var s:Sprite2D;
+			var sheet:TextureSheet = new TextureSheet(tex, 24, 32);
+			sheet.addAnimation("up", [0, 1, 2], true, 10);
+			sheet.addAnimation("right", [3, 4, 5], true, 10);
+			sheet.addAnimation("down", [6, 7, 8], true, 10);
+			sheet.addAnimation("left", [9, 10, 11], true, 10);
+			tex.setSheet(sheet);
 
-            var sheet:SpriteSheet = new SpriteSheet(tex.bitmapWidth, tex.bitmapHeight, 24, 32, 10);
-            sheet.addAnimation("up", [0, 1, 2], true);
-            sheet.addAnimation("right", [3, 4, 5], true);
-            sheet.addAnimation("down", [6, 7, 8], true);
-            sheet.addAnimation("left", [9, 10, 11], true);
+			spriteCloud = new Sprite2DCloud(numSprites, tex);
 
-            spriteCloud = new Sprite2DCloud(numSprites, tex);
-            //spriteCloud = new Sprite2DBatch(tex);
-            spriteCloud.setSpriteSheet(sheet);
+			addSpritesClick();
 
-            addSpritesClick();
+			addChild(spriteCloud);
 
-            addChild(spriteCloud);
+			addEventListener(Event.ADDED_TO_STAGE, addedToStage);
+		}
 
-            addEventListener(Event.ADDED_TO_STAGE, addedToStage);
-            addEventListener(Event.REMOVED_FROM_STAGE, removedFromStage);
-        }
+		private function addSpritesClick(event:MouseEvent = null):void {
+			var s:Sprite2D;
 
-        private function addSpritesClick(event:MouseEvent = null):void {
+			for(var i:int = 0; i < 100; i++) {
+				s = new Sprite2D();
+				s.x = Math.round(Math.random() * 1000);
+				s.y = Math.round(Math.random() * 1000);
+				s.vx = (Math.random() - Math.random()) * 3;
+				s.vy = (Math.random() - Math.random()) * 3;
+				s.pivot = new Point(0, -15);
 
-            var s:Sprite2D;
-            for(var i:int = 0; i < 100; i++) {
+				spriteCloud.addChild(s);
 
-                s = new Sprite2D();
-                s.x = Math.round(Math.random() * 1000);
-                s.y = Math.round(Math.random() * 1000);
-                s.vx = (Math.random() - Math.random()) * 3;
-                s.vy = (Math.random() - Math.random()) * 3;
-                s.pivot = new Point(0, -15);
+				if(spriteCloud.childCount == 1) {   // alpha, tint & scale test for sprites in clouds
+					s.alpha = 0.5;
+					s.tint = 0x00FF00;
+					s.scaleX = s.scaleY = 2.0;
+				}
+			}
+		}
 
-                if(spriteCloud.addChild(s)) {
-                    sprites.push(s);
-                }
+		private function addedToStage(event:Event):void {
+			removeEventListener(Event.ADDED_TO_STAGE, addedToStage);
 
-                if(sprites.length == 1) {   // alpha, tint & scale test for sprites in clouds
-                    s.alpha = 0.2;
-                    s.tint = 0x00FF00;
-                    s.scaleX = s.scaleY = 2.0;
-                }
-            }
-        }
+			addSpritesButton = new PushButton(stage, 0.0, 150.0, "addChild", addSpritesClick);
+		}
 
-        private function removedFromStage(event:Event):void {
-            if(stage.contains(addSpritesButton)) {
-                stage.removeChild(addSpritesButton);
-            }
-        }
+		override protected function step(elapsed:Number):void {
+			var s:Sprite2D;
+			var vxabs:Number;
+			var vyabs:Number;
 
-        private function addedToStage(event:Event):void {
+			for(var node:Node2D = spriteCloud.childFirst; node; node = node.next) {
+				s = node as Sprite2D;
+				s.x += s.vx;
+				s.y += s.vy;
 
-            if(!addSpritesButton) {
-                addSpritesButton = new PushButton(stage, 0.0, 150.0, "addChild", addSpritesClick);
-            }
+				//s.rotation += 10;
 
-            if(!stage.contains(addSpritesButton)) {
-                stage.addChild(addSpritesButton);
-            }
-        }
+				if(s.x < 0) {
+					s.x = 0;
+					s.vx *= -1;
+				} else if(s.x > stage.stageWidth) {
+					s.x = stage.stageWidth;
+					s.vx *= -1;
+				}
 
-        override protected function step(elapsed:Number):void {
+				if(s.y < 0) {
+					s.y = 0;
+					s.vy *= -1;
+				} else if(s.y > stage.stageHeight) {
+					s.y = stage.stageHeight;
+					s.vy *= -1;
+				}
 
-            var s:Sprite2D;
-            var len:int = sprites.length;
-            var i:int = len;
-            var vxabs:Number;
-            var vyabs:Number;
+				vxabs = Math.abs(s.vx);
+				vyabs = Math.abs(s.vy);
 
-            while(--i > -1) {
-                s = sprites[i];
-                s.x += s.vx;
-                s.y += s.vy;
+				if(s.vx > 0 && vxabs > vyabs) { // right
+					s.animation.play("right");
+				} else if(s.vx < 0 && vxabs > vyabs) { // left
+					s.animation.play("left");
+				} else if(s.vy > 0 && vyabs > vxabs) { // down
+					s.animation.play("down");
+				} else if(s.vy < 0 && vyabs > vxabs) { // up
+					s.animation.play("up");
+				}
 
-                //s.rotation += 10;
+				s.rotation += 5.0;
+			}
+		}
 
-                if(s.x < 0) {
-                    s.x = 0;
-                    s.vx *= -1;
-                }
+		override public function dispose():void {
+			super.dispose();
 
-                if(s.x > stage.stageWidth) {
-                    s.x = stage.stageWidth;
-                    s.vx *= -1;
-                }
+			if(addSpritesButton) {
+				stage.removeChild(addSpritesButton);
+				addSpritesButton = null;
+			}
 
-                if(s.y < 0) {
-                    s.y = 0;
-                    s.vy *= -1;
-                }
+			spriteCloud = null;
+		}
 
-                if(s.y > stage.stageHeight) {
-                    s.y = stage.stageHeight;
-                    s.vy *= -1;
-                }
-
-                vxabs = Math.abs(s.vx);
-                vyabs = Math.abs(s.vy);
-
-                if(s.vx > 0 && vxabs > vyabs) { // right
-                    s.spriteSheet.playAnimation("right");
-                } else if(s.vx < 0 && vxabs > vyabs) { // left
-                    s.spriteSheet.playAnimation("left");
-                } else if(s.vy > 0 && vyabs > vxabs) { // down
-                    s.spriteSheet.playAnimation("down");
-                } else if(s.vy < 0 && vyabs > vxabs) { // up
-                    s.spriteSheet.playAnimation("up");
-                }
-
-                s.rotation += 5.0;
-            }
-        }
-    }
+	}
 }

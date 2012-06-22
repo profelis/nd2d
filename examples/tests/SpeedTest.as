@@ -31,7 +31,6 @@
 package tests {
 
 	import com.bit101.components.ComboBox;
-	import com.bit101.components.Label;
 	import com.bit101.components.Style;
 
 	import de.nulldesign.nd2d.display.Node2D;
@@ -39,7 +38,7 @@ package tests {
 	import de.nulldesign.nd2d.display.Sprite2D;
 	import de.nulldesign.nd2d.display.Sprite2DBatch;
 	import de.nulldesign.nd2d.display.Sprite2DCloud;
-	import de.nulldesign.nd2d.materials.texture.SpriteSheet;
+	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
 
 	import flash.events.Event;
@@ -48,7 +47,6 @@ package tests {
 	public class SpeedTest extends Scene2D {
 
 		private var comboBox:ComboBox;
-		private var label:Label;
 
 		[Embed(source="/assets/spritechar2.png")]
 		private var spriteTexture:Class;
@@ -57,70 +55,55 @@ package tests {
 		private var spriteBatch:Sprite2DBatch;
 
 		private var tex:Texture2D;
-		private var sheet:SpriteSheet;
+		private var sheet:TextureSheet;
 
 		private var selectedTestIdx:int = -1;
-		private var numChilds:uint = 0;
-		private var maxCloudSize:uint = 16000;
+		private var maxCloudSize:uint = 16383;
+
+		private var spritesPerFrame:uint = 128;
 
 		public function SpeedTest() {
-
+			mouseEnabled = false;
 			backgroundColor = 0x666666;
 
 			addEventListener(Event.ADDED_TO_STAGE, addedToStage);
-			addEventListener(Event.REMOVED_FROM_STAGE, removedFromStage);
-		}
-
-		private function removedFromStage(e:Event):void {
-			if(comboBox) {
-				stage.removeChild(comboBox);
-			}
-
-			if(label) {
-				stage.removeChild(label);
-			}
 		}
 
 		private function addedToStage(e:Event):void {
+			removeEventListener(Event.ADDED_TO_STAGE, addedToStage);
 
-			if(!comboBox) {
+			Style.LABEL_TEXT = 0x000000;
 
-				Style.LABEL_TEXT = 0x000000;
+			comboBox = new ComboBox(stage, 0, 130, "- Select -", [
+				"Sprite2D (static)",
+				"   Sprite2D (animated)",
+				"   Sprite2D (moving)",
+				"Sprite2DCloud (static)",
+				"   Sprite2DCloud (animated)",
+				"   Sprite2DCloud (moving)",
+				"Sprite2DBatch (static)",
+				"   Sprite2DBatch (animated)",
+				"   Sprite2DBatch (moving)",
+				"Sprite2D individual Texture",
+				"   animated",
+				"   moving",
+				"Clear"]);
+			comboBox.width = 150;
+			comboBox.addEventListener(Event.SELECT, onTestSelect);
+			comboBox.numVisibleItems = 13;
 
-				comboBox = new ComboBox(stage, 0, 130, "select test", ["Sprite2D shared Texture", "Sprite2DCloud", "Sprite2DBatch", "Sprite2D individual Textures", "clear"]);
-				comboBox.width = 150;
-				comboBox.addEventListener(Event.SELECT, onTestSelect);
-				comboBox.numVisibleItems = 5;
+			// don't dispose this bitmap and sheet when we dispose the childs but always
+			// remember to manually dispose it when no longer needed (see dispose function below)
+			tex = Texture2D.textureFromBitmapData(new spriteTexture().bitmapData, false);
 
-				label = new Label(stage, 5, 150);
-				label.textField.textColor = 0xFFFFFF;
+			sheet = new TextureSheet(tex, 24, 32);
+			sheet.addAnimation("blah", [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], true, 5);
 
-				tex = Texture2D.textureFromBitmapData(new spriteTexture().bitmapData);
-
-				sheet = new SpriteSheet(tex.bitmapWidth, tex.bitmapHeight, 24, 32, 10);
-				sheet.addAnimation("blah", [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], true);
-				sheet.playAnimation("blah");
-
-			} else {
-				stage.addChild(comboBox);
-				stage.addChild(label);
-			}
+			tex.setSheet(sheet);
 		}
 
 		private function onTestSelect(e:Event):void {
 			// clean up
-			for each(var n:Node2D in children) {
-				var s:Sprite2D = n as Sprite2D;
-				if(s && s.texture && s.texture != tex) {
-					s.texture.dispose();
-				}
-
-				n.dispose();
-			}
-			removeAllChildren();
-
-			numChilds = 0;
-
 			if(spriteBatch) {
 				spriteBatch.dispose();
 				spriteBatch = null;
@@ -131,102 +114,150 @@ package tests {
 				spriteCloud = null;
 			}
 
+			while(childFirst) {
+				var sprite:Sprite2D = childFirst as Sprite2D;
+
+				// dispose individual textures
+				if(sprite && sprite.texture != tex) {
+					sprite.texture.bitmap.dispose();
+					sprite.texture.bitmap = null;
+
+					sprite.texture.sheet = null;
+				}
+
+				childFirst.dispose();
+			}
+
 			selectedTestIdx = comboBox.selectedIndex;
 
 			switch(selectedTestIdx) {
-				case 1:
+				case 3:
+				case 4:
+				case 5:  {
 					spriteCloud = new Sprite2DCloud(maxCloudSize, tex);
-					spriteCloud.setSpriteSheet(sheet);
 					addChild(spriteCloud);
 					break;
-				case 2:
+				}
+
+				case 6:
+				case 7:
+				case 8:  {
 					spriteBatch = new Sprite2DBatch(tex);
-					spriteBatch.setSpriteSheet(sheet);
 					addChild(spriteBatch);
 					break;
+				}
 			}
 		}
-
 
 		override protected function step(elapsed:Number):void {
 			super.step(elapsed);
 
-			if(Main.stats.measuredFPS >= 60.0) {
-
+			if(Main.stats.measuredFPS >= stage.frameRate) {
 				var s:Sprite2D;
 
-				switch(selectedTestIdx) {
-					case 0:
-						++numChilds;
-						s = new Sprite2D(tex);
-						s.setSpriteSheet(sheet.clone());
-						s.x = stage.stageWidth * Math.random();
-						s.y = stage.stageHeight * Math.random();
-						addChild(s);
-						s.spriteSheet.playAnimation("blah");
-						break;
-
-					case 1:
-						if(numChilds < maxCloudSize) {
-							++numChilds;
-							s = new Sprite2D();
-							s.x = stage.stageWidth * Math.random();
-							s.y = stage.stageHeight * Math.random();
-							spriteCloud.addChild(s);
-							s.spriteSheet.playAnimation("blah");
+				for(var i:uint = 0; i < spritesPerFrame; i++) {
+					switch(selectedTestIdx) {
+						case 0:
+						case 1:
+						case 2:  {
+							s = new Sprite2D(tex);
+							addChild(s);
+							break;
 						}
-						break;
 
-					case 2:
-						++numChilds;
-						s = new Sprite2D();
-						s.x = stage.stageWidth * Math.random();
-						s.y = stage.stageHeight * Math.random();
-						spriteBatch.addChild(s);
-						s.spriteSheet.playAnimation("blah");
-						break;
+						case 3:
+						case 4:
+						case 5:  {
+							if(spriteCloud.numChildren >= maxCloudSize) {
+								spriteCloud = new Sprite2DCloud(maxCloudSize, tex);
+								addChild(spriteCloud);
+							}
 
-					case 3:
-						++numChilds;
-						var rndTex:Texture2D = Texture2D.textureFromBitmapData(new spriteTexture().bitmapData, true);
-						var c:ColorTransform = new ColorTransform();
-						c.redMultiplier = Math.random();
-						c.greenMultiplier = Math.random();
-						c.blueMultiplier = Math.random();
-						rndTex.bitmap.colorTransform(rndTex.bitmap.rect, c);
+							s = new Sprite2D();
+							spriteCloud.addChild(s);
+							break;
+						}
 
-						s = new Sprite2D(rndTex);
-						s.setSpriteSheet(sheet.clone());
-						s.x = stage.stageWidth * Math.random();
-						s.y = stage.stageHeight * Math.random();
-						s.spriteSheet.playAnimation("blah");
-						addChild(s);
-						break;
+						case 6:
+						case 7:
+						case 8:  {
+							s = new Sprite2D();
+							spriteBatch.addChild(s);
+							break;
+						}
+
+						case 9:
+						case 10:
+						case 11:  {
+							var rndTex:Texture2D = Texture2D.textureFromBitmapData(new spriteTexture().bitmapData, false);
+							var c:ColorTransform = new ColorTransform();
+							c.redMultiplier = Math.random();
+							c.greenMultiplier = Math.random();
+							c.blueMultiplier = Math.random();
+							rndTex.bitmap.colorTransform(rndTex.bitmap.rect, c);
+
+							rndTex.setSheet(sheet);
+
+							s = new Sprite2D(rndTex);
+							addChild(s);
+							break;
+						}
+					}
+
+					if(s) {
+						s.x = Math.round(stage.stageWidth * Math.random());
+						s.y = Math.round(stage.stageHeight * Math.random());
+
+						switch(selectedTestIdx) {
+							case 1:
+							case 4:
+							case 7:
+							case 10:  {
+								s.animation.play("blah", 1000 * Math.random());
+								break;
+							}
+						}
+					}
 				}
-
-				label.text = "numChildren: " + String(numChilds);
 			}
-
-			var n:Node2D;
 
 			switch(selectedTestIdx) {
-				case 0:
-				case 3:
-					for each(n in children) {
-						n.rotation += 10.0;
-					}
-					break;
-				case 1:
-					for each(n in spriteCloud.children) {
-						n.rotation += 10.0;
-					}
-					break;
 				case 2:
-					for each(n in spriteBatch.children) {
-						n.rotation += 10.0;
+				case 5:
+				case 8:
+				case 11:  {
+					for(var p:Node2D = childFirst; p; p = p.next) {
+						if(p is Sprite2DBatch || p is Sprite2DCloud) {
+							for(var n:Node2D = p.childFirst; n; n = n.next) {
+								n.rotation += 10.0;
+							}
+						} else {
+							p.rotation += 10.0;
+						}
 					}
 					break;
+				}
 			}
+		}
+
+		override public function dispose():void {
+			super.dispose();
+
+			// force dispose of texture because we
+			// created it with "autoCleanUpResources = false"
+			if(tex) {
+				tex.dispose(true);
+				tex = null;
+			}
+
+			if(comboBox) {
+				stage.removeChild(comboBox);
+			}
+
+			sheet = null;
+			comboBox = null;
+			spriteCloud = null;
+			spriteBatch = null;
 		}
 	}
 }

@@ -3,7 +3,6 @@ package tests {
 	import de.nulldesign.nd2d.display.Scene2D;
 	import de.nulldesign.nd2d.display.Sprite2D;
 	import de.nulldesign.nd2d.display.Sprite2DCloud;
-	import de.nulldesign.nd2d.materials.BlendModePresets;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
 
 	import flash.events.Event;
@@ -57,8 +56,10 @@ package tests {
 
 		override protected function step(elapsed:Number):void {
 			var n:int = (mouseX / stage.stageWidth) * MAX_TRACK_POINTS;
-			if(n > MAX_TRACK_POINTS)
+
+			if(n > MAX_TRACK_POINTS) {
 				n = MAX_TRACK_POINTS;
+			}
 
 			for(var i:int = 0; i < n; i++) {
 				trackPoints[i].visible = true;

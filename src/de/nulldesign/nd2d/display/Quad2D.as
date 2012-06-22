@@ -39,7 +39,8 @@ package de.nulldesign.nd2d.display {
 	import flash.display3D.Context3D;
 
 	/**
-	 * A quad can have four custom colors (in ARGB format. eg. 0xFF990022) for each corner. The colors will be interpolated between the corners.
+	 * A quad can have four custom colors (in ARGB format. eg. 0xFF990022) for
+	 * each corner. The colors will be interpolated between the corners.
 	 */
 	public class Quad2D extends Node2D {
 
@@ -53,6 +54,7 @@ package de.nulldesign.nd2d.display {
 		public function set topLeftColor(value:uint):void {
 			var v:Vertex = faceList[0].v1;
 			v.color = value;
+
 			material.modifyColorInBuffer(0, v.r, v.g, v.b, v.a);
 		}
 
@@ -63,6 +65,7 @@ package de.nulldesign.nd2d.display {
 		public function set topRightColor(value:uint):void {
 			var v:Vertex = faceList[0].v2;
 			v.color = value;
+
 			material.modifyColorInBuffer(1, v.r, v.g, v.b, v.a);
 		}
 
@@ -73,6 +76,7 @@ package de.nulldesign.nd2d.display {
 		public function set bottomRightColor(value:uint):void {
 			var v:Vertex = faceList[0].v3;
 			v.color = value;
+
 			material.modifyColorInBuffer(2, v.r, v.g, v.b, v.a);
 		}
 
@@ -83,11 +87,11 @@ package de.nulldesign.nd2d.display {
 		public function set bottomLeftColor(value:uint):void {
 			var v:Vertex = faceList[1].v3;
 			v.color = value;
+
 			material.modifyColorInBuffer(3, v.r, v.g, v.b, v.a);
 		}
 
 		public function Quad2D(pWidth:Number, pHeight:Number) {
-
 			_width = pWidth;
 			_height = pHeight;
 
@@ -102,26 +106,21 @@ package de.nulldesign.nd2d.display {
 			blendMode = BlendModePresets.NORMAL_NO_PREMULTIPLIED_ALPHA;
 		}
 
-		override public function get numTris():uint {
-			return faceList.length;
-		}
-
-		override public function get drawCalls():uint {
-			return material.drawCalls;
-		}
-
 		override public function handleDeviceLoss():void {
 			super.handleDeviceLoss();
-			if(material)
+
+			if(material) {
 				material.handleDeviceLoss();
+			}
 		}
 
 		override protected function draw(context:Context3D, camera:Camera2D):void {
-
 			material.blendMode = blendMode;
 			material.modelMatrix = worldModelMatrix;
+			material.clipSpaceMatrix = clipSpaceMatrix;
 			material.viewProjectionMatrix = camera.getViewProjectionMatrix(false);
-			material.render(context, faceList, 0, faceList.length);
+
+			material.render(context, faceList, 0, 2);
 		}
 
 		override public function dispose():void {
@@ -129,6 +128,9 @@ package de.nulldesign.nd2d.display {
 				material.dispose();
 				material = null;
 			}
+
+			faceList = null;
+
 			super.dispose();
 		}
 	}

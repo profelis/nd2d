@@ -47,7 +47,6 @@ package tests {
 		[Embed(source="/assets/particle_small.png")]
 		private var cubeTexture:Class;
 
-		private var sprites:Vector.<Sprite2D>;
 		private var spriteCloud:Node2D;
 
 		private var perlinBmp:BitmapData;
@@ -55,22 +54,22 @@ package tests {
 		private var maxParticles:uint = 6000;
 
 		public function MassiveSpritesTest() {
+			mouseEnabled = false;
+
 			addEventListener(Event.ADDED_TO_STAGE, addedToStage);
 		}
 
-		protected function randomizeParticle(s:Sprite2D):void {
-			s.x = Math.random() * stage.stageWidth;
-			s.y = Math.random() * stage.stageHeight;
-			s.vx = (Math.random() - Math.random()) * 15;
-			s.vy = (Math.random() - Math.random()) * 15;
-			s.alpha = 1.0;
+		protected function randomizeParticle(node:Node2D):void {
+			node.x = Math.random() * stage.stageWidth;
+			node.y = Math.random() * stage.stageHeight;
+			node.vx = (Math.random() - Math.random()) * 15;
+			node.vy = (Math.random() - Math.random()) * 15;
+			node.alpha = 1.0;
 		}
 
 		protected function addedToStage(e:Event):void {
-
 			removeEventListener(Event.ADDED_TO_STAGE, addedToStage);
 
-			sprites = new Vector.<Sprite2D>();
 			var tex:Texture2D = Texture2D.textureFromBitmapData(new cubeTexture().bitmapData);
 			var s:Sprite2D;
 
@@ -85,7 +84,6 @@ package tests {
 			for(var i:int = 0; i < maxParticles; i++) {
 				s = new Sprite2D();
 				randomizeParticle(s);
-				sprites[i] = s;
 				spriteCloud.addChild(s);
 			}
 
@@ -93,88 +91,93 @@ package tests {
 
 			perlinBmp = new BitmapData(stage.stageWidth, stage.stageHeight, false);
 			perlinBmp.perlinNoise(stage.stageWidth * 0.1, stage.stageHeight * 0.1, 3, Math.random() * 20, false, false,
-					BitmapDataChannel.RED | BitmapDataChannel.GREEN | BitmapDataChannel.BLUE, false);
+				BitmapDataChannel.RED | BitmapDataChannel.GREEN | BitmapDataChannel.BLUE, false);
 
 			stage.addEventListener(Event.RESIZE, resizeStage);
 		}
 
 		protected function resizeStage(e:Event):void {
-
 			if(stage) {
+				if(perlinBmp) {
+					perlinBmp.dispose();
+				}
+
 				perlinBmp = new BitmapData(stage.stageWidth, stage.stageHeight, false);
 				perlinBmp.perlinNoise(stage.stageWidth * 0.1, stage.stageHeight * 0.1, 3, Math.random() * 20, true, false,
-						BitmapDataChannel.RED | BitmapDataChannel.GREEN | BitmapDataChannel.BLUE, false);
+					BitmapDataChannel.RED | BitmapDataChannel.GREEN | BitmapDataChannel.BLUE, false);
 			}
 		}
 
 		override protected function step(elapsed:Number):void {
-
 			var p:Number;
-			var s:Sprite2D;
-			var len:int = sprites.length;
 			var r:uint;
 			var g:uint;
 			var b:uint;
 			var mdiff:Point = new Point(0.0, 0.0);
 
-			for(var i:int = 0; i < len; i++) {
-				s = sprites[i];
-				s.x += s.vx;
-				s.y += s.vy;
+			for(var node:Node2D = spriteCloud.childFirst; node; node = node.next) {
+				node.x += node.vx;
+				node.y += node.vy;
 
-				if(s.x < 0) {
+				if(node.x < 0) {
 					//s.x = 0;
 					//s.vx *= -1;
-					randomizeParticle(s);
-				}
-
-				if(s.x > stage.stageWidth) {
+					randomizeParticle(node);
+				} else if(node.x > stage.stageWidth) {
 					//s.x = stage.stageWidth;
 					//s.vx *= -1;
-					randomizeParticle(s);
+					randomizeParticle(node);
 				}
 
-				if(s.y < 0) {
+				if(node.y < 0) {
 					//s.y = 0;
 					//s.vy *= -1;
-					randomizeParticle(s);
-				}
-
-				if(s.y > stage.stageHeight) {
+					randomizeParticle(node);
+				} else if(node.y > stage.stageHeight) {
 					//s.y = stage.stageHeight;
 					//s.vy *= -1;
-					randomizeParticle(s);
+					randomizeParticle(node);
 				}
 
-				mdiff.x = stage.mouseX - s.x;
-				mdiff.y = stage.mouseY - s.y;
+				mdiff.x = stage.mouseX - node.x;
+				mdiff.y = stage.mouseY - node.y;
 
 				if(mdiff.length < 100.0) {
-					s.vx -= mdiff.x * 0.02;
-					s.vy -= mdiff.y * 0.02;
+					node.vx -= mdiff.x * 0.02;
+					node.vy -= mdiff.y * 0.02;
 				}
 
-				p = perlinBmp.getPixel(s.x, s.y);
+				p = perlinBmp.getPixel(node.x, node.y);
 
 				r = p >> 16;
 				g = p >> 8 & 255;
 				b = p & 255;
 
-				s.vx += (r - b) * 0.003;
-				s.vy += (g - b) * 0.003;
+				node.vx += (r - b) * 0.003;
+				node.vy += (g - b) * 0.003;
 
 				// clip
-				s.vx = Math.min(s.vx, 3);
-				s.vy = Math.min(s.vy, 3);
-				s.vx = Math.max(s.vx, -3);
-				s.vy = Math.max(s.vy, -3);
+				node.vx = Math.min(node.vx, 3);
+				node.vy = Math.min(node.vy, 3);
+				node.vx = Math.max(node.vx, -3);
+				node.vy = Math.max(node.vy, -3);
 
-				r = (s.x / stage.stageWidth) * 255;
-				g = (s.y / stage.stageHeight) * 255;
-				b = Math.abs(Math.round((s.vx + s.vy))) * 10;
-				s.tint = (r << 16 | g << 8 | b);
-				s.alpha -= 0.001;
+				r = (node.x / stage.stageWidth) * 255;
+				g = (node.y / stage.stageHeight) * 255;
+				b = Math.abs(Math.round((node.vx + node.vy))) * 10;
+				node.tint = (r << 16 | g << 8 | b);
+				node.alpha -= 0.001;
 			}
 		}
+
+		override public function dispose():void {
+			super.dispose();
+
+			if(perlinBmp) {
+				perlinBmp.dispose();
+				perlinBmp = null;
+			}
+		}
+
 	}
 }

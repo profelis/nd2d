@@ -30,20 +30,14 @@
 package tests {
 
 	import de.nulldesign.nd2d.display.Node2D;
-
 	import de.nulldesign.nd2d.display.Scene2D;
 	import de.nulldesign.nd2d.display.Sprite2D;
 	import de.nulldesign.nd2d.display.Sprite2DBatch;
-	import de.nulldesign.nd2d.materials.texture.SpriteSheet;
+	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
-	import de.nulldesign.nd2d.materials.texture.TextureOption;
 	import de.nulldesign.nd2d.utils.NumberUtil;
 
-	import flash.display.BitmapData;
-	import flash.display.Sprite;
-
 	import flash.events.Event;
-	import flash.events.MouseEvent;
 
 	public class Transform3DTest extends Scene2D {
 
@@ -64,8 +58,8 @@ package tests {
 			batchNode = new Sprite2DBatch(tex);
 			addChild(batchNode);
 
-			var sheet:SpriteSheet = new SpriteSheet(tex.bitmapWidth, tex.bitmapHeight, 780 / 10, 208 / 4, 1);
-			batchNode.setSpriteSheet(sheet);
+			var sheet:TextureSheet = new TextureSheet(tex, 780 / 10, 208 / 4);
+			tex.setSheet(sheet);
 
 			for(var i:int = 0; i < 40; i++) {
 				var s:Sprite2D = new Sprite2D();
@@ -73,7 +67,7 @@ package tests {
 
 				s.x = (i % 10) * 78.0 - 780.0 * 0.5;
 				s.y = Math.floor(i / 10) * 52.0 - 208.0 * 0.5;
-				s.spriteSheet.frame = i;
+				s.animation.frame = i;
 			}
 		}
 
@@ -81,11 +75,11 @@ package tests {
 			batchNode.x = stage.stageWidth * 0.5;
 			batchNode.y = stage.stageHeight * 0.5;
 
-			var n:Node2D
-			for(var i:int = 0; i < batchNode.children.length; i++) {
-				n = batchNode.getChildAt(i);
-				n.rotationX = NumberUtil.sin0_1(timeSinceStartInSeconds * 0.8) * 180.0 * (Math.floor(i / 10) % 2 == 0 ? -1 : 1);
-				n.rotationY = NumberUtil.sin0_1(timeSinceStartInSeconds * 0.8) * 90.0 * (i % 2 == 0 ? 1 : -1);
+			var i:uint = 0;
+
+			for(var node:Node2D = batchNode.childFirst; node; node = node.next, i++) {
+				node.rotationX = NumberUtil.sin0_1(timeSinceStartInSeconds * 0.8) * 180.0 * (Math.floor(i / 10) % 2 == 0 ? -1 : 1);
+				node.rotationY = NumberUtil.sin0_1(timeSinceStartInSeconds * 0.8) * 90.0 * (i % 2 == 0 ? 1 : -1);
 			}
 		}
 	}

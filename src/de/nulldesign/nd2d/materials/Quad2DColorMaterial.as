@@ -34,35 +34,41 @@ package de.nulldesign.nd2d.materials {
 	import de.nulldesign.nd2d.geom.UV;
 	import de.nulldesign.nd2d.geom.Vertex;
 	import de.nulldesign.nd2d.materials.shader.ShaderCache;
-	import de.nulldesign.nd2d.utils.ColorUtil;
 
 	import flash.display3D.Context3D;
 	import flash.display3D.Context3DProgramType;
 	import flash.display3D.Context3DVertexBufferFormat;
 
-	public class Quad2DColorMaterial extends AMaterial {
+	public class Quad2DColorMaterial extends BaseMaterial {
 
 		private const VERTEX_SHADER:String =
-				"m44 op, va0, vc0   \n" + // vertex * clipspace
-						"mov v0, va1		\n";  // copy color
+			"alias va0, position;" +
+			"alias va1, colorOffset;" +
+			"alias vc0, viewProjection;" +
+			"alias vc4, clipSpace;" +
+
+			"temp0 = mul4x4(position, clipSpace);" +
+			"output = mul4x4(temp0, viewProjection);" +
+
+			// pass to fragment shader
+			"v0 = colorOffset;";
 
 		private const FRAGMENT_SHADER:String =
-				"mov oc, v0		\n";  // mult with colorOffset
+			"alias v0, colorOffset;" +
+
+			"output = colorOffset;";
 
 		public function Quad2DColorMaterial() {
-			drawCalls = 1;
 		}
 
 		override protected function prepareForRender(context:Context3D):void {
 			super.prepareForRender(context);
 
-			clipSpaceMatrix.identity();
-			clipSpaceMatrix.append(modelMatrix);
-			clipSpaceMatrix.append(viewProjectionMatrix);
-
 			context.setVertexBufferAt(0, vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_2); // vertex
 			context.setVertexBufferAt(1, vertexBuffer, 2, Context3DVertexBufferFormat.FLOAT_4); // color
-			context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, clipSpaceMatrix, true);
+
+			context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, viewProjectionMatrix, true);
+			context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 4, clipSpaceMatrix, true);
 		}
 
 		override protected function clearAfterRender(context:Context3D):void {
@@ -77,13 +83,15 @@ package de.nulldesign.nd2d.materials {
 
 		override protected function initProgram(context:Context3D):void {
 			if(!shaderData) {
-				shaderData = ShaderCache.getInstance().getShader(context, this, VERTEX_SHADER, FRAGMENT_SHADER, 6, 0);
+				shaderData = ShaderCache.getShader(context, "", VERTEX_SHADER, FRAGMENT_SHADER, 6, 0);
 			}
 		}
 
 		public function modifyColorInBuffer(bufferIdx:uint, r:Number, g:Number, b:Number, a:Number):void {
+			if(!mVertexBuffer || mVertexBuffer.length == 0) {
+				return;
+			}
 
-			if(!mVertexBuffer || mVertexBuffer.length == 0) return;
 			const idx:uint = bufferIdx * shaderData.numFloatsPerVertex;
 
 			mVertexBuffer[idx + 2] = r;

@@ -42,92 +42,104 @@ package de.nulldesign.nd2d.materials {
 	import flash.display3D.Context3DVertexBufferFormat;
 	import flash.geom.Point;
 
-	public class ParticleSystemMaterial extends AMaterial {
-
-		private const BURST_SHADER_PART:String = "";
-		private const REPEAT_SHADER_PART:String = "frc vt0, vt0 \n";
+	public class ParticleSystemMaterial extends BaseMaterial {
 
 		private const VERTEX_SHADER:String =
+			"alias va0, position;" +
+			"alias va1, uv;" +
 
-			/*
-			 va0 = vertex
-			 va1 = uv
-			 va2 = misc (starttime, life, startsize, endsize)
-			 va3 = velocity / startpos
-			 va4 = startcolor
-			 va5 = endcolor
+			"alias va2.x, startTime;" +
+			"alias va2.y, lifeTime;" +
+			"alias va2.z, startSize;" +
+			"alias va2.w, endSize;" +
 
-			 vc0 = matrix
-			 vc4 = current time
-			 vc5 = gravity
-			 */
+			"alias va3.xy, velocity;" +
+			"alias va3.zw, startPos;" +
 
-			// progress calculation p -> vt0
-				"sub vt0, vc4, va2.x        \n" + // currentTime - birth
-						"div vt0, vt0, va2.y        \n" + // (currentTime - birth) / life
-						"[PARTICLES_REPEAT]" + // (fract((currentTime - birth) / life)
-						"sat vt0, vt0               \n" + // clamp(fract((currentTime - birth) / life), 0.0, 1.0) == p -> vt0
+			"alias va4, startColor;" +
+			"alias va5, endColor;" +
 
-					// velocity / position by progress / gravity calculation
-						"mov vt1.xy, va3.xy         \n" + // tmp velocity -> vt1
-						"mul vt2 vc5.xy, vt0        \n" + // (gravity * p) -> vt2
-						"add vt1.xy, vt1.xy, vt2.xy \n" + // tmpVelocity += gravity * p;
-						"mul vt1.xy, vt1.xy, vt0.xy \n" + // tmpVelocity *= p; -> vt1
+			"alias vc0, viewProjection;" +
+			"alias vc4, clipSpace;" +
+			"alias vc8.xy, gravity;" +
+			"alias vc8.z, currentTime;" +
+			"alias vc8.w, CONST(1.0);" +
 
-					// size calculation -> float size = startSize * (1.0 - progress) + endSize * progress;
-						"sub vt2.x, va0.w, vt0.x    \n" + // (1.0 - progress)
-						"mul vt3.x va2.z, vt2.x     \n" + // startSize * (1.0 - progress)
-						"mul vt2.x, va2.w, vt0.x    \n" + // endSize * progress;
-						"add vt3.x, vt3.x, vt2.x    \n" + // startSize * (1.0 - progress) + endSize * progress -> size vt3.x
+			// progress calculation
+			// 		clamp( frac( (currentTime - startTime) / lifeTime ) )
+			"temp0 = currentTime - startTime;" +
+			"temp0 /= lifeTime;" +
 
-						"mov vt2, va0               \n" + // tmp initial vertex position
-						"mul vt2.xy, vt2.xy, vt3.x  \n" + // tmpVertexPos.xy *= size;
-						"add vt2.xy, vt2.xy, va3.zw \n" + // tmpVertexPos.xy += velocity.zw;
-						"add vt2.xy, vt2.xy, vt1.xy \n" + //tmpVertexPos.xy += tmpVelocity.xy;
-						"m44 op, vt2, vc0           \n" + // vertex * clipspace
+			"#if !BURST;" +
+			"	temp0 = frac(temp0);" +
+			"#endif;" +
 
-						"mov v0, va1                \n" + // copy uv
+			"alias temp0, progress;" +
 
-					// mix colors -> startColor * (1.0 - progress) + endColor * progress
-						"sub vt2.x, va0.w, vt0.x    \n" + // 1.0 - progress
-						"mul vt3, va4, vt2.x        \n" + // startColor * (1.0 - progress)
-						"mul vt4, va5, vt0.x        \n" + // endColor * progress
-						"add v1, vt3, vt4           \n"; // save color
+			"progress.x = clamp(progress.x);" +
+			"progress.y = 1.0 - progress.x;" +
 
+			// velocity / gravity calculation
+			// 		(velocity + (gravity * progress)) * progress
+			"temp2 = gravity * progress.x;" +
+			"temp1 = velocity + temp2.xy;" +
+			"temp1 *= progress.x;" +
 
-		private const PREMULTIPLIED_ALPHA_PART:String = "mul ft0, ft0, v1	\n" + // mult with color
-				"mul oc, ft0, v1.w  \n";  // mult with alpha
+			"alias temp1, currentVelocity;" +
 
-		private const NON_PREMULTIPLIED_ALPHA_PART:String = "mul oc, ft0, v1 \n";  // mult with color
+			// size calculation
+			// 		temp3 = (startSize * (1.0 - progress)) + (endSize * progress)
+			"temp3 = startSize * progress.y;" +
+			"temp2 = endSize * progress.x;" +
+			"temp3 += temp2;" +
+
+			"alias temp3, currentSize;" +
+
+			// move
+			// 		(position * currentSize) + startPos + currentVelocity
+			"temp2 = position;" +
+			"temp2.xy *= currentSize;" +
+			"temp2.xy += startPos;" +
+			"temp2.xy += currentVelocity;" +
+
+			"temp2 = mul4x4(temp2, clipSpace);" +
+			"output = mul4x4(temp2, viewProjection);" +
+
+			// mix colors
+			// 		(startColor * (1.0 - progress)) + (endColor * progress)
+			"temp3 = startColor * progress.y;" +
+			"temp4 = endColor * progress.x;" +
+			"temp3 += temp4;" +
+
+			"#if PREMULTIPLIED_ALPHA;" +
+			"	temp3.rgb *= temp3.a;" +
+			"#endif;" +
+
+			// pass to fragment shader
+			"v0 = uv;" +
+			"v1 = temp3;";
 
 		private const FRAGMENT_SHADER:String =
-				"tex ft0, v0, fs0 <TEXTURE_SAMPLING_OPTIONS>  \n" + // sample texture from interpolated uv coords
-						"[PARTICLES_COLOR_CALCULATION]";  // mult with alpha
+			"alias v0, texCoord;" +
+			"alias v1, colorMultiplier;" +
 
-		protected var texture:Texture2D;
+			"temp0 = sample(texCoord, texture0);" +
+			"output = temp0 * colorMultiplier;";
 
 		public var gravity:Point;
 		public var currentTime:Number;
 
 		protected var burst:Boolean;
+		protected var texture:Texture2D;
+		protected var programConstants:Vector.<Number> = new Vector.<Number>(4, true);
 
 		public function ParticleSystemMaterial(texture:Texture2D, burst:Boolean) {
-			this.texture = texture;
-			this.drawCalls = 1;
 			this.burst = burst;
-		}
-
-		override public function handleDeviceLoss():void {
-			super.handleDeviceLoss();
-			texture.texture = null;
-			shaderData = null;
+			this.texture = texture;
 		}
 
 		override protected function prepareForRender(context:Context3D):void {
-
 			super.prepareForRender(context);
-
-			refreshClipspaceMatrix();
 
 			context.setTextureAt(0, texture.getTexture(context));
 			context.setVertexBufferAt(0, vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_2); // vertex
@@ -137,21 +149,15 @@ package de.nulldesign.nd2d.materials {
 			context.setVertexBufferAt(4, vertexBuffer, 12, Context3DVertexBufferFormat.FLOAT_4); // startcolor
 			context.setVertexBufferAt(5, vertexBuffer, 16, Context3DVertexBufferFormat.FLOAT_4); // endcolor
 
-			context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, clipSpaceMatrix, true);
+			context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, viewProjectionMatrix, true);
+			context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 4, clipSpaceMatrix, true);
 
-			programConstVector[0] = currentTime;
-			programConstVector[1] = currentTime;
-			programConstVector[2] = currentTime;
-			programConstVector[3] = currentTime;
+			programConstants[0] = gravity.x;
+			programConstants[1] = gravity.y;
+			programConstants[2] = currentTime;
+			programConstants[3] = 1.0;
 
-			context.setProgramConstantsFromVector(Context3DProgramType.VERTEX, 4, programConstVector);
-
-			programConstVector[0] = gravity.x;
-			programConstVector[1] = gravity.y;
-			programConstVector[2] = 0.0;
-			programConstVector[3] = 1.0;
-
-			context.setProgramConstantsFromVector(Context3DProgramType.VERTEX, 5, programConstVector);
+			context.setProgramConstantsFromVector(Context3DProgramType.VERTEX, 8, programConstants);
 		}
 
 		override protected function clearAfterRender(context:Context3D):void {
@@ -165,7 +171,6 @@ package de.nulldesign.nd2d.materials {
 		}
 
 		override protected function addVertex(context:Context3D, buffer:Vector.<Number>, v:Vertex, uv:UV, face:Face):void {
-
 			fillBuffer(buffer, v, uv, face, VERTEX_POSITION, 2);
 			fillBuffer(buffer, v, uv, face, VERTEX_UV, 2);
 			fillBuffer(buffer, v, uv, face, "PB3D_MISC", 4);
@@ -175,7 +180,6 @@ package de.nulldesign.nd2d.materials {
 		}
 
 		override protected function fillBuffer(buffer:Vector.<Number>, v:Vertex, uv:UV, face:Face, semanticsID:String, floatFormat:int):void {
-
 			super.fillBuffer(buffer, v, uv, face, semanticsID, floatFormat);
 
 			var pv:ParticleVertex = ParticleVertex(v);
@@ -197,6 +201,23 @@ package de.nulldesign.nd2d.materials {
 			}
 		}
 
+		override protected function initProgram(context:Context3D):void {
+			if(!shaderData) {
+				var defines:String =
+					"#define PREMULTIPLIED_ALPHA=" + int(texture.hasPremultipliedAlpha) + ";" +
+					"#define BURST=" + int(burst) + ";";
+
+				shaderData = ShaderCache.getShader(context, defines, VERTEX_SHADER, FRAGMENT_SHADER, 20, texture.textureOptions);
+			}
+		}
+
+		override public function handleDeviceLoss():void {
+			super.handleDeviceLoss();
+
+			shaderData = null;
+			texture.texture = null;
+		}
+
 		override public function dispose():void {
 			super.dispose();
 
@@ -204,33 +225,8 @@ package de.nulldesign.nd2d.materials {
 				texture.dispose();
 				texture = null;
 			}
-		}
 
-		override protected function initProgram(context:Context3D):void {
-			if(!shaderData) {
-
-				var vertexString:String;
-				var fragmentString:String;
-				var cacheNum:uint;
-
-				if(burst) {
-					cacheNum = 1000;
-					vertexString = VERTEX_SHADER.replace("[PARTICLES_REPEAT]", BURST_SHADER_PART);
-				} else {
-					cacheNum = 2000;
-					vertexString = VERTEX_SHADER.replace("[PARTICLES_REPEAT]", REPEAT_SHADER_PART);
-				}
-
-				if(texture.hasPremultipliedAlpha) {
-					cacheNum += 100;
-					fragmentString = FRAGMENT_SHADER.replace("[PARTICLES_COLOR_CALCULATION]", PREMULTIPLIED_ALPHA_PART);
-				} else {
-					cacheNum += 200;
-					fragmentString = FRAGMENT_SHADER.replace("[PARTICLES_COLOR_CALCULATION]", NON_PREMULTIPLIED_ALPHA_PART);
-				}
-
-				shaderData = ShaderCache.getInstance().getShader(context, this, vertexString, fragmentString, 20, texture.textureOptions, cacheNum);
-			}
+			programConstants = null;
 		}
 	}
 }

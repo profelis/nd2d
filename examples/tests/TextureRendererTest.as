@@ -43,41 +43,38 @@ package tests {
 		[Embed(source="../assets/crate.jpg")]
 		private var spriteTexture:Class;
 
-		private var s:Sprite2D;
-		private var s2:Sprite2D;
+		private var sprite:Sprite2D;
+		private var sprite2:Sprite2D;
 		private var texturedGrid:Grid2D;
 
 		private var texRenderer:TextureRenderer;
 
 		public function TextureRendererTest() {
+			// build your scene as always
+			var tex:Texture2D = Texture2D.textureFromBitmapData(new spriteTexture().bitmapData);
 
-			var b:Texture2D = Texture2D.textureFromBitmapData(new spriteTexture().bitmapData);
+			sprite = new Sprite2D(tex);
+			addChild(sprite);
 
-			s = new Sprite2D(b);
-			s2 = new Sprite2D(b);
-			s2.scaleX = s2.scaleY = 0.5;
+			sprite2 = new Sprite2D(tex);
+			sprite2.scale = 0.5;
+			sprite.addChild(sprite2);
 
-			s.addChild(s2);
-			//s.visible = false;
-
-			var renderTexture:Texture2D = Texture2D.textureFromSize(256, 256);
-
-			texRenderer = new TextureRenderer(s, renderTexture);
-
-			addChild(s);
+			// render any sprite or node including all it's sub-childs into a new texture
+			texRenderer = new TextureRenderer(sprite, Texture2D.textureFromSize(256, 256));
 			addChild(texRenderer);
 
-			texturedGrid = new MorphGrid(12, 12, renderTexture, 0.05);
+			// display the rendered texture, here we use MorphGrid but Sprite2D would work as well
+			texturedGrid = new MorphGrid(12, 12, texRenderer.texture, 0.05);
 			texturedGrid.tint = 0x99ff00;
 			addChild(texturedGrid);
 		}
 
 		override protected function step(elapsed:Number):void {
-			s.x = stage.stageWidth * 0.5 - s.width * 0.55;
-			s.y = stage.stageHeight * 0.5;
+			sprite.x = stage.stageWidth * 0.5 - sprite.width * 0.55;
+			sprite.y = stage.stageHeight * 0.5;
 
-			//s.rotation += 1;
-			s2.rotation += 1;
+			sprite2.rotation += 1;
 
 			texturedGrid.x = stage.stageWidth * 0.5 + texturedGrid.width * 0.55;
 			texturedGrid.y = stage.stageHeight * 0.5;

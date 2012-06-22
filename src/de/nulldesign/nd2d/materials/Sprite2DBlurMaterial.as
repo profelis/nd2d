@@ -30,105 +30,135 @@
 
 package de.nulldesign.nd2d.materials {
 
-	import com.adobe.utils.AGALMiniAssembler;
-
 	import de.nulldesign.nd2d.display.Camera2D;
-
 	import de.nulldesign.nd2d.geom.Face;
-	import de.nulldesign.nd2d.geom.UV;
-	import de.nulldesign.nd2d.geom.Vertex;
 	import de.nulldesign.nd2d.materials.shader.Shader2D;
 	import de.nulldesign.nd2d.materials.shader.ShaderCache;
-	import de.nulldesign.nd2d.materials.texture.ASpriteSheetBase;
-	import de.nulldesign.nd2d.materials.texture.SpriteSheet;
-
-	import flash.display.Shader;
-	import flash.display.Stage;
+	import de.nulldesign.nd2d.materials.texture.TextureSheetBase;
+	import de.nulldesign.nd2d.materials.texture.Texture2D;
+	import de.nulldesign.nd2d.utils.Statistics;
 
 	import flash.display3D.Context3D;
 	import flash.display3D.Context3DProgramType;
-	import flash.display3D.Context3DTextureFormat;
-	import flash.display3D.Program3D;
 	import flash.display3D.textures.Texture;
-	import flash.geom.Matrix;
 	import flash.geom.Matrix3D;
-	import flash.geom.Point;
-	import flash.geom.Rectangle;
 
 	/**
 	 * http://www.gamerendering.com/2008/10/11/gaussian-blur-filter-shader/
 	 */
 	public class Sprite2DBlurMaterial extends Sprite2DMaterial {
 
-		protected const HORIZONTAL_FRAGMENT_SHADER:String =
+		private const VERTEX_SHADER:String =
+			"alias va0, position;" +
+			"alias va1.xy, uv;" +
+			"alias vc0, viewProjection;" +
+			"alias vc4, clipSpace;" +
+			"alias vc8, colorMultiplier;" +
+			"alias vc9, colorOffset;" +
+			"alias vc10, uvSheet;" +
+			"alias vc11.xy, uvOffset;" +
+			"alias vc11.zw, uvScale;" +
+
+			"temp0 = mul4x4(position, clipSpace);" +
+			"output = mul4x4(temp0, viewProjection);" +
+
+			"#if USE_UV;" +
+			"	temp0 = uv * uvScale;" +
+			"	temp0 += uvOffset;" +
+			"#else;" +
+			"	temp0 = uv * uvSheet.zw;" +
+			"	temp0 += uvSheet.xy;" +
+			"#endif;" +
+
+			// pass to fragment shader
+			"v0 = temp0;" +
+			"v1 = colorMultiplier;" +
+			"v2 = colorOffset;" +
+			"v3 = uvSheet;";
+
+		private const HORIZONTAL_FRAGMENT_SHADER:String =
+			"alias v0, texCoord;" +
+			"alias v1, colorMultiplier;" +
+			"alias v2, colorOffset;" +
+			"alias v3.xy, uvSheetOffset;" +
+			"alias v3.zw, uvSheetScale;" +
+
+			"#if USE_UV;" +
+			"	temp0 = frac(texCoord);" +
+			"	temp0 *= uvSheetScale;" +
+			"	temp0 += uvSheetOffset;" +
+			"#else;" +
+			"	temp0 = texCoord;" +
+			"#endif;" +
+
 			// -4
-				"mov ft0, v0								\n" +
-						"sub ft0.x, ft0.x, fc3.y					\n" +
-						"tex ft1, ft0, fs0 <TEXTURE_SAMPLING_OPTIONS>		\n" +
-						"mul ft1, ft1, fc2.x						\n" +
+			"temp0.x -= fc3.y;" +
+			"temp1 = sampleNoMip(temp0, texture0);" +
+			"temp1 *= fc2.x;" +
 
-					// -3
-						"add ft0.x, ft0.x, fc3.z					\n" +
-						"tex ft2, ft0, fs0 <TEXTURE_SAMPLING_OPTIONS>		\n" +
-						"mul ft2, ft2, fc2.y						\n" +
-						"add ft1, ft1, ft2							\n" +
+			// -3
+			"temp0.x += fc3.z;" +
+			"temp2 = sampleNoMip(temp0, texture0);" +
+			"temp2 *= fc2.y;" +
+			"temp1 += temp2;" +
 
-					// -2
-						"add ft0.x, ft0.x, fc3.z					\n" +
-						"tex ft2, ft0, fs0 <TEXTURE_SAMPLING_OPTIONS>		\n" +
-						"mul ft2, ft2, fc2.z						\n" +
-						"add ft1, ft1, ft2							\n" +
+			// -2
+			"temp0.x += fc3.z;" +
+			"temp2 = sampleNoMip(temp0, texture0);" +
+			"temp2 *= fc2.z;" +
+			"temp1 += temp2;" +
 
-					// -1
-						"add ft0.x, ft0.x, fc3.z					\n" +
-						"tex ft2, ft0, fs0 <TEXTURE_SAMPLING_OPTIONS>		\n" +
-						"mul ft2, ft2, fc2.w						\n" +
-						"add ft1, ft1, ft2							\n" +
+			// -1
+			"temp0.x += fc3.z;" +
+			"temp2 = sampleNoMip(temp0, texture0);" +
+			"temp2 *= fc2.w;" +
+			"temp1 += temp2;" +
 
-					// 0
-						"add ft0.x, ft0.x, fc3.z					\n" +
-						"tex ft2, ft0, fs0 <TEXTURE_SAMPLING_OPTIONS>		\n" +
-						"mul ft2, ft2, fc3.x						\n" +
-						"add ft1, ft1, ft2							\n" +
+			// 0
+			"temp0.x += fc3.z;" +
+			"temp2 = sampleNoMip(temp0, texture0);" +
+			"temp2 *= fc3.x;" +
+			"temp1 += temp2;" +
 
-					// 1
-						"add ft0.x, ft0.x, fc3.z					\n" +
-						"tex ft2, ft0, fs0 <TEXTURE_SAMPLING_OPTIONS>		\n" +
-						"mul ft2, ft2, fc2.w						\n" +
-						"add ft1, ft1, ft2							\n" +
+			// 1
+			"temp0.x += fc3.z;" +
+			"temp2 = sampleNoMip(temp0, texture0);" +
+			"temp2 *= fc2.w;" +
+			"temp1 += temp2;" +
 
-					// 2
-						"add ft0.x, ft0.x, fc3.z					\n" +
-						"tex ft2, ft0, fs0 <TEXTURE_SAMPLING_OPTIONS>		\n" +
-						"mul ft2, ft2, fc2.z						\n" +
-						"add ft1, ft1, ft2							\n" +
+			// 2
+			"temp0.x += fc3.z;" +
+			"temp2 = sampleNoMip(temp0, texture0);" +
+			"temp2 *= fc2.z;" +
+			"temp1 += temp2;" +
 
-					// 3
-						"add ft0.x, ft0.x, fc3.z					\n" +
-						"tex ft2, ft0, fs0 <TEXTURE_SAMPLING_OPTIONS>		\n" +
-						"mul ft2, ft2, fc2.y						\n" +
-						"add ft1, ft1, ft2							\n" +
+			// 3
+			"temp0.x += fc3.z;" +
+			"temp2 = sampleNoMip(temp0, texture0);" +
+			"temp2 *= fc2.y;" +
+			"temp1 += temp2;" +
 
-					// 4
-						"add ft0.x, ft0.x, fc3.z					\n" +
-						"tex ft2, ft0, fs0 <TEXTURE_SAMPLING_OPTIONS>		\n" +
-						"mul ft2, ft2, fc2.x						\n" +
-						"add ft1, ft1, ft2							\n" +
+			// 4
+			"temp0.x += fc3.z;" +
+			"temp2 = sampleNoMip(temp0, texture0);" +
+			"temp2 *= fc2.x;" +
+			"temp1 += temp2;" +
 
-						"mul ft1, ft1, fc0							\n" +
-						"add oc, ft1, fc1							\n";
+			"output = colorize(temp1, colorMultiplier, colorOffset);";
 
-		protected var VERTICAL_FRAGMENT_SHADER:String;
+		private var VERTICAL_FRAGMENT_SHADER:String;
 
 		protected var horizontalShader:Shader2D;
 		protected var verticalShader:Shader2D;
 
 		protected const MAX_BLUR:uint = 4;
 
-		protected var blurredTexture:Texture;
-		protected var blurredTexture2:Texture;
-		protected var blurredTextureCam:Camera2D = new Camera2D(1, 1);
+		protected var blurredTexture:Texture2D;
+		protected var blurredTexture2:Texture2D;
 		protected var activeRenderToTexture:Texture;
+
+		protected var blurredMatrix:Matrix3D = new Matrix3D();
+		protected var blurredTextureCam:Camera2D = new Camera2D(1, 1);
 
 		protected var blurX:uint;
 		protected var blurY:uint;
@@ -136,41 +166,37 @@ package de.nulldesign.nd2d.materials {
 		protected const BLUR_DIRECTION_HORIZONTAL:uint = 0;
 		protected const BLUR_DIRECTION_VERTICAL:uint = 1;
 
-		protected var fragmentData:Vector.<Number>;
+		protected var programConstants:Vector.<Number> = new Vector.<Number>(8, true);
 
 		public function Sprite2DBlurMaterial(blurX:uint = 4, blurY:uint = 4) {
-
 			super();
 
-			VERTICAL_FRAGMENT_SHADER = HORIZONTAL_FRAGMENT_SHADER.replace("sub ft0.x, ft0.x, fc3.y", "sub ft0.y, ft0.y, fc3.y");
-			var reg:RegExp = /add ft0.x, ft0.x, fc3.z/g;
-			VERTICAL_FRAGMENT_SHADER = VERTICAL_FRAGMENT_SHADER.replace(reg, "add ft0.y, ft0.y, fc3.z");
+			VERTICAL_FRAGMENT_SHADER = HORIZONTAL_FRAGMENT_SHADER.replace("temp0.x -= fc3.y", "temp0.y -= fc3.y");
+			VERTICAL_FRAGMENT_SHADER = VERTICAL_FRAGMENT_SHADER.replace(/temp0.x \+= fc3.z/g, "temp0.y += fc3.z");
 
-			fragmentData = new Vector.<Number>(8, true);
 			setBlur(blurX, blurY);
 		}
 
 		public function setBlur(blurX:uint = 4, blurY:uint = 4):void {
 			this.blurX = blurX;
 			this.blurY = blurY;
-
-			drawCalls = Math.max(1, Math.ceil(blurX / MAX_BLUR) + Math.ceil(blurY / MAX_BLUR));
 		}
 
 		protected function updateBlurKernel(radius:uint, direction:uint):void {
-
-			fragmentData[0] = 0.0; //0.05; // fc2.x
-			fragmentData[1] = 0.0; //0.09; // fc2.y
-			fragmentData[2] = 0.0; //0.12; // fc2.z
-			fragmentData[3] = 0.0; //0.15; // fc2.w
-			fragmentData[4] = 1.0; //0.16; // fc3.x
+			programConstants[0] = 0.0; //0.05; // fc2.x
+			programConstants[1] = 0.0; //0.09; // fc2.y
+			programConstants[2] = 0.0; //0.12; // fc2.z
+			programConstants[3] = 0.0; //0.15; // fc2.w
+			programConstants[4] = 1.0; //0.16; // fc3.x
 			// movement: minus 4 and plus 1 several times...
-			fragmentData[5] = 4.0 * (1.0 / (direction == BLUR_DIRECTION_HORIZONTAL ? texture.textureWidth : texture.textureHeight)); // fc3.y
-			fragmentData[6] = 1.0 * (1.0 / (direction == BLUR_DIRECTION_HORIZONTAL ? texture.textureWidth : texture.textureHeight)); // fc3.z
-			fragmentData[7] = 0.0;  // fc3.w
+			programConstants[5] = 4.0 * (1.0 / (direction == BLUR_DIRECTION_HORIZONTAL ? texture.textureWidth : texture.textureHeight)); // fc3.y
+			programConstants[6] = 1.0 * (1.0 / (direction == BLUR_DIRECTION_HORIZONTAL ? texture.textureWidth : texture.textureHeight)); // fc3.z
+			programConstants[7] = 0.0;  // fc3.w
 
 			// http://stackoverflow.com/questions/1696113/how-do-i-gaussian-blur-an-image-without-using-any-in-built-gaussian-functions
-			if(radius == 0) return;
+			if(radius == 0) {
+				return;
+			}
 
 			var kernelLen:uint = radius * 2 + 1;
 			var r:Number = -radius;
@@ -182,9 +208,10 @@ package de.nulldesign.nd2d.materials {
 
 			for(i = 0; i < kernelLen; i++) {
 				var x:Number = r * r;
+
 				kernel[i] = sqrtTwoPiTimesRadiusRecip * Math.exp(-x * twoRadiusSquaredRecip);
-				r++;
 				kernelSum += kernel[i];
+				r++;
 			}
 
 			for(i = 0; i < kernelLen; i++) {
@@ -192,31 +219,36 @@ package de.nulldesign.nd2d.materials {
 			}
 
 			var idx:uint = 4;
+
 			for(i = kernelLen / 2; i >= 0; i--) {
-				fragmentData[idx--] = kernel[i];
+				programConstants[idx--] = kernel[i];
 			}
 		}
 
 		override protected function prepareForRender(context:Context3D):void {
-
 			super.prepareForRender(context);
 
-			context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 2, fragmentData, 2);
+			context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 2, programConstants, 2);
 
 			if(!blurredTexture) {
-				blurredTexture = context.createTexture(texture.textureWidth, texture.textureHeight, Context3DTextureFormat.BGRA, true);
+				blurredTexture = Texture2D.textureFromSize(texture.textureWidth, texture.textureHeight);
 			}
 
 			if(!blurredTexture2) {
-				blurredTexture2 = context.createTexture(texture.textureWidth, texture.textureHeight, Context3DTextureFormat.BGRA, true);
+				blurredTexture2 = Texture2D.textureFromSize(texture.textureWidth, texture.textureHeight);
 			}
 		}
 
 		protected function renderBlur(context:Context3D, startTri:uint, numTris:uint):void {
-			activeRenderToTexture = (activeRenderToTexture == blurredTexture ? blurredTexture2 : blurredTexture);
+			activeRenderToTexture = (activeRenderToTexture == blurredTexture.getTexture(context) ? blurredTexture2.getTexture(context) : blurredTexture.getTexture(context));
 			context.setRenderToTexture(activeRenderToTexture, false, 2, 0);
 			context.clear(0.0, 0.0, 0.0, 0.0);
+
 			context.drawTriangles(indexBuffer, startTri * 3, numTris);
+
+			Statistics.drawCalls++;
+			Statistics.triangles += numTris - startTri;
+
 			context.setTextureAt(0, activeRenderToTexture);
 		}
 
@@ -225,16 +257,27 @@ package de.nulldesign.nd2d.materials {
 
 			// set up camera for blurry texture
 			blurredTextureCam.resizeCameraStage(texture.textureWidth, texture.textureHeight);
-			blurredTextureCam.x = -texture.textureWidth * 0.5;
-			blurredTextureCam.y = -texture.textureHeight * 0.5;
+			blurredTextureCam.x = -texture.bitmapWidth * 0.5;
+			blurredTextureCam.y = -texture.bitmapHeight * 0.5;
+
+			blurredMatrix.identity();
+			blurredMatrix.appendScale(texture.bitmapWidth >> 1, texture.bitmapHeight >> 1, 1.0);
 
 			// save camera matrix
 			var savedCamMatrix:Matrix3D = viewProjectionMatrix;
-			var savedSpriteSheet:ASpriteSheetBase = spriteSheet;
-			var savedModelMatrix:Matrix3D = modelMatrix;
+			var savedSpriteSheet:TextureSheetBase = texture.sheet;
+			var savedClipSpaceMatrix:Matrix3D = clipSpaceMatrix;
+			var savedUvOffsetX:Number = uvOffsetX;
+			var savedUvOffsetY:Number = uvOffsetY;
+			var savedUvScaleX:Number = uvScaleX;
+			var savedUvScaleY:Number = uvScaleY;
 			viewProjectionMatrix = blurredTextureCam.getViewProjectionMatrix();
-			spriteSheet = null;
-			modelMatrix = new Matrix3D();
+			texture.sheet = null;
+			clipSpaceMatrix = blurredMatrix;
+			uvOffsetX = 0.0;
+			uvOffsetY = 0.0;
+			uvScaleX = 1.0;
+			uvScaleY = 1.0;
 
 			updateBlurKernel(MAX_BLUR, BLUR_DIRECTION_HORIZONTAL);
 			prepareForRender(context);
@@ -252,7 +295,7 @@ package de.nulldesign.nd2d.materials {
 
 			if(blurX % MAX_BLUR != 0) {
 				updateBlurKernel(blurX % MAX_BLUR, BLUR_DIRECTION_HORIZONTAL);
-				context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 2, fragmentData, 2);
+				context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 2, programConstants, 2);
 
 				renderBlur(context, startTri, numTris);
 			}
@@ -260,7 +303,7 @@ package de.nulldesign.nd2d.materials {
 			// BLUR Y
 			context.setProgram(verticalShader.shader);
 			updateBlurKernel(MAX_BLUR, BLUR_DIRECTION_VERTICAL);
-			context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 2, fragmentData, 2);
+			context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 2, programConstants, 2);
 
 			totalSteps = Math.floor(blurY / MAX_BLUR);
 
@@ -270,7 +313,7 @@ package de.nulldesign.nd2d.materials {
 
 			if(blurY % MAX_BLUR != 0) {
 				updateBlurKernel(blurY % MAX_BLUR, BLUR_DIRECTION_VERTICAL);
-				context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 2, fragmentData, 2);
+				context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 2, programConstants, 2);
 
 				renderBlur(context, startTri, numTris);
 			}
@@ -279,13 +322,17 @@ package de.nulldesign.nd2d.materials {
 
 			// FINAL PASS
 			viewProjectionMatrix = savedCamMatrix;
-			spriteSheet = savedSpriteSheet;
-			modelMatrix = savedModelMatrix;
+			texture.sheet = savedSpriteSheet;
+			clipSpaceMatrix = savedClipSpaceMatrix;
+			uvOffsetX = savedUvOffsetX;
+			uvOffsetY = savedUvOffsetY;
+			uvScaleX = savedUvScaleX;
+			uvScaleY = savedUvScaleY;
 
 			updateBlurKernel(0, BLUR_DIRECTION_HORIZONTAL);
 			prepareForRender(context);
 
-			if(blurX == 0 && blurY == 0) {
+			if(!blurX && !blurY) {
 				activeRenderToTexture = texture.getTexture(context);
 			}
 
@@ -293,7 +340,32 @@ package de.nulldesign.nd2d.materials {
 
 			context.drawTriangles(indexBuffer, startTri * 3, numTris);
 
+			Statistics.drawCalls++;
+			Statistics.triangles += numTris - startTri;
+
 			clearAfterRender(context);
+		}
+
+		override protected function initProgram(context:Context3D):void {
+			if(!shaderData) {
+				var defines:String =
+					"#define PREMULTIPLIED_ALPHA=" + int(texture.hasPremultipliedAlpha) + ";" +
+					"#define USE_UV=" + int(usesUV) + ";" +
+					"#define USE_COLOR=" + int(usesColor) + ";" +
+					"#define USE_COLOR_OFFSET=" + int(usesColorOffset) + ";";
+
+				horizontalShader = ShaderCache.getShader(context, defines, VERTEX_SHADER, HORIZONTAL_FRAGMENT_SHADER, 4, texture.textureOptions);
+				verticalShader = ShaderCache.getShader(context, defines, VERTEX_SHADER, VERTICAL_FRAGMENT_SHADER, 4, texture.textureOptions);
+
+				shaderData = horizontalShader;
+			}
+		}
+
+		override public function handleDeviceLoss():void {
+			super.handleDeviceLoss();
+
+			blurredTexture.texture = null;
+			blurredTexture2.texture = null;
 		}
 
 		override public function dispose():void {
@@ -308,21 +380,10 @@ package de.nulldesign.nd2d.materials {
 				blurredTexture2.dispose();
 				blurredTexture2 = null;
 			}
-		}
 
-		override public function handleDeviceLoss():void {
-			super.handleDeviceLoss();
-			blurredTexture = null;
-			blurredTexture2 = null;
-		}
-
-		override protected function initProgram(context:Context3D):void {
-			if(!shaderData) {
-				horizontalShader = ShaderCache.getInstance().getShader(context, this, VERTEX_SHADER, HORIZONTAL_FRAGMENT_SHADER, 4, texture.textureOptions, 0);
-				verticalShader = ShaderCache.getInstance().getShader(context, this, VERTEX_SHADER, VERTICAL_FRAGMENT_SHADER, 4, texture.textureOptions, 1000);
-
-				shaderData = horizontalShader;
-			}
+			blurredMatrix = null;
+			programConstants = null;
+			blurredTextureCam = null;
 		}
 	}
 }

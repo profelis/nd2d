@@ -30,56 +30,52 @@
 
 package de.nulldesign.nd2d.materials.texture.parser {
 
+	import de.nulldesign.nd2d.materials.texture.Texture2D;
+
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 
-	public class TexturePackerParser extends ATextureAtlasParser {
+	public class ParserZwopTex extends ParserBase {
 
-		public function TexturePackerParser() {
+		public function ParserZwopTex() {
 		}
 
-		override public function parse(xmlData:XML):void {
-
+		override public function parse(texture:Texture2D, xmlData:XML):void {
 			var metadata:XML = getDict("metadata", xmlData);
 
 			if(!metadata) {
-				throw new Error("Unrecognised XML Format");
+				throw new Error("Unrecognised XML Format. Only the Zwoptex App XML is supported. The Flash app is not supported at the moment. Feel free to write a parser and commit it ;)");
 			}
 
 			var format:String = getValueFromDict("format", metadata);
 
 			switch(format) {
-				case "0":
-					throw new Error("cocos2d-original Format is not supported. Try cocos2d or cocos2d-0.99.4 instead");
+				case "3":  {
+					parseZwoptexDefault(texture, xmlData);
 					break;
-				case "1":
-				case "2":
-					parseCocos2DDefault(xmlData);
-					break;
-				default:
+				}
+				default:  {
 					throw new Error("Unrecognised XML Format");
 					break;
+				}
 			}
 		}
 
-		protected function parseCocos2DDefault(cocos2DXML:XML):void {
-
+		private function parseZwoptexDefault(texture:Texture2D, xmlData:XML):void {
 			var type:String;
 			var data:String;
 			var array:Array;
 
-			var topKeys:XMLList = cocos2DXML.dict.key;
-			var topDicts:XMLList = cocos2DXML.dict.dict;
+			var topKeys:XMLList = xmlData.dict.key;
+			var topDicts:XMLList = xmlData.dict.dict;
 
 			for(var k:uint = 0; k < topKeys.length(); k++) {
 				switch(topKeys[k].toString()) {
-					case "frames":
-					{
+					case "frames":  {
 						var frameKeys:XMLList = topDicts[k].key;
 						var frameDicts:XMLList = topDicts[k].dict;
 
 						for(var l:uint = 0; l < frameKeys.length(); l++) {
-
 							var keyName:String = frameKeys[l];
 							var propKeys:XMLList = frameDicts[l].key;
 							var propAll:XMLList = frameDicts[l].*;
@@ -87,85 +83,53 @@ package de.nulldesign.nd2d.materials.texture.parser {
 							frameNameToIndex[keyName] = l;
 
 							for(var m:uint = 0; m < propKeys.length(); m++) {
+								var i:uint = propKeys[m].childIndex() + 1;
 
-								type = propAll[propKeys[m].childIndex() + 1].name();
-								data = propAll[propKeys[m].childIndex() + 1];
+								data = propAll[i];
+								type = propAll[i].name();
 
 								switch(propKeys[m].toString()) {
-									case "frame":
-									{
+									case "textureRect":  {
 										if(type == "string") {
 											array = data.split(/[^0-9-]+/);
 											frames.push(new Rectangle(array[1], array[2], array[3], array[4]));
+
+											uvRects.push(new Rectangle(
+												array[1] / texture.textureWidth,
+												array[2] / texture.textureHeight,
+												array[3] / texture.textureWidth,
+												array[4] / texture.textureHeight));
 										} else {
 											throw new Error("Error parsing descriptor format");
 										}
-									}
+
 										break;
-									case "offset":
-									{
+									}
+									case "spriteOffset":  {
 										if(type == "string") {
 											array = data.split(/[^0-9-]+/);
-											// our coordinate system is different than the cocos one
 											offsets.push(new Point(array[1], -array[2]));
 										} else {
 											throw new Error("Error parsing descriptor format");
 										}
-									}
+
 										break;
-									/*
-									 case "sourceSize":
-									 {
-									 if(type == "string") {
-									 array = data.split(/[^0-9-]+/);
-									 sourceSizes.push(new Point(array[1], array[2]));
-									 } else {
-									 throw new Error("Error parsing descriptor format");
-									 }
-									 }
-									 break;
-									 case "sourceColorRect":
-									 {
-									 if(type == "string") {
-									 array = data.split(/[^0-9-]+/);
-									 sourceColorRects.push(new Rectangle(array[1], array[2], array[3], array[4]));
-									 } else {
-									 throw new Error("Error parsing descriptor format");
-									 }
-									 }
-									 break;
-									 */
-									case "rotated":
-									{
+									}
+									case "rotated":  {
 										if(type != "false") {
 											throw new Error("Rotated elements not supported (yet)");
 										}
-									}
+
 										break;
+									}
 								}
 							}
 						}
-					}
+
 						break;
+					}
 				}
 			}
-
-			/*
-			 Frame:
-			 Top-Left originating rectangle of the sprite's pixel texture coordinates. Cocos2'd will convert these to UV coordinates (0-1) when loading based on the texture size.
-
-			 Offset:
-			 Zwoptex trim's transparency off sprites. Because of this sprite's need to be offset to ensure their texture is drawn in correct alignment to their original size.
-
-			 Source Color Rect:
-			 This is the Top-Left originating rectangle that is the valid pixel data of the sprite. Say you have a 512x512 sprite that only has 10x10 pixels of data inside of it located at 500x500. The source color rect could be {500,500,10,10}.
-
-			 Format:
-			 Version number related to what version of Zwoptex was used so cocos2d knows how to parse the plist properly.
-			 Flash Version: 0
-			 Desktop Version 0-0.4b: 1
-			 Desktop Version 1.x: 2
-			 */
 		}
 	}
 }

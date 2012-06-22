@@ -30,7 +30,7 @@
 
 package de.nulldesign.nd2d.materials.shader {
 
-	import com.adobe.utils.AGALMiniAssembler;
+	import com.adobe.utils.AGALMacroAssembler;
 
 	import de.nulldesign.nd2d.materials.texture.TextureOption;
 
@@ -43,8 +43,104 @@ package de.nulldesign.nd2d.materials.shader {
 		public var shader:Program3D;
 		public var numFloatsPerVertex:int;
 
-		public function Shader2D(context:Context3D, vertexShaderString:String, fragmentShaderString:String, numFloatsPerVertex:uint, textureOptions:uint) {
+		public static const COMMON_LIB:String =
+			"macro min( a, b ) {" +
+			"	min out, a, b;" +
+			"}" +
 
+			"macro max( a, b ) {" +
+			"	max out, a, b;" +
+			"}" +
+
+			"macro sin( a ) {" +
+			"	sin out, a" +
+			"}" +
+
+			"macro cos( a ) {" +
+			"	cos out, a;" +
+			"}" +
+
+			// fractional part
+			"macro frac( a ) {" +
+			"	frc out, a;" +
+			"}" +
+
+			// clamp between 0 and 1
+			"macro clamp( a ) {" +
+			"	sat out, a;" +
+			"}";
+
+		public static const VERTEX_LIB:String =
+			"alias op, output;" +
+
+			"alias vt0, temp0;" +
+			"alias vt1, temp1;" +
+			"alias vt2, temp2;" +
+			"alias vt3, temp3;" +
+			"alias vt4, temp4;" +
+			"alias vt5, temp5;" +
+			"alias vt6, temp6;" +
+			"alias vt7, temp7;";
+
+		public static const FRAGMENT_LIB:String =
+			"alias oc, output;" +
+
+			"alias fs0, texture0;" +
+			"alias fs1, texture1;" +
+			"alias fs2, texture2;" +
+			"alias fs3, texture3;" +
+			"alias fs4, texture4;" +
+			"alias fs5, texture5;" +
+			"alias fs6, texture6;" +
+			"alias fs7, texture7;" +
+
+			"alias ft0, temp0;" +
+			"alias ft1, temp1;" +
+			"alias ft2, temp2;" +
+			"alias ft3, temp3;" +
+			"alias ft4, temp4;" +
+			"alias ft5, temp5;" +
+			"alias ft6, temp6;" +
+			"alias ft7, temp7;" +
+
+			// sample texture
+			"macro sample( texCoord, texture ) {" +
+			"	tex out, texCoord, texture <???>;" +
+			"}" +
+
+			// sample texture without mipmap
+			"macro sampleNoMip( texCoord, texture ) {" +
+			"	tex out, texCoord, texture <???,mipnone>;" +
+			"}" +
+
+			// colorize (uses temp7.a)
+			"macro colorize( color, colorMultiplier, colorOffset ) {" +
+			"	#if USE_COLOR;" +
+			"		color *= colorMultiplier;" +
+			"	#endif;" +
+
+			"	#if USE_COLOR_OFFSET;" +
+			"		#if PREMULTIPLIED_ALPHA;" +
+			"			color.rgb /= color.a;" +
+			"		#endif;" +
+
+			"		color.rgb += colorOffset.rgb;" +
+
+			"		temp7.a = colorOffset.a * color.a;" +	// temp register
+			"		temp7.a /= color.a;" +
+			"		color.a += temp7.a;" +
+
+			"		color = clamp(color);" +
+
+			"		#if PREMULTIPLIED_ALPHA;" +
+			"			color.rgb *= color.a;" +
+			"		#endif;" +
+			"	#endif;" +
+
+			"	out = color;" +
+			"}";
+
+		public function Shader2D(context:Context3D, commonShaderString:String, vertexShaderString:String, fragmentShaderString:String, numFloatsPerVertex:uint, textureOptions:uint) {
 			var texOptions:Array = ["2d"];
 			var optionMissing:Boolean = false;
 
@@ -58,10 +154,10 @@ package de.nulldesign.nd2d.materials.shader {
 				optionMissing = true;
 			}
 
-			if(textureOptions & TextureOption.FILTERING_LINEAR) {
-				texOptions.push("linear");
-			} else if(textureOptions & TextureOption.FILTERING_NEAREST) {
+			if(textureOptions & TextureOption.FILTERING_NEAREST) {
 				texOptions.push("nearest");
+			} else if(textureOptions & TextureOption.FILTERING_LINEAR) {
+				texOptions.push("linear");
 			} else {
 				optionMissing = true;
 			}
@@ -75,20 +171,21 @@ package de.nulldesign.nd2d.materials.shader {
 			}
 
 			if(optionMissing && textureOptions > 0) {
-				throw new Error("you need to specify all three texture option components. for example: myOption = MIPMAP_NEAREST | FILTERING_NEAREST | REPEAT_NORMAL;");
+				throw new Error("You need to specify all three texture option components. (MIPMAP_NEAREST | FILTERING_NEAREST | REPEAT_NORMAL)");
 			}
 
-			var pattern:RegExp = /TEXTURE_SAMPLING_OPTIONS/g;
-			var finalFragmentShader:String = fragmentShaderString.replace(pattern, texOptions.join(","));
+			var finalVertexShader:String = COMMON_LIB + VERTEX_LIB + commonShaderString + vertexShaderString;
+			var finalFragmentShader:String = (COMMON_LIB + FRAGMENT_LIB + commonShaderString + fragmentShaderString).replace(/\?\?\?/g, texOptions.join(","));
 
-			var vertexShaderAssembler:AGALMiniAssembler = new AGALMiniAssembler();
-			vertexShaderAssembler.assemble(Context3DProgramType.VERTEX, vertexShaderString);
+			var vertexShaderAssembler:AGALMacroAssembler = new AGALMacroAssembler();
+			vertexShaderAssembler.assemble(Context3DProgramType.VERTEX, finalVertexShader);
 
-			var colorFragmentShaderAssembler:AGALMiniAssembler = new AGALMiniAssembler();
+			var colorFragmentShaderAssembler:AGALMacroAssembler = new AGALMacroAssembler();
 			colorFragmentShaderAssembler.assemble(Context3DProgramType.FRAGMENT, finalFragmentShader);
 
 			shader = context.createProgram();
 			shader.upload(vertexShaderAssembler.agalcode, colorFragmentShaderAssembler.agalcode);
+
 			this.numFloatsPerVertex = numFloatsPerVertex;
 		}
 	}

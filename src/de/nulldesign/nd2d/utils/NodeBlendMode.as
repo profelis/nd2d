@@ -30,14 +30,14 @@
 
 package de.nulldesign.nd2d.utils {
 
-    public class NodeBlendMode {
+	public class NodeBlendMode {
 
-        public var src:String;
-        public var dst:String;
+		public var src:String;
+		public var dst:String;
 
-        public function NodeBlendMode(src:String, dst:String) {
-            this.src = src;
-            this.dst = dst;
-        }
-    }
+		public function NodeBlendMode(src:String, dst:String) {
+			this.src = src;
+			this.dst = dst;
+		}
+	}
 }

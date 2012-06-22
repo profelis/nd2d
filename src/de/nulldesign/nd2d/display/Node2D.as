@@ -32,8 +32,7 @@ package de.nulldesign.nd2d.display {
 
 	import de.nulldesign.nd2d.materials.BlendModePresets;
 	import de.nulldesign.nd2d.utils.NodeBlendMode;
-	import de.nulldesign.nd2d.utils.StatsObject;
-	
+
 	import flash.display.Stage;
 	import flash.display3D.Context3D;
 	import flash.events.Event;
@@ -58,13 +57,15 @@ package de.nulldesign.nd2d.display {
 	[Event(name="removedFromStage", type="flash.events.Event")]
 
 	/**
-	 * Dispatched when a user presses and releases the main button of the user's pointing device over the same Node2D.
+	 * Dispatched when a user presses and releases the main button of the user's
+	 * pointing device over the same Node2D.
 	 * @eventType flash.events.MouseEvent.CLICK
 	 */
 	[Event(name="click", type="flash.events.MouseEvent")]
 
 	/**
-	 * Dispatched when a user presses the pointing device button over an Node2D instance.
+	 * Dispatched when a user presses the pointing device button over an Node2D
+	 * instance.
 	 * @eventType flash.events.MouseEvent.MOUSE_DOWN
 	 */
 	[Event(name="mouseDown", type="flash.events.MouseEvent")]
@@ -76,7 +77,8 @@ package de.nulldesign.nd2d.display {
 	[Event(name="mouseMove", type="flash.events.MouseEvent")]
 
 	/**
-	 * Dispatched when a user releases the pointing device button over an Node2D instance.
+	 * Dispatched when a user releases the pointing device button over an Node2D
+	 * instance.
 	 * @eventType flash.events.MouseEvent.MOUSE_UP
 	 */
 	[Event(name="mouseUp", type="flash.events.MouseEvent")]
@@ -88,13 +90,15 @@ package de.nulldesign.nd2d.display {
 	[Event(name="mouseOver", type="flash.events.MouseEvent")]
 
 	/**
-	 * Dispatched when the user moves a pointing device away from an Node2D instance.
+	 * Dispatched when the user moves a pointing device away from an Node2D
+	 * instance.
 	 * @eventType flash.events.MouseEvent.MOUSE_OUT
 	 */
 	[Event(name="mouseOut", type="flash.events.MouseEvent")]
 
 	/**
-	 * Dispatched when a user presses and releases the main button of the user's pointing device over the same Node2D.
+	 * Dispatched when a user presses and releases the main button of the user's
+	 * pointing device over the same Node2D.
 	 * @eventType flash.events.TouchEvent.TOUCH_TAP
 	 */
 	[Event(name="touchTap", type="flash.events.TouchEvent")]
@@ -106,7 +110,8 @@ package de.nulldesign.nd2d.display {
 	[Event(name="touchOver", type="flash.events.TouchEvent")]
 
 	/**
-	 * Dispatched when the user moves a pointing device away from an Node2D instance.
+	 * Dispatched when the user moves a pointing device away from an Node2D
+	 * instance.
 	 * @eventType flash.events.TouchEvent.TOUCH_OUT
 	 */
 	[Event(name="touchOut", type="flash.events.TouchEvent")]
@@ -118,13 +123,15 @@ package de.nulldesign.nd2d.display {
 	[Event(name="touchMove", type="flash.events.TouchEvent")]
 
 	/**
-	 * Dispatched when a user presses the pointing device button over an Node2D instance.
+	 * Dispatched when a user presses the pointing device button over an Node2D
+	 * instance.
 	 * @eventType flash.events.TouchEvent.TOUCH_BEGIN
 	 */
 	[Event(name="touchBegin", type="flash.events.TouchEvent")]
 
 	/**
-	 * Dispatched when a user releases the pointing device button over an Node2D instance.
+	 * Dispatched when a user releases the pointing device button over an Node2D
+	 * instance.
 	 * @eventType flash.events.TouchEvent.TOUCH_END
 	 */
 	[Event(name="touchEnd", type="flash.events.TouchEvent")]
@@ -155,6 +162,16 @@ package de.nulldesign.nd2d.display {
 		public var invalidateMatrix:Boolean = true;
 
 		/**
+		 * @private
+		 */
+		public var clipSpaceMatrix:Matrix3D = new Matrix3D();
+
+		/**
+		 * @private
+		 */
+		public var invalidateClipSpace:Boolean = true;
+
+		/**
 		 * Currently only used by Sprite2DCloud
 		 * @private
 		 */
@@ -183,7 +200,9 @@ package de.nulldesign.nd2d.display {
 
 		public var batchParent:Sprite2DBatch = null;
 
-		public var nodeIsTinted:Boolean = false;
+		public var usesUV:Boolean = false;
+		public var usesColor:Boolean = false;
+		public var usesColorOffset:Boolean = false;
 
 		public var vx:Number;
 		public var vy:Number;
@@ -214,13 +233,9 @@ package de.nulldesign.nd2d.display {
 
 		/**
 		 * [read-only] Use addChild() instead
-		 * @private
 		 */
 		public var parent:Node2D;
 
-		/**
-		 * @private
-		 */
 		protected var _width:Number;
 
 		public function get width():Number {
@@ -231,9 +246,6 @@ package de.nulldesign.nd2d.display {
 			scaleX = value / _width;
 		}
 
-		/**
-		 * @private
-		 */
 		protected var _height:Number;
 
 		public function get height():Number {
@@ -300,10 +312,10 @@ package de.nulldesign.nd2d.display {
 		}
 
 		public function set tint(value:uint):void {
-			if(_tint != value) {
+			if(_tint != value && _colorTransform) {
 				_tint = value;
 
-				var r:Number = (_tint >> 16) / 255.0;
+				var r:Number = (_tint >> 16 & 255) / 255.0;
 				var g:Number = (_tint >> 8 & 255) / 255.0;
 				var b:Number = (_tint & 255) / 255.0;
 
@@ -318,6 +330,70 @@ package de.nulldesign.nd2d.display {
 
 				invalidateColors = true;
 			}
+		}
+
+		protected var _uvOffsetX:Number = 0.0;
+
+		/**
+		 * Use this property to animate a texture
+		 */
+		public function set uvOffsetX(value:Number):void {
+			if(_uvOffsetX != value) {
+				_uvOffsetX = value;
+				invalidateUV = true;
+			}
+		}
+
+		public function get uvOffsetX():Number {
+			return _uvOffsetX;
+		}
+
+		protected var _uvOffsetY:Number = 0.0;
+
+		/**
+		 * Use this property to animate a texture
+		 */
+		public function set uvOffsetY(value:Number):void {
+			if(_uvOffsetY != value) {
+				_uvOffsetY = value;
+				invalidateUV = true;
+			}
+		}
+
+		public function get uvOffsetY():Number {
+			return _uvOffsetY;
+		}
+
+		protected var _uvScaleX:Number = 1.0;
+
+		/**
+		 * Use this property to repeat/scale a texture.
+		 */
+		public function set uvScaleX(value:Number):void {
+			if(_uvScaleX != value) {
+				_uvScaleX = value;
+				invalidateUV = true;
+			}
+		}
+
+		public function get uvScaleX():Number {
+			return _uvScaleX;
+		}
+
+		protected var _uvScaleY:Number = 1.0;
+
+		/**
+		 * Use this property to repeat/scale a texture.
+		 */
+		public function set uvScaleY(value:Number):void {
+			if(_uvScaleY != value) {
+				_uvScaleY = value;
+				invalidateUV = true;
+			}
+		}
+
+		public function get uvScaleY():Number {
+			return _uvScaleY;
 		}
 
 		protected var _scaleX:Number = 1.0;
@@ -344,6 +420,11 @@ package de.nulldesign.nd2d.display {
 
 		public function get scaleY():Number {
 			return _scaleY;
+		}
+
+		public function set scale(value:Number):void {
+			scaleX = value;
+			scaleY = value;
 		}
 
 		protected var _x:Number = 0.0;
@@ -476,14 +557,6 @@ package de.nulldesign.nd2d.display {
 			return _mouseY;
 		}
 
-		public function get numTris():uint {
-			return 0;
-		}
-
-		public function get drawCalls():uint {
-			return 0;
-		}
-
 		public function get numChildren():uint {
 			return childCount;
 		}
@@ -496,6 +569,7 @@ package de.nulldesign.nd2d.display {
 		 */
 		public function updateLocalMatrix():void {
 			invalidateMatrix = false;
+
 			localModelMatrix.identity();
 			localModelMatrix.appendTranslation(-_pivot.x, -_pivot.y, 0);
 			localModelMatrix.appendScale(_scaleX, _scaleY, 1.0);
@@ -515,7 +589,21 @@ package de.nulldesign.nd2d.display {
 			if(parent) {
 				worldModelMatrix.append(parent.worldModelMatrix);
 			}
+
+			updateClipSpace();
 		}
+
+		/**
+		 * @private
+		 */
+		public function updateClipSpace():void {
+			invalidateClipSpace = false;
+
+			clipSpaceMatrix.identity();
+			clipSpaceMatrix.append(worldModelMatrix);
+		}
+
+		private static const offsetFactor:Number = 1.0 / 255.0;
 
 		/**
 		 * @private
@@ -523,11 +611,12 @@ package de.nulldesign.nd2d.display {
 		public function updateColors():void {
 			invalidateColors = false;
 
+			// premultiply alpha
 			if(hasPremultipliedAlphaTexture) {
-				combinedColorTransform.redMultiplier = _colorTransform.redMultiplier * _alpha;
-				combinedColorTransform.greenMultiplier = _colorTransform.greenMultiplier * _alpha;
-				combinedColorTransform.blueMultiplier = _colorTransform.blueMultiplier * _alpha;
 				combinedColorTransform.alphaMultiplier = _colorTransform.alphaMultiplier * _alpha;
+				combinedColorTransform.redMultiplier = _colorTransform.redMultiplier * combinedColorTransform.alphaMultiplier;
+				combinedColorTransform.greenMultiplier = _colorTransform.greenMultiplier * combinedColorTransform.alphaMultiplier;
+				combinedColorTransform.blueMultiplier = _colorTransform.blueMultiplier * combinedColorTransform.alphaMultiplier;
 			} else {
 				combinedColorTransform.redMultiplier = _colorTransform.redMultiplier;
 				combinedColorTransform.greenMultiplier = _colorTransform.greenMultiplier;
@@ -535,27 +624,40 @@ package de.nulldesign.nd2d.display {
 				combinedColorTransform.alphaMultiplier = _colorTransform.alphaMultiplier * _alpha;
 			}
 
-			combinedColorTransform.redOffset = _colorTransform.redOffset;
-			combinedColorTransform.greenOffset = _colorTransform.greenOffset;
-			combinedColorTransform.blueOffset = _colorTransform.blueOffset;
-			combinedColorTransform.alphaOffset = _colorTransform.alphaOffset;
+			combinedColorTransform.redOffset = _colorTransform.redOffset * offsetFactor;
+			combinedColorTransform.greenOffset = _colorTransform.greenOffset * offsetFactor;
+			combinedColorTransform.blueOffset = _colorTransform.blueOffset * offsetFactor;
+			combinedColorTransform.alphaOffset = _colorTransform.alphaOffset * offsetFactor * combinedColorTransform.alphaMultiplier;
 
 			if(parent) {
 				combinedColorTransform.concat(parent.combinedColorTransform);
 			}
 
-			nodeIsTinted = (combinedColorTransform.redMultiplier != 1.0 ||
-					combinedColorTransform.greenMultiplier != 1.0 ||
-					combinedColorTransform.blueMultiplier != 1.0 ||
-					combinedColorTransform.alphaMultiplier != 1.0 ||
-					combinedColorTransform.redOffset != 0.0 ||
-					combinedColorTransform.greenOffset != 0.0 ||
-					combinedColorTransform.blueOffset != 0.0 ||
-					combinedColorTransform.alphaOffset != 0.0);
+			usesColor = combinedColorTransform.redMultiplier != 1.0
+				|| combinedColorTransform.greenMultiplier != 1.0
+				|| combinedColorTransform.blueMultiplier != 1.0
+				|| combinedColorTransform.alphaMultiplier != 1.0;
+
+			usesColorOffset = combinedColorTransform.redOffset != 0.0
+				|| combinedColorTransform.greenOffset != 0.0
+				|| combinedColorTransform.blueOffset != 0.0
+				|| combinedColorTransform.alphaOffset != 0.0;
 
 			for(var child:Node2D = childFirst; child; child = child.next) {
 				child.updateColors();
 			}
+		}
+
+		/**
+		 * @private
+		 */
+		public function updateUV():void {
+			invalidateUV = false;
+
+			usesUV = _uvOffsetX != 0.0
+				|| _uvOffsetY != 0.0
+				|| _uvScaleX != 1.0
+				|| _uvScaleY != 1.0;
 		}
 
 		/**
@@ -676,47 +778,41 @@ package de.nulldesign.nd2d.display {
 			}
 		}
 
-		public function handleDeviceLoss():void {
-			var child:Node2D;
-
-			for(child = childFirst; child; child = child.next) {
-				child.handleDeviceLoss();
-			}
-
-			// extend in extended classes
-		}
-
 		/**
 		 * @private
 		 */
-		internal function drawNode(context:Context3D, camera:Camera2D, parentMatrixChanged:Boolean, statsObject:StatsObject):void {
-			var myMatrixChanged:Boolean = false;
-
+		internal function drawNode(context:Context3D, camera:Camera2D):void {
 			if(!_visible) {
 				return;
+			}
+
+			if(invalidateUV) {
+				updateUV();
 			}
 
 			if(invalidateColors) {
 				updateColors();
 			}
 
-			if(invalidateMatrix) {
-				updateLocalMatrix();
-				myMatrixChanged = true;
-			}
+			if(invalidateMatrix || (parent && parent.invalidateMatrix)) {
+				if(invalidateMatrix) {
+					updateLocalMatrix();
+				}
 
-			if(parentMatrixChanged || myMatrixChanged) {
 				updateWorldMatrix();
-				myMatrixChanged = true;
+
+				invalidateMatrix = true;
+			} else if(invalidateClipSpace) {
+				updateClipSpace();
 			}
 
 			draw(context, camera);
-			statsObject.totalDrawCalls += drawCalls;
-			statsObject.totalTris += numTris;
 
 			for(var child:Node2D = childFirst; child; child = child.next) {
-				child.drawNode(context, camera, myMatrixChanged, statsObject);
+				child.drawNode(context, camera);
 			}
+
+			invalidateMatrix = false;
 		}
 
 		protected function draw(context:Context3D, camera:Camera2D):void {
@@ -727,7 +823,7 @@ package de.nulldesign.nd2d.display {
 			// overwrite in extended classes
 		}
 
-		internal function unlinkChild(child:Node2D):void {
+		protected function unlinkChild(child:Node2D):void {
 			if(child.prev) {
 				child.prev.next = child.next;
 			} else {
@@ -745,7 +841,7 @@ package de.nulldesign.nd2d.display {
 		}
 
 		public function addChild(child:Node2D):Node2D {
-			if(child.parent && child.parent != this) {
+			if(child.parent) {
 				child.parent.removeChild(child);
 			}
 
@@ -782,6 +878,10 @@ package de.nulldesign.nd2d.display {
 			unlinkChild(child);
 
 			child.parent = null;
+			child.invalidateUV = true;
+			child.invalidateMatrix = true;
+			child.invalidateColors = true;
+			child.invalidateVisibility = true;
 			child.setStageAndCamRef(null, null);
 
 			childCount--;
@@ -961,12 +1061,12 @@ package de.nulldesign.nd2d.display {
 
 		/**
 		 * Fast merge sort based on compare function.
-		 * 
+		 *
 		 * Pass your own compare function or use the build-in
 		 * Y-sort which is faster because it avoids getters.
-		 * 
-		 *   mergeSort(compareY, SORT_DESC)
-		 * 
+		 *
+		 * mergeSort(compareY, SORT_DESC)
+		 *
 		 * @param sortFunction
 		 * @param sortDirection         SORT_ASC or SORT_DESC
 		 */
@@ -975,8 +1075,9 @@ package de.nulldesign.nd2d.display {
 		}
 
 		public function removeAllChildren():void {
-			while(childFirst) {
-				removeChild(childFirst);
+			// reverse order to speed up Sprite2DCloud
+			while(childLast) {
+				removeChild(childLast);
 			}
 		}
 
@@ -991,7 +1092,8 @@ package de.nulldesign.nd2d.display {
 		}
 
 		/**
-		 * transforms a point from the nodes local coordinate system into global space
+		 * transforms a point from the nodes local coordinate system into global
+		 * space
 		 * @param p
 		 * @return
 		 */
@@ -1017,8 +1119,8 @@ package de.nulldesign.nd2d.display {
 			clipSpaceMat.invert();
 
 			var from:Vector3D = new Vector3D(p.x / camera.sceneWidth * 2.0 - 1.0,
-					-(p.y / camera.sceneHeight * 2.0 - 1.0),
-					0.0, 1.0);
+				-(p.y / camera.sceneHeight * 2.0 - 1.0),
+				0.0, 1.0);
 
 			var v:Vector3D = clipSpaceMat.transformVector(from);
 			v.w = 1.0 / v.w;
@@ -1043,14 +1145,33 @@ package de.nulldesign.nd2d.display {
 			return new Point(v.x, v.y);
 		}
 
-		public function dispose():void {
+		public function handleDeviceLoss():void {
 			for(var child:Node2D = childFirst; child; child = child.next) {
-				child.dispose();
+				child.handleDeviceLoss();
+			}
+
+			// extend in extended classes
+		}
+
+		public function dispose():void {
+			// reverse order to speed up Sprite2DCloud
+			while(childLast) {
+				childLast.dispose();
 			}
 
 			if(parent) {
 				parent.removeChild(this);
 			}
+
+			_pivot = null;
+			_position = null;
+			blendMode = null;
+			mouseEvents = null;
+			_colorTransform = null;
+			localModelMatrix = null;
+			worldModelMatrix = null;
+			localMouseMatrix = null;
+			combinedColorTransform = null;
 		}
 	}
 }

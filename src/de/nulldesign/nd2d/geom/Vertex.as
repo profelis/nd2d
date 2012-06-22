@@ -34,8 +34,8 @@ package de.nulldesign.nd2d.geom {
 
 	public class Vertex extends Vector3D {
 
-        private static var UID_COUNT:uint = 0;
-        public const uid:Number = ++UID_COUNT;
+		private static var UID_COUNT:uint = 0;
+		public const uid:Number = ++UID_COUNT;
 
 		/**
 		 * the color must be in ARGB format.
@@ -44,30 +44,30 @@ package de.nulldesign.nd2d.geom {
 
 		public var bufferIdx:int = -1;
 
-        public function Vertex(x:Number = 0.0, y:Number = 0.0, z:Number = 0.0) {
-            super(x, y, z, 1.0);
-        }
+		public function Vertex(x:Number = 0.0, y:Number = 0.0, z:Number = 0.0) {
+			super(x, y, z, 1.0);
+		}
 
-        public function get a():Number {
-            return ((color >> 24) & 0xFF) / 0xFF;
-        }
+		public function get a():Number {
+			return ((color >> 24) & 0xFF) / 0xFF;
+		}
 
 		public function get r():Number {
-            return ((color >> 16) & 0xFF) / 0xFF;
-        }
+			return ((color >> 16) & 0xFF) / 0xFF;
+		}
 
-        public function get g():Number {
-            return ((color >> 8) & 0xFF) / 0xFF;
-        }
+		public function get g():Number {
+			return ((color >> 8) & 0xFF) / 0xFF;
+		}
 
-        public function get b():Number {
-            return (color & 0xFF) / 0xFF;
-        }
+		public function get b():Number {
+			return (color & 0xFF) / 0xFF;
+		}
 
-        override public function clone():Vector3D {
-            var v:Vertex = new Vertex(x, y, z);
+		override public function clone():Vector3D {
+			var v:Vertex = new Vertex(x, y, z);
 			v.color = color;
-            return v;
-        }
-    }
+			return v;
+		}
+	}
 }

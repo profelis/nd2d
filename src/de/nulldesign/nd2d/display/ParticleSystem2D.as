@@ -36,9 +36,9 @@ package de.nulldesign.nd2d.display {
 	import de.nulldesign.nd2d.utils.ColorUtil;
 	import de.nulldesign.nd2d.utils.NumberUtil;
 	import de.nulldesign.nd2d.utils.ParticleSystemPreset;
+	import de.nulldesign.nd2d.utils.Statistics;
 	import de.nulldesign.nd2d.utils.VectorUtil;
 
-	import flash.display.BitmapData;
 	import flash.display3D.Context3D;
 	import flash.events.Event;
 	import flash.geom.Point;
@@ -51,8 +51,11 @@ package de.nulldesign.nd2d.display {
 	[Event(name="complete", type="flash.events.Event")]
 
 	/**
-	 * <p>The particle system can render thousands of instances of a bitmap on the GPU</p>
-	 * Since all movement based on the rules to supply with the ParticleSystemPreset are calculated on the GPU, you won't be able to control individual particles.
+	 * <p>The particle system can render thousands of instances of a bitmap on the
+	 * GPU</p>
+	 * Since all movement based on the rules to supply with the
+	 * ParticleSystemPreset are calculated on the GPU, you won't be able to
+	 * control individual particles.
 	 * Use a Sprite2DBatch or Sprite2DCloud for this need
 	 */
 	public class ParticleSystem2D extends Node2D {
@@ -74,14 +77,6 @@ package de.nulldesign.nd2d.display {
 		protected var burstDone:Boolean = false;
 		protected var lastParticleDeathTime:Number = 0.0;
 
-		override public function get numTris():uint {
-			return activeParticles * 2;
-		}
-
-		override public function get drawCalls():uint {
-			return material.drawCalls;
-		}
-
 		public function ParticleSystem2D(textureObject:Texture2D, maxCapacity:uint, preset:ParticleSystemPreset, burst:Boolean = false) {
 			super();
 			this.preset = preset;
@@ -97,7 +92,6 @@ package de.nulldesign.nd2d.display {
 		}
 
 		protected function init(textureObject:Texture2D, maxCapacity:uint):void {
-
 			this.maxCapacity = maxCapacity;
 
 			var tex:Texture2D;
@@ -116,32 +110,31 @@ package de.nulldesign.nd2d.display {
 			currentTime = 0;
 
 			for(var i:int = 0; i < maxCapacity; i++) {
-
 				particles[i] = new Particle();
 
 				faceList[f++] = new Face(particles[i].v1, particles[i].v2, particles[i].v3, particles[i].uv1,
-						particles[i].uv2, particles[i].uv3);
+					particles[i].uv2, particles[i].uv3);
 
 				faceList[f++] = new Face(particles[i].v1, particles[i].v3, particles[i].v4, particles[i].uv1,
-						particles[i].uv3, particles[i].uv4);
+					particles[i].uv3, particles[i].uv4);
 
 				var angle:Number = NumberUtil.rndMinMax(VectorUtil.deg2rad(preset.minEmitAngle),
-						VectorUtil.deg2rad(preset.maxEmitAngle));
+					VectorUtil.deg2rad(preset.maxEmitAngle));
 
 				var speed:Number = NumberUtil.rndMinMax(preset.minSpeed, preset.maxSpeed);
 
 				var particleStartColor:Number = ColorUtil.mixColors(preset.startColor, preset.startColorVariance,
-						NumberUtil.rnd0_1());
+					NumberUtil.rnd0_1());
 				var particleEndColor:Number = ColorUtil.mixColors(preset.endColor, preset.endColorVariance,
-						NumberUtil.rnd0_1());
+					NumberUtil.rnd0_1());
 
 				initParticle(NumberUtil.rndMinMax(preset.minStartPosition.x, preset.maxStartPosition.x),
-						NumberUtil.rndMinMax(preset.minStartPosition.y, preset.maxStartPosition.y),
-						Math.sin(angle) * speed, Math.cos(angle) * speed, particleStartColor, particleEndColor,
-						preset.startAlpha, preset.endAlpha,
-						NumberUtil.rndMinMax(preset.minStartSize, preset.maxStartSize),
-						NumberUtil.rndMinMax(preset.minEndSize, preset.maxEndSize),
-						NumberUtil.rndMinMax(preset.minLife, preset.maxLife), preset.spawnDelay * i);
+					NumberUtil.rndMinMax(preset.minStartPosition.y, preset.maxStartPosition.y),
+					Math.sin(angle) * speed, Math.cos(angle) * speed, particleStartColor, particleEndColor,
+					preset.startAlpha, preset.endAlpha,
+					NumberUtil.rndMinMax(preset.minStartSize, preset.maxStartSize),
+					NumberUtil.rndMinMax(preset.minEndSize, preset.maxEndSize),
+					NumberUtil.rndMinMax(preset.minLife, preset.maxLife), preset.spawnDelay * i);
 			}
 
 			activeParticles = 1;
@@ -152,7 +145,6 @@ package de.nulldesign.nd2d.display {
 		}
 
 		protected function initParticle(x:Number, y:Number, vx:Number, vy:Number, startColor:Number, endColor:Number, startAlpha:Number, endAlpha:Number, startSize:Number, endSize:Number, life:Number, startTime:Number):void {
-
 			var p:Particle = particles[activeParticles];
 
 			p.v1.x = -texW;
@@ -199,24 +191,25 @@ package de.nulldesign.nd2d.display {
 			}
 		}
 
-
-		override public function handleDeviceLoss():void {
-			super.handleDeviceLoss();
-			material.handleDeviceLoss();
-		}
-
 		override protected function draw(context:Context3D, camera:Camera2D):void {
-
 			if(burstDone) {
 				return;
 			}
 
 			material.blendMode = blendMode;
 			material.modelMatrix = worldModelMatrix;
+			material.clipSpaceMatrix = clipSpaceMatrix;
 			material.viewProjectionMatrix = camera.getViewProjectionMatrix(false);
 			material.currentTime = currentTime;
 			material.gravity = gravity;
 			material.render(context, faceList, 0, activeParticles * 2);
+
+			Statistics.sprites += activeParticles;
+		}
+
+		override public function handleDeviceLoss():void {
+			super.handleDeviceLoss();
+			material.handleDeviceLoss();
 		}
 
 		override public function dispose():void {
@@ -224,6 +217,10 @@ package de.nulldesign.nd2d.display {
 				material.dispose();
 				material = null;
 			}
+
+			preset = null;
+			faceList = null;
+			particles = null;
 
 			super.dispose();
 		}

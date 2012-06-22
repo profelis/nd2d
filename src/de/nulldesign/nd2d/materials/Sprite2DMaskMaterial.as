@@ -40,41 +40,65 @@ package de.nulldesign.nd2d.materials {
 	import flash.display3D.Context3DProgramType;
 	import flash.display3D.Context3DVertexBufferFormat;
 	import flash.geom.Matrix3D;
-	import flash.geom.Point;
 	import flash.geom.Rectangle;
 
 	public class Sprite2DMaskMaterial extends Sprite2DMaterial {
 
-		protected const DEFAULT_VERTEX_SHADER:String = "m44 vt0, va0, vc0              \n" + // vertex(va0) * clipspace
-				"m44 vt1, vt0, vc4              \n" + // clipsace to local pos in mask
-				"add vt1.xy, vt1.xy, vc8.xy     \n" + // add half masksize to local pos
-				"div vt1.xy, vt1.xy, vc8.zw     \n" + // local pos / masksize
-				"mov vt2, va1                   \n" + // copy uv
-				"mul vt2.xy, vt2.xy, vc9.zw     \n" + // mult with uv-scale
-				"add vt2.xy, vt2.xy, vc9.xy     \n" + // add uv offset
-				"mov v0, vt2                    \n" + // copy uv
-				"mov v1, vt1                    \n" + // copy mask uv
-				"mov op, vt0                    \n";  // output position
+		private const VERTEX_SHADER:String =
+			"alias va0, position;" +
+			"alias va1.xy, uv;" +
+			"alias vc0, clipSpace;" +
+			"alias vc4, maskClipSpace;" +
+			"alias vc8.xy, maskSizeHalf;" +
+			"alias vc8.zw, maskSize;" +
+			"alias vc9.xy, uvOffset;" +
+			"alias vc9.zw, uvScale;" +
 
+			"temp0 = mul4x4(position, clipSpace);" +
+			"output = temp0;" +
 
-		protected const DEFAULT_FRAGMENT_SHADER:String =
-				"tex ft0, v0, fs0 <TEXTURE_SAMPLING_OPTIONS>  \n" + // sample texture
-						"mul ft0, ft0, fc0                              \n" + // mult with colorMultiplier
-						"add ft0, ft0, fc1                              \n" + // mult with colorOffset
-						"tex ft1, v1, fs1 <2d,miplinear,linear,clamp>   \n" + // sample mask
-						"sub ft2, fc2, ft1                              \n" + // (1 - maskcolor)
-						"mov ft3, fc3                                   \n" + // save maskalpha
-						"sub ft3, fc2, ft3                              \n" + // (1 - maskalpha)
-						"mul ft3, ft2, ft3                              \n" + // (1 - maskcolor) * (1 - maskalpha)
-						"add ft3, ft1, ft3                              \n" + // finalmaskcolor = maskcolor + (1 - maskcolor) * (1 - maskalpha));
-						"mul oc, ft0, ft3                               \n"; // mult mask color with tex color and output it
+			"temp1 = mul4x4(temp0, maskClipSpace);" +
+			"temp1 += maskSizeHalf;" +
+			"temp1 /= maskSize;" +
 
-		public var maskModelMatrix:Matrix3D;
-		public var maskTexture:Texture2D;
+			"temp2 = uv * uvScale;" +
+			"temp2 += uvOffset;" +
+
+			// pass to fragment shader
+			"v0 = temp2;" +
+			"v1 = temp1;";
+
+		private const FRAGMENT_SHADER:String =
+			"alias v0, texCoord;" +
+			"alias v1, maskCoord;" +
+			"alias fc0, colorMultiplier;" +
+			"alias fc1, colorOffset;" +
+			"alias fc2, CONST(1.0, 1.0, 1.0, 1.0);" +
+			"alias fc3, maskAlpha;" +
+
+			// texture
+			"temp0 = sample(texCoord, texture0);" +
+			"temp0 = colorize(temp0, colorMultiplier, colorOffset);" +
+
+			// mask
+			// 		maskColor + (1.0 - maskColor) * (1.0 - maskAlpha)
+			"tex temp1, maskCoord, texture1 <2d,miplinear,linear,clamp>;" +
+			"temp2 = 1.0 - temp1;" +
+			"temp3 = maskAlpha;" +
+			"temp3 = 1.0 - temp3;" +
+			"temp3 = temp2 * temp3;" +
+			"temp3 = temp1 + temp3;" +
+
+			// texture * mask
+			"output = temp0 * temp3;";
+
 		public var maskAlpha:Number;
+		public var maskTexture:Texture2D;
+		public var maskModelMatrix:Matrix3D;
 
-		protected var maskDimensions:Point;
 		protected var maskClipSpaceMatrix:Matrix3D = new Matrix3D();
+
+		private var programConstants:Vector.<Number> = new Vector.<Number>(4, true);
 
 		public function Sprite2DMaskMaterial() {
 			super();
@@ -82,12 +106,12 @@ package de.nulldesign.nd2d.materials {
 
 		override public function handleDeviceLoss():void {
 			super.handleDeviceLoss();
-			maskTexture.texture = null;
+
 			shaderData = null;
+			maskTexture.texture = null;
 		}
 
 		override protected function prepareForRender(context:Context3D):void {
-
 			super.prepareForRender(context);
 
 			context.setTextureAt(0, texture.getTexture(context));
@@ -95,21 +119,19 @@ package de.nulldesign.nd2d.materials {
 			context.setVertexBufferAt(0, vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_2); // vertex
 			context.setVertexBufferAt(1, vertexBuffer, 2, Context3DVertexBufferFormat.FLOAT_2); // uv
 
-			var uvOffsetAndScale:Rectangle = new Rectangle(0.0, 0.0, 1.0, 1.0);
+			var uvSheet:Rectangle;
 
-			if(spriteSheet) {
-
-				uvOffsetAndScale = spriteSheet.getUVRectForFrame(texture.textureWidth, texture.textureHeight);
-
-				var offset:Point = spriteSheet.getOffsetForFrame();
+			if(texture.sheet) {
+				uvSheet = animation.frameUV;
 
 				clipSpaceMatrix.identity();
-				clipSpaceMatrix.appendScale(spriteSheet.spriteWidth >> 1, spriteSheet.spriteHeight >> 1, 1.0);
-				clipSpaceMatrix.appendTranslation(offset.x, offset.y, 0.0);
+				clipSpaceMatrix.appendScale(animation.frameRect.width >> 1, animation.frameRect.height >> 1, 1.0);
+				clipSpaceMatrix.appendTranslation(animation.frameOffset.x, animation.frameOffset.y, 0.0);
 				clipSpaceMatrix.append(modelMatrix);
 				clipSpaceMatrix.append(viewProjectionMatrix);
-
 			} else {
+				uvSheet = texture.uvRect;
+
 				clipSpaceMatrix.identity();
 				clipSpaceMatrix.appendScale(texture.textureWidth >> 1, texture.textureHeight >> 1, 1.0);
 				clipSpaceMatrix.append(modelMatrix);
@@ -124,48 +146,47 @@ package de.nulldesign.nd2d.materials {
 			context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, clipSpaceMatrix, true);
 			context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 4, maskClipSpaceMatrix, true);
 
-			programConstVector[0] = maskTexture.textureWidth >> 1;
-			programConstVector[1] = maskTexture.textureHeight >> 1;
-			programConstVector[2] = maskTexture.textureWidth;
-			programConstVector[3] = maskTexture.textureHeight;
+			programConstants[0] = maskTexture.textureWidth >> 1;
+			programConstants[1] = maskTexture.textureHeight >> 1;
+			programConstants[2] = maskTexture.textureWidth;
+			programConstants[3] = maskTexture.textureHeight;
 
-			context.setProgramConstantsFromVector(Context3DProgramType.VERTEX, 8, programConstVector);
+			context.setProgramConstantsFromVector(Context3DProgramType.VERTEX, 8, programConstants);
 
-			programConstVector[0] = uvOffsetAndScale.x;
-			programConstVector[1] = uvOffsetAndScale.y;
-			programConstVector[2] = uvOffsetAndScale.width;
-			programConstVector[3] = uvOffsetAndScale.height;
+			programConstants[0] = uvSheet.x;
+			programConstants[1] = uvSheet.y;
+			programConstants[2] = uvSheet.width;
+			programConstants[3] = uvSheet.height;
 
-			context.setProgramConstantsFromVector(Context3DProgramType.VERTEX, 9, programConstVector);
+			context.setProgramConstantsFromVector(Context3DProgramType.VERTEX, 9, programConstants);
 
-			programConstVector[0] = colorTransform.redMultiplier;
-			programConstVector[1] = colorTransform.greenMultiplier;
-			programConstVector[2] = colorTransform.blueMultiplier;
-			programConstVector[3] = colorTransform.alphaMultiplier;
+			programConstants[0] = colorTransform.redMultiplier;
+			programConstants[1] = colorTransform.greenMultiplier;
+			programConstants[2] = colorTransform.blueMultiplier;
+			programConstants[3] = colorTransform.alphaMultiplier;
 
-			context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 0, programConstVector);
+			context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 0, programConstants);
 
-			var offsetFactor:Number = 1.0 / 255.0;
-			programConstVector[0] = colorTransform.redOffset * offsetFactor;
-			programConstVector[1] = colorTransform.greenOffset * offsetFactor;
-			programConstVector[2] = colorTransform.blueOffset * offsetFactor;
-			programConstVector[3] = colorTransform.alphaOffset * offsetFactor;
+			programConstants[0] = colorTransform.redOffset;
+			programConstants[1] = colorTransform.greenOffset;
+			programConstants[2] = colorTransform.blueOffset;
+			programConstants[3] = colorTransform.alphaOffset;
 
-			context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 1, programConstVector);
+			context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 1, programConstants);
 
-			programConstVector[0] = 1.0;
-			programConstVector[1] = 1.0;
-			programConstVector[2] = 1.0;
-			programConstVector[3] = 1.0;
+			programConstants[0] = 1.0;
+			programConstants[1] = 1.0;
+			programConstants[2] = 1.0;
+			programConstants[3] = 1.0;
 
-			context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 2, programConstVector);
+			context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 2, programConstants);
 
-			programConstVector[0] = maskAlpha;
-			programConstVector[1] = maskAlpha;
-			programConstVector[2] = maskAlpha;
-			programConstVector[3] = maskAlpha;
+			programConstants[0] = maskAlpha;
+			programConstants[1] = maskAlpha;
+			programConstants[2] = maskAlpha;
+			programConstants[3] = maskAlpha;
 
-			context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 3, programConstVector);
+			context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 3, programConstants);
 		}
 
 		override protected function clearAfterRender(context:Context3D):void {
@@ -177,14 +198,19 @@ package de.nulldesign.nd2d.materials {
 		}
 
 		override protected function addVertex(context:Context3D, buffer:Vector.<Number>, v:Vertex, uv:UV, face:Face):void {
-
 			fillBuffer(buffer, v, uv, face, VERTEX_POSITION, 2);
 			fillBuffer(buffer, v, uv, face, VERTEX_UV, 2);
 		}
 
 		override protected function initProgram(context:Context3D):void {
 			if(!shaderData) {
-				shaderData = ShaderCache.getInstance().getShader(context, this, DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER, 4, texture.textureOptions);
+				var defines:String =
+					"#define PREMULTIPLIED_ALPHA=" + int(texture.hasPremultipliedAlpha) + ";" +
+					"#define USE_UV=" + int(usesUV) + ";" +
+					"#define USE_COLOR=" + int(usesColor) + ";" +
+					"#define USE_COLOR_OFFSET=" + int(usesColorOffset) + ";";
+
+				shaderData = ShaderCache.getShader(context, defines, VERTEX_SHADER, FRAGMENT_SHADER, 4, texture.textureOptions);
 			}
 		}
 
@@ -195,6 +221,10 @@ package de.nulldesign.nd2d.materials {
 				maskTexture.dispose();
 				maskTexture = null;
 			}
+
+			maskModelMatrix = null;
+			programConstants = null;
+			maskClipSpaceMatrix = null;
 		}
 	}
 }

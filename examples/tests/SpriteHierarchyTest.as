@@ -30,15 +30,13 @@
 
 package tests {
 
-	import de.nulldesign.nd2d.display.Node2D;
 	import de.nulldesign.nd2d.display.Scene2D;
 	import de.nulldesign.nd2d.display.Sprite2D;
 	import de.nulldesign.nd2d.materials.BlendModePresets;
-	import de.nulldesign.nd2d.materials.texture.SpriteSheet;
+	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
 
 	import flash.events.MouseEvent;
-	import flash.geom.Point;
 	import flash.geom.Vector3D;
 
 	public class SpriteHierarchyTest extends Scene2D {
@@ -58,7 +56,6 @@ package tests {
 		private var s6:Sprite2D;
 
 		public function SpriteHierarchyTest() {
-
 			var tex:Texture2D = Texture2D.textureFromBitmapData(new spriteTexture().bitmapData);
 
 			s = new Sprite2D(tex);
@@ -79,12 +76,12 @@ package tests {
 
 			var tex2:Texture2D = Texture2D.textureFromBitmapData(new spriteTexture2().bitmapData);
 
-			var sheet:SpriteSheet = new SpriteSheet(tex2.bitmapWidth, tex2.bitmapHeight, 24, 32, 5);
-			sheet.addAnimation("up", [6, 7, 8], true);
-			sheet.playAnimation("up", 0, true);
+			var sheet:TextureSheet = new TextureSheet(tex2, 24, 32);
+			sheet.addAnimation("up", [6, 7, 8], true, 5);
+			tex2.setSheet(sheet);
 
 			s3 = new Sprite2D(tex2);
-			s3.setSpriteSheet(sheet);
+			s3.animation.play("up");
 			s3.mouseEnabled = true;
 			s3.usePixelPerfectHitTest = true;
 			s3.addEventListener(MouseEvent.MOUSE_OVER, mouseOver);
@@ -119,20 +116,22 @@ package tests {
 		private function mouseOver(event:MouseEvent):void {
 			event.target.tint = Math.random() * 0xffffff;
 
-			/*
-			var n:Node2D = event.target as Node2D;
-			var p:Point = n.localToGlobal(new Point(n.mouseX, n.mouseY));
-			trace("localToGlobal: " + p + " stage: " + n.mouseX + " // " + n.mouseY);
-			p = n.globalToLocal(new Point(stage.mouseX, stage.mouseY));
-			trace("globalToLocal: " + p + " stage: " + stage.mouseX + " // " + stage.mouseY);
-            */
+		/*
+		   var n:Node2D = event.target as Node2D;
+		   var p:Point = n.localToGlobal(new Point(n.mouseX, n.mouseY));
+		   trace("localToGlobal: " + p + " stage: " + n.mouseX + " // " +
+		   n.mouseY);
+		   p = n.globalToLocal(new Point(stage.mouseX, stage.mouseY));
+		   trace("globalToLocal: " + p + " stage: " + stage.mouseX + " // " +
+		   stage.mouseY);
+		 */
 		}
 
 		override protected function step(elapsed:Number):void {
 			/*
-			camera.x = 50;
-			camera.rotation = 30;
-            */
+			   camera.x = 50;
+			   camera.rotation = 30;
+			 */
 			s.position = new Vector3D(stage.stageWidth / 2, stage.stageHeight / 2);
 			s.rotation += 0.1;
 			s2.rotation -= 0.5;

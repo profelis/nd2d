@@ -36,13 +36,12 @@ package tests {
 
 	import de.nulldesign.nd2d.display.Scene2D;
 	import de.nulldesign.nd2d.display.Sprite2D;
+	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
 	import de.nulldesign.nd2d.materials.texture.TextureOption;
 
 	import flash.display.Sprite;
 	import flash.events.Event;
-	import flash.events.MouseEvent;
-	import flash.geom.Point;
 	import flash.geom.Vector3D;
 
 	public class TextureAndRotationOptionsTest extends Scene2D {
@@ -52,7 +51,6 @@ package tests {
 
 		[Embed(source="/assets/spritechar1.png")]
 		private var spriteTexture:Class;
-
 
 		private var s:Sprite2D;
 		private var s2:Sprite2D;
@@ -66,11 +64,9 @@ package tests {
 		private var repeatComboBox:ComboBox;
 
 		public function TextureAndRotationOptionsTest() {
-
 			backgroundColor = 0x333333;
 
 			addEventListener(Event.ADDED_TO_STAGE, addedToStage);
-			addEventListener(Event.REMOVED_FROM_STAGE, removedFromStage);
 		}
 
 		private function removedFromStage(e:Event):void {
@@ -80,110 +76,107 @@ package tests {
 		}
 
 		private function addedToStage(e:Event):void {
+			removeEventListener(Event.ADDED_TO_STAGE, addedToStage);
 
-			if(!container) {
+			container = new Sprite();
+			stage.addChild(container);
 
-				container = new Sprite();
-				stage.addChild(container);
+			var slider:HUISlider;
 
-				var slider:HUISlider;
+			Style.LABEL_TEXT = 0xFFFFFF;
 
-				Style.LABEL_TEXT = 0xFFFFFF;
+			slider = new HUISlider(container, 0, 130, "uvOffsetX", sliderChanged);
+			slider.minimum = 0.0;
+			slider.maximum = 5.0;
+			slider.value = 0.0;
 
-				slider = new HUISlider(container, 0, 130, "uvOffsetX", sliderChanged);
-				slider.minimum = 0.0;
-				slider.maximum = 5.0;
-				slider.value = 0.0;
+			slider = new HUISlider(container, 0, 150, "uvOffsetY", sliderChanged);
+			slider.minimum = 0.0;
+			slider.maximum = 5.0;
+			slider.value = 0.0;
 
-				slider = new HUISlider(container, 0, 150, "uvOffsetY", sliderChanged);
-				slider.minimum = 0.0;
-				slider.maximum = 5.0;
-				slider.value = 0.0;
+			slider = new HUISlider(container, 0, 170, "uvScaleX", sliderChanged);
+			slider.minimum = 0.0;
+			slider.maximum = 5.0;
+			slider.value = 1.0;
 
-				slider = new HUISlider(container, 0, 170, "uvScaleX", sliderChanged);
-				slider.minimum = 0.0;
-				slider.maximum = 5.0;
-				slider.value = 1.0;
+			slider = new HUISlider(container, 0, 190, "uvScaleY", sliderChanged);
+			slider.minimum = 0.0;
+			slider.maximum = 5.0;
+			slider.value = 1.0;
 
-				slider = new HUISlider(container, 0, 190, "uvScaleY", sliderChanged);
-				slider.minimum = 0.0;
-				slider.maximum = 5.0;
-				slider.value = 1.0;
+			slider = new HUISlider(container, 0, 330, "rotationX", sliderChanged);
+			slider.minimum = 0.0;
+			slider.maximum = 360.0;
+			slider.value = 0.0;
 
-				slider = new HUISlider(container, 0, 330, "rotationX", sliderChanged);
-				slider.minimum = 0.0;
-				slider.maximum = 360.0;
-				slider.value = 0.0;
+			slider = new HUISlider(container, 0, 350, "rotationY", sliderChanged);
+			slider.minimum = 0.0;
+			slider.maximum = 360.0;
+			slider.value = 0.0;
 
-				slider = new HUISlider(container, 0, 350, "rotationY", sliderChanged);
-				slider.minimum = 0.0;
-				slider.maximum = 360.0;
-				slider.value = 0.0;
+			Style.LABEL_TEXT = 0x000000;
 
-				Style.LABEL_TEXT = 0x000000;
+			mipMapComboBox = new ComboBox(container, 10, 210, "mipmapping", ["mipdisable", "mipnearest", "miplinear"]);
+			mipMapComboBox.width = 120;
+			mipMapComboBox.selectedIndex = 2;
+			mipMapComboBox.addEventListener(Event.SELECT, onTextureOptionChange);
+			mipMapComboBox.numVisibleItems = 3;
 
-				mipMapComboBox = new ComboBox(container, 10, 210, "mipmapping", ["mipdisable", "mipnearest", "miplinear"]);
-				mipMapComboBox.width = 120;
-				mipMapComboBox.selectedIndex = 2;
-				mipMapComboBox.addEventListener(Event.SELECT, onTextureOptionChange);
-				mipMapComboBox.numVisibleItems = 3;
+			filteringComboBox = new ComboBox(container, 10, 240, "texture filtering", ["nearest", "linear"]);
+			filteringComboBox.width = 120;
+			filteringComboBox.selectedIndex = 1;
+			filteringComboBox.addEventListener(Event.SELECT, onTextureOptionChange);
+			filteringComboBox.numVisibleItems = 2;
 
-				filteringComboBox = new ComboBox(container, 10, 240, "texture filtering", ["nearest", "linear"]);
-				filteringComboBox.width = 120;
-				filteringComboBox.selectedIndex = 1;
-				filteringComboBox.addEventListener(Event.SELECT, onTextureOptionChange);
-				filteringComboBox.numVisibleItems = 2;
+			repeatComboBox = new ComboBox(container, 10, 270, "texture repeat", ["repeat", "clamp"]);
+			repeatComboBox.width = 120;
+			repeatComboBox.selectedIndex = 0;
+			repeatComboBox.addEventListener(Event.SELECT, onTextureOptionChange);
+			repeatComboBox.numVisibleItems = 2;
 
-				repeatComboBox = new ComboBox(container, 10, 270, "texture repeat", ["repeat", "clamp"]);
-				repeatComboBox.width = 120;
-				repeatComboBox.selectedIndex = 0;
-				repeatComboBox.addEventListener(Event.SELECT, onTextureOptionChange);
-				repeatComboBox.numVisibleItems = 2;
+			textureComboBox = new ComboBox(container, 10, 300, "texture image", ["crate", "sprites"]);
+			textureComboBox.width = 120;
+			textureComboBox.selectedIndex = 0;
+			textureComboBox.addEventListener(Event.SELECT, onTextureOptionChange);
+			textureComboBox.numVisibleItems = 2;
 
-				textureComboBox = new ComboBox(container, 10, 300, "texture image", ["crate", "sprites"]);
-				textureComboBox.width = 120;
-				textureComboBox.selectedIndex = 0;
-				textureComboBox.addEventListener(Event.SELECT, onTextureOptionChange);
-				textureComboBox.numVisibleItems = 2;
-
-				onTextureOptionChange();
-
-			} else {
-				stage.addChild(container);
-			}
+			onTextureOptionChange();
 		}
 
 		private function onTextureOptionChange(e:Event = null):void {
-
 			if(s) {
 				s.dispose();
-				removeChild(s);
 				s2.dispose();
-				removeChild(s2);
 				s3.dispose();
-				removeChild(s3);
 			}
 
 			var tex:Texture2D;
+
 			if(textureComboBox.selectedIndex == 0) {
-				tex = Texture2D.textureFromBitmapData(new crateTexture().bitmapData, true);
+				tex = Texture2D.textureFromBitmapData(new crateTexture().bitmapData);
 			} else {
-				tex = Texture2D.textureFromBitmapData(new spriteTexture().bitmapData, true);
+				tex = Texture2D.textureFromBitmapData(new spriteTexture().bitmapData);
+				tex.setSheet(new TextureSheet(tex, 24, 32));
+				tex.sheet.addAnimation("blah", [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], true, 2);
 			}
 
 			s = new Sprite2D(tex);
 			s.position = new Vector3D(stage.stageWidth / 2 - 300.0, stage.stageHeight / 2);
 			s.scaleX = s.scaleY = 0.5;
+			s.animation.play("blah");
 			addChild(s);
 
 			s2 = new Sprite2D(tex);
 			s2.scaleX = s2.scaleY = 1.0;
 			s2.position = new Vector3D(stage.stageWidth / 2 - 50, stage.stageHeight / 2);
+			s2.animation.play("blah");
 			addChild(s2);
 
 			s3 = new Sprite2D(tex);
 			s3.scaleX = s3.scaleY = 1.5;
 			s3.position = new Vector3D(stage.stageWidth / 2 + 300.0, stage.stageHeight / 2);
+			s3.animation.play("blah");
 			addChild(s3);
 
 			tex.textureOptions = 0;
@@ -197,31 +190,35 @@ package tests {
 		}
 
 		private function sliderChanged(e:Event):void {
-
 			var slider:HUISlider = e.target as HUISlider;
 
 			switch(slider.label) {
-				case "uvOffsetX":
-					s.material.uvOffsetX = s2.material.uvOffsetX = s3.material.uvOffsetX = slider.value;
+				case "uvOffsetX":  {
+					s.uvOffsetX = s2.uvOffsetX = s3.uvOffsetX = slider.value;
 					break;
-				case "uvOffsetY":
-					s.material.uvOffsetY = s2.material.uvOffsetY = s3.material.uvOffsetY = slider.value;
+				}
+				case "uvOffsetY":  {
+					s.uvOffsetY = s2.uvOffsetY = s3.uvOffsetY = slider.value;
 					break;
-				case "uvScaleX":
-					s.material.uvScaleX = s2.material.uvScaleX = s3.material.uvScaleX = slider.value;
+				}
+				case "uvScaleX":  {
+					s.uvScaleX = s2.uvScaleX = s3.uvScaleX = slider.value;
 					break;
-				case "uvScaleY":
-					s.material.uvScaleY = s2.material.uvScaleY = s3.material.uvScaleY = slider.value;
+				}
+				case "uvScaleY":  {
+					s.uvScaleY = s2.uvScaleY = s3.uvScaleY = slider.value;
 					break;
-				case "rotationX":
+				}
+				case "rotationX":  {
 					s.rotationX = s2.rotationX = s3.rotationX = slider.value;
 					break;
-				case "rotationY":
+				}
+				case "rotationY":  {
 					s.rotationY = s2.rotationY = s3.rotationY = slider.value;
 					break;
+				}
 			}
 		}
-
 
 		override protected function step(elapsed:Number):void {
 			if(s && s2 && s3) {
@@ -230,5 +227,20 @@ package tests {
 				s3.rotation += 0.2;
 			}
 		}
+
+		override public function dispose():void {
+			super.dispose();
+
+			if(container) {
+				stage.removeChild(container);
+			}
+
+			container = null;
+			repeatComboBox = null;
+			mipMapComboBox = null;
+			textureComboBox = null;
+			filteringComboBox = null;
+		}
+
 	}
 }

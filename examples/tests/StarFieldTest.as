@@ -39,47 +39,50 @@ package tests {
 
 	public class StarFieldTest extends Scene2D {
 
-        [Embed(source="/assets/starfield.jpg")]
-        private var starFieldTexture:Class;
+		[Embed(source="/assets/starfield.jpg")]
+		private var starFieldTexture:Class;
 
-        [Embed(source="/assets/starfield.png")]
-        private var starFieldTexture2:Class;
+		[Embed(source="/assets/starfield.png")]
+		private var starFieldTexture2:Class;
 
-        private var starfield1:Sprite2D;
+		private var starfield1:Sprite2D;
 
-        private var starfield2:Sprite2D;
+		private var starfield2:Sprite2D;
 
-        public function StarFieldTest() {
+		public function StarFieldTest() {
+			addEventListener(Event.ADDED_TO_STAGE, addedToStage);
 
-            addEventListener(Event.ADDED_TO_STAGE, addedToStage);
+			starfield1 = new Sprite2D(Texture2D.textureFromBitmapData(new starFieldTexture().bitmapData));
+			addChild(starfield1);
 
-            starfield1 = new Sprite2D(Texture2D.textureFromBitmapData(new starFieldTexture().bitmapData));
-            addChild(starfield1);
+			starfield2 = new Sprite2D(Texture2D.textureFromBitmapData(new starFieldTexture2().bitmapData));
+			starfield2.blendMode = BlendModePresets.ADD_PREMULTIPLIED_ALPHA;
+			addChild(starfield2);
+		}
 
-            starfield2 = new Sprite2D(Texture2D.textureFromBitmapData(new starFieldTexture2().bitmapData));
-            starfield2.blendMode = BlendModePresets.ADD_PREMULTIPLIED_ALPHA;
-            addChild(starfield2);
-        }
+		private function addedToStage(e:Event):void {
+			removeEventListener(Event.ADDED_TO_STAGE, addedToStage);
 
-        private function addedToStage(e:Event):void {
-            removeEventListener(Event.ADDED_TO_STAGE, addedToStage);
+			starfield1.x = stage.stageWidth * 0.5;
+			starfield1.y = stage.stageHeight * 0.5;
+			starfield1.width = stage.stageWidth;
+			starfield1.height = stage.stageHeight;
+			starfield1.uvScaleX = starfield1.scaleX;
+			starfield1.uvScaleY = starfield1.scaleY;
 
-            starfield1.width = stage.stageWidth;
-            starfield1.scaleY = starfield1.scaleX;
-            starfield1.x = stage.stageWidth / 2;
-            starfield1.y = stage.stageHeight / 2;
+			starfield2.x = stage.stageWidth * 0.5;
+			starfield2.y = stage.stageHeight * 0.5;
+			starfield2.width = stage.stageWidth;
+			starfield2.height = stage.stageHeight;
+			starfield2.uvScaleX = starfield1.scaleX;
+			starfield2.uvScaleY = starfield1.scaleY;
+		}
 
-            starfield2.width = stage.stageWidth;
-            starfield2.scaleY = starfield2.scaleX;
-            starfield2.x = stage.stageWidth / 2;
-            starfield2.y = stage.stageHeight / 2;
-        }
-
-        override protected function step(elapsed:Number):void {
-            starfield1.material.uvOffsetX -= (stage.stageWidth * 0.5 - mouseX) * 0.00002;
-            starfield1.material.uvOffsetY -= (stage.stageHeight * 0.5 - mouseY) * 0.00002;
-            starfield2.material.uvOffsetX -= (stage.stageWidth * 0.5 - mouseX) * 0.00004;
-            starfield2.material.uvOffsetY -= (stage.stageHeight * 0.5 - mouseY) * 0.00004;
-        }
-    }
+		override protected function step(elapsed:Number):void {
+			starfield1.uvOffsetX -= (stage.stageWidth * 0.5 - mouseX) * 0.00002;
+			starfield1.uvOffsetY -= (stage.stageHeight * 0.5 - mouseY) * 0.00002;
+			starfield2.uvOffsetX -= (stage.stageWidth * 0.5 - mouseX) * 0.00004;
+			starfield2.uvOffsetY -= (stage.stageHeight * 0.5 - mouseY) * 0.00004;
+		}
+	}
 }

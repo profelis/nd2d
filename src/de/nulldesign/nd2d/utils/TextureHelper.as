@@ -33,6 +33,7 @@ package de.nulldesign.nd2d.utils {
 	import de.nulldesign.nd2d.geom.Face;
 	import de.nulldesign.nd2d.geom.UV;
 	import de.nulldesign.nd2d.geom.Vertex;
+	import de.nulldesign.nd2d.materials.texture.Texture2D;
 
 	import flash.display.BitmapData;
 	import flash.display3D.Context3D;
@@ -48,7 +49,8 @@ package de.nulldesign.nd2d.utils {
 		}
 
 		/**
-		 * Will return a point that contains the width and height of the smallest possible texture size in 2^n
+		 * Will return a point that contains the width and height of the smallest
+		 * possible texture size in 2^n
 		 * @param w width
 		 * @param h height
 		 * @return x = width, y = height of the texture
@@ -69,7 +71,8 @@ package de.nulldesign.nd2d.utils {
 		}
 
 		/**
-		 * Will return a point that contains the width and height of the smallest possible texture size in 2^n
+		 * Will return a point that contains the width and height of the smallest
+		 * possible texture size in 2^n
 		 * @param bmp
 		 * @return x = width, y = height of the texture
 		 */
@@ -78,13 +81,13 @@ package de.nulldesign.nd2d.utils {
 		}
 
 		/**
-		 * Generates a texture from a bitmap. Will use the smallest possible size (2^n)
+		 * Generates a texture from a bitmap. Will use the smallest possible size
+		 * (2^n)
 		 * @param context
 		 * @param bmp
 		 * @return The generated texture
 		 */
 		public static function generateTextureFromByteArray(context:Context3D, atf:ByteArray):Texture {
-
 			var w:int = Math.pow(2, atf[7]);
 			var h:int = Math.pow(2, atf[8]);
 			//var numTextures:int = atf[9];
@@ -93,42 +96,40 @@ package de.nulldesign.nd2d.utils {
 			var texture:Texture = context.createTexture(w, h, textureFormat, false);
 			texture.uploadCompressedTextureFromByteArray(atf, 0, false);
 
+			// TODO: add memory usage to Statistics
+
 			return texture;
 		}
 
 		/**
-		 * Generates a texture from a bitmap. Will use the smallest possible size (2^n)
+		 * Generates a texture from a bitmap. Will use the smallest possible size
+		 * (2^n)
 		 * @param context
 		 * @param bmp
 		 * @return The generated texture
 		 */
-		public static function generateTextureFromBitmap(context:Context3D, bmp:BitmapData, useMipMaps:Boolean):Texture {
-
+		public static function generateTextureFromBitmap(context:Context3D, bmp:BitmapData, useMipMaps:Boolean, stats:Texture2D = null):Texture {
 			var textureDimensions:Point = getTextureDimensionsFromBitmap(bmp);
-
 			var newBmp:BitmapData = new BitmapData(textureDimensions.x, textureDimensions.y, true, 0x00000000);
 
-			var sourceRect:Rectangle;
-			var destPoint:Point;
-
-			sourceRect = new Rectangle(0, 0, bmp.width, bmp.height);
-			destPoint = new Point(textureDimensions.x * 0.5 - bmp.width * 0.5, textureDimensions.y * 0.5 - bmp.height * 0.5);
-
-			newBmp.copyPixels(bmp, sourceRect, destPoint);
+			newBmp.copyPixels(bmp, new Rectangle(0, 0, bmp.width, bmp.height), new Point(0, 0));
 
 			var texture:Texture = context.createTexture(textureDimensions.x, textureDimensions.y, Context3DTextureFormat.BGRA, false);
 
 			if(useMipMaps) {
-				uploadTextureWithMipmaps(texture, newBmp);
+				uploadTextureWithMipmaps(texture, newBmp, stats);
 			} else {
 				texture.uploadFromBitmapData(newBmp);
-				//texture.uploadFromByteArray(data, 0);
+
+				if(stats) {
+					stats.memoryUsed += textureDimensions.x * textureDimensions.y * 4;
+				}
 			}
 
 			return texture;
 		}
 
-		public static function uploadTextureWithMipmaps(dest:Texture, src:BitmapData):void {
+		public static function uploadTextureWithMipmaps(dest:Texture, src:BitmapData, stats:Texture2D = null):void {
 			var ws:int = src.width;
 			var hs:int = src.height;
 			var level:int = 0;
@@ -136,13 +137,14 @@ package de.nulldesign.nd2d.utils {
 			var transform:Matrix = new Matrix();
 
 			while(ws >= 1 || hs >= 1) {
-
 				tmp.fillRect(tmp.rect, 0x00000000);
 				tmp.draw(src, transform, null, null, null, true);
 
 				dest.uploadFromBitmapData(tmp, level);
 
-				//dest.uploadFromByteArray(data, 0, mip);
+				if(stats) {
+					stats.memoryUsed += ws * hs * 4;
+				}
 
 				transform.scale(0.5, 0.5);
 				level++;

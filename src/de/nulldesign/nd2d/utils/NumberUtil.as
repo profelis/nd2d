@@ -30,40 +30,51 @@
 
 package de.nulldesign.nd2d.utils {
 
-    public class NumberUtil {
+	public class NumberUtil {
 
-        /**
-         * generates a random number between 0 and 1
-         * @return
-         */
-        public static function rnd0_1():Number {
-            return Math.random();
-        }
+		/**
+		 * Mathematical modulo for negative numbers
+		 * @param a
+		 * @param n
+		 * @return
+		 *
+		 */
+		public static function mod(a:Number, n:Number):Number {
+			return ((a % n + n) % n);
+		}
 
-        /**
-         * generates a random number between -1 and 1
-         * @return
-         */
-        public static function rndMinus1_1():Number {
-            return Math.random() - Math.random();
-        }
+		/**
+		 * Generates a random number between 0 and 1
+		 * @return
+		 */
+		public static function rnd0_1():Number {
+			return Math.random();
+		}
 
-        /**
-         * generates a random number between min and max
-         * @param min
-         * @param max
-         * @return the random number
-         */
-        public static function rndMinMax(min:Number, max:Number):Number {
-            return min + Math.random() * (max - min);
-        }
+		/**
+		 * Generates a random number between -1 and 1
+		 * @return
+		 */
+		public static function rndMinus1_1():Number {
+			return Math.random() - Math.random();
+		}
 
-        public static function rndMinMaxInt(min:int, max:int):int {
-            return Math.round(rndMinMax(min, max));
-        }
+		/**
+		 * Generates a random number between min and max
+		 * @param min
+		 * @param max
+		 * @return the random number
+		 */
+		public static function rndMinMax(min:Number, max:Number):Number {
+			return min + Math.random() * (max - min);
+		}
 
-        public static function sin0_1(t:Number):Number {
-            return 0.5 + Math.sin(t) * 0.5;
-        }
-    }
+		public static function rndMinMaxInt(min:int, max:int):int {
+			return Math.round(rndMinMax(min, max));
+		}
+
+		public static function sin0_1(t:Number):Number {
+			return 0.5 + Math.sin(t) * 0.5;
+		}
+	}
 }

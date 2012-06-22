@@ -30,22 +30,24 @@
 
 package de.nulldesign.nd2d.display {
 
-	import de.nulldesign.nd2d.utils.StatsObject;
-
 	import flash.display.Stage;
-
 	import flash.display3D.Context3D;
 	import flash.geom.Matrix3D;
 	import flash.geom.Vector3D;
 
 	/**
 	 * <p>A scene that can contain 2D nodes. Such as Sprite2D.</p>
-	 * <p>The scene is meant to display a state of your game, such as the game screen, a highscore screen, etc. You can switch between the scenes by setting a new active scene in the World2D</p>
+	 * <p>The scene is meant to display a state of your game, such as the game
+	 * screen, a highscore screen, etc. You can switch between the scenes by
+	 * setting a new active scene in the World2D</p>
 	 *
-	 * Even if a scene has x,y, rotation etc. properties you can't modify a scene this way.
+	 * Even if a scene has x,y, rotation etc. properties you can't modify a scene
+	 * this way.
 	 * Use the built in camera instance to pan and zoom over your scene.
 	 *
-	 * <p>If you make use of the camera and still want to have non moving objects in your scene like GUI elements, attach them to the sceneGUILayer instead to the scene itself.</p>
+	 * <p>If you make use of the camera and still want to have non moving objects
+	 * in your scene like GUI elements, attach them to the sceneGUILayer
+	 * instead to the scene itself.</p>
 	 */
 	public class Scene2D extends Node2D {
 
@@ -64,7 +66,7 @@ package de.nulldesign.nd2d.display {
 		 */
 		public function set backgroundColor(value:Number):void {
 			_backgroundColor = value;
-			br = (backgroundColor >> 16) / 255.0;
+			br = (backgroundColor >> 16 & 255) / 255.0;
 			bg = (backgroundColor >> 8 & 255) / 255.0;
 			bb = (backgroundColor & 255) / 255.0;
 		}
@@ -75,11 +77,7 @@ package de.nulldesign.nd2d.display {
 		public function Scene2D() {
 			super();
 			mouseEnabled = true;
-		}
-
-		override public function handleDeviceLoss():void {
-			super.handleDeviceLoss();
-			sceneGUILayer.handleDeviceLoss();
+			invalidateMatrix = false;
 		}
 
 		override internal function stepNode(elapsed:Number, timeSinceStartInSeconds:Number):void {
@@ -95,9 +93,9 @@ package de.nulldesign.nd2d.display {
 			sceneGUILayer.stepNode(elapsed, timeSinceStartInSeconds);
 		}
 
-		override internal function drawNode(context:Context3D, camera:Camera2D, parentMatrixChanged:Boolean, statsObject:StatsObject):void {
+		override internal function drawNode(context:Context3D, camera:Camera2D):void {
 			for(var child:Node2D = childFirst; child; child = child.next) {
-				child.drawNode(context, camera, false, statsObject);
+				child.drawNode(context, camera);
 			}
 
 			// resize gui camera if needed
@@ -106,7 +104,7 @@ package de.nulldesign.nd2d.display {
 			}
 
 			// draw GUI layer
-			sceneGUILayer.drawNode(context, sceneGUICamera, false, statsObject);
+			sceneGUILayer.drawNode(context, sceneGUICamera);
 		}
 
 		override internal function processMouseEvent(mousePosition:Vector3D, mouseEventType:String, cameraViewProjectionMatrix:Matrix3D, isTouchEvent:Boolean, touchPointID:int):Node2D {
@@ -124,11 +122,29 @@ package de.nulldesign.nd2d.display {
 				_height = camera.sceneHeight;
 			}
 
-			sceneGUILayer.setStageAndCamRef(value, sceneGUICamera);
+			if(sceneGUILayer) {
+				sceneGUILayer.setStageAndCamRef(value, sceneGUICamera);
+			}
 		}
 
 		override protected function hitTest():Boolean {
 			return (_mouseX >= 0.0 && _mouseX <= _width && _mouseY >= 0.0 && _mouseY <= _height);
 		}
+
+		override public function handleDeviceLoss():void {
+			super.handleDeviceLoss();
+
+			sceneGUILayer.handleDeviceLoss();
+		}
+
+		override public function dispose():void {
+			super.dispose();
+
+			sceneGUILayer.dispose();
+			sceneGUILayer = null;
+
+			sceneGUICamera = null;
+		}
+
 	}
 }

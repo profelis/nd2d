@@ -32,30 +32,30 @@ package de.nulldesign.nd2d.display {
 
 	import de.nulldesign.nd2d.geom.Face;
 	import de.nulldesign.nd2d.materials.BlendModePresets;
-	import de.nulldesign.nd2d.materials.texture.ASpriteSheetBase;
 	import de.nulldesign.nd2d.materials.Sprite2DMaskMaterial;
 	import de.nulldesign.nd2d.materials.Sprite2DMaterial;
-	import de.nulldesign.nd2d.materials.texture.SpriteSheet;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
+	import de.nulldesign.nd2d.materials.SpriteAnimation;
+	import de.nulldesign.nd2d.utils.Statistics;
 	import de.nulldesign.nd2d.utils.TextureHelper;
 
-	import flash.display.BitmapData;
 	import flash.display3D.Context3D;
-	import flash.geom.Rectangle;
 
 	/**
 	 * <p>2D sprite class</p>
 	 * One draw call is used per sprite.
-	 * If you have a lot of sprites with the same texture / spritesheet try to use a Sprite2DCould, it will be a lot faster.
+	 * If you have a lot of sprites with the same texture / spritesheet try to use
+	 * Sprite2DBatch or Sprite2DCould, it will be a lot faster.
 	 */
 	public class Sprite2D extends Node2D {
 
-		protected var faceList:Vector.<Face>;
 		protected var mask:Sprite2D;
+		protected var faceList:Vector.<Face>;
 
 		public var texture:Texture2D;
-		public var spriteSheet:ASpriteSheetBase;
-		public var material:Sprite2DMaterial;
+		public var animation:SpriteAnimation;
+
+		protected var material:Sprite2DMaterial;
 
 		public var usePixelPerfectHitTest:Boolean = false;
 
@@ -65,6 +65,7 @@ package de.nulldesign.nd2d.display {
 		 */
 		public function Sprite2D(textureObject:Texture2D = null) {
 			faceList = TextureHelper.generateQuadFromDimensions(2, 2);
+			animation = new SpriteAnimation(this);
 
 			if(textureObject) {
 				setMaterial(new Sprite2DMaterial());
@@ -73,42 +74,29 @@ package de.nulldesign.nd2d.display {
 		}
 
 		/**
-		 * @param SpriteSheet or TextureAtlas
-		 */
-		public function setSpriteSheet(value:ASpriteSheetBase):void {
-			this.spriteSheet = value;
-
-			if(spriteSheet) {
-				_width = spriteSheet.spriteWidth;
-				_height = spriteSheet.spriteHeight;
-			}
-		}
-
-		/**
 		 * The texture object
 		 * @param Texture2D
 		 */
 		public function setTexture(value:Texture2D):void {
-
-			this.texture = value;
-
-			if(texture && !spriteSheet) {
-				_width = texture.bitmapWidth;
-				_height = texture.bitmapHeight;
-			}
+			texture = value;
 
 			if(texture) {
+				_width = texture.bitmapWidth;
+				_height = texture.bitmapHeight;
+
 				hasPremultipliedAlphaTexture = texture.hasPremultipliedAlpha;
 				blendMode = texture.hasPremultipliedAlpha ? BlendModePresets.NORMAL_PREMULTIPLIED_ALPHA : BlendModePresets.NORMAL_NO_PREMULTIPLIED_ALPHA;
 			}
+
+			animation.setTexture(value);
 		}
 
 		/**
-		 * By default a Sprite2D has an instance of Sprite2DMaterial. You can pass other materials to the sprite to change it's appearance.
+		 * By default a Sprite2D has an instance of Sprite2DMaterial. You can pass
+		 * other materials to the sprite to change it's appearance.
 		 * @param Sprite2DMaterial
 		 */
 		public function setMaterial(value:Sprite2DMaterial):void {
-
 			if(material) {
 				material.dispose();
 			}
@@ -117,12 +105,12 @@ package de.nulldesign.nd2d.display {
 		}
 
 		/**
-		 * The mask texture can be any size, but it needs a 1px padding around the borders, otherwise the masks edges get repeated
+		 * The mask texture can be any size, but it needs a 1px padding around the
+		 * borders, otherwise the masks edges get repeated
 		 * Don't disable mipmapping for the masks texture, it won't work...
 		 * @param mask sprite
 		 */
 		public function setMask(mask:Sprite2D):void {
-
 			this.mask = mask;
 
 			if(mask) {
@@ -133,96 +121,107 @@ package de.nulldesign.nd2d.display {
 		}
 
 		/**
-		 * sets the spritsheets / textureatlas frame and updated the sprites size immediately
-		 * @param value
-		 */
-		public function setFrameByName(value:String):void {
-			if(spriteSheet) {
-				spriteSheet.setFrameByName(value);
-				_width = spriteSheet.spriteWidth;
-				_height = spriteSheet.spriteHeight;
-			}
-		}
-
-		override public function get numTris():uint {
-			return 2;
-		}
-
-		override public function get drawCalls():uint {
-			return material ? material.drawCalls : 0;
-		}
-
-		/**
 		 * @private
 		 */
 		override internal function stepNode(elapsed:Number, timeSinceStartInSeconds:Number):void {
-
 			super.stepNode(elapsed, timeSinceStartInSeconds);
 
-			if(spriteSheet) {
-				spriteSheet.update(timeSinceStartInSeconds);
-				_width = spriteSheet.spriteWidth;
-				_height = spriteSheet.spriteHeight;
+			if(texture && texture.sheet) {
+				animation.update(elapsed);
 			}
 		}
 
-		override public function handleDeviceLoss():void {
-			super.handleDeviceLoss();
-
-			if(material)
-				material.handleDeviceLoss();
-
-			if(texture)
-				texture.texture = null;
-		}
-
 		override protected function draw(context:Context3D, camera:Camera2D):void {
-
 			material.blendMode = blendMode;
 			material.modelMatrix = worldModelMatrix;
+			material.clipSpaceMatrix = clipSpaceMatrix;
 			material.viewProjectionMatrix = camera.getViewProjectionMatrix(false);
 			material.colorTransform = combinedColorTransform;
-			material.spriteSheet = spriteSheet;
+			material.animation = animation;
 			material.texture = texture;
-			material.nodeTinted = nodeIsTinted;
+			material.uvOffsetX = uvOffsetX;
+			material.uvOffsetY = uvOffsetY;
+			material.uvScaleX = uvScaleX;
+			material.uvScaleY = uvScaleY;
+			material.usesUV = usesUV;
+			material.usesColor = usesColor;
+			material.usesColorOffset = usesColorOffset;
 
 			if(mask) {
-
 				if(mask.invalidateMatrix) {
 					mask.updateLocalMatrix();
 				}
 
 				var maskMat:Sprite2DMaskMaterial = Sprite2DMaskMaterial(material);
+
+				maskMat.maskAlpha = mask.alpha;
 				maskMat.maskTexture = mask.texture;
 				maskMat.maskModelMatrix = mask.localModelMatrix;
-				maskMat.maskAlpha = mask.alpha;
 			}
 
 			material.render(context, faceList, 0, faceList.length);
+
+			Statistics.sprites++;
 		}
 
 		/**
-		 * By default, only a bounding rectangle test is made. If you need pixel perfect hittests, enable the usePixelPerfectHitTest.
-		 * This only works if this sprite has a Texture2D object with a bitmapData instance. Otherwise pixels can't be read and a default rectangle test is made
+		 * By default, only a bounding rectangle test is made. If you need pixel
+		 * perfect hittests, enable the usePixelPerfectHitTest.
+		 * This only works if this sprite has a Texture2D object with a bitmapData
+		 * instance. Otherwise pixels can't be read and a default rectangle
+		 * test is made
 		 * @return if the sprite was hit or not
 		 */
 		override protected function hitTest():Boolean {
-
 			if(usePixelPerfectHitTest && texture.bitmap) {
-
 				var xCoord:Number = _mouseX + (_width >> 1);
 				var yCoord:Number = _mouseY + (_height >> 1);
 
-				if(spriteSheet) {
-					var rect:Rectangle = spriteSheet.getDimensionForFrame();
-					xCoord += rect.x;
-					yCoord += rect.y;
+				if(texture.sheet) {
+					xCoord += animation.frameRect.x;
+					yCoord += animation.frameRect.y;
 				}
 
 				return super.hitTest() && (texture.bitmap.getPixel32(xCoord, yCoord) >> 24 & 0xFF) > 0;
 			}
 
 			return super.hitTest();
+		}
+
+		public function updateAnimationDimensions():void {
+			if(texture && texture.sheet) {
+				if(_width != animation.frameRect.width || _height != animation.frameRect.height) {
+					invalidateClipSpace = true;
+				}
+
+				_width = animation.frameRect.width;
+				_height = animation.frameRect.height;
+			}
+		}
+
+		override public function updateClipSpace():void {
+			clipSpaceMatrix.identity();
+
+			if(texture.sheet) {
+				clipSpaceMatrix.appendScale(animation.frameRect.width >> 1, animation.frameRect.height >> 1, 1.0);
+				clipSpaceMatrix.appendTranslation(animation.frameOffset.x, animation.frameOffset.y, 0.0);
+			} else {
+				clipSpaceMatrix.appendScale(texture.bitmapWidth >> 1, texture.bitmapHeight >> 1, 1.0);
+			}
+
+			clipSpaceMatrix.append(worldModelMatrix);
+		}
+
+		override public function handleDeviceLoss():void {
+			super.handleDeviceLoss();
+
+			if(material) {
+				material.handleDeviceLoss();
+			}
+
+			if(texture) {
+				texture.texture = null;
+			}
 		}
 
 		override public function dispose():void {
@@ -240,6 +239,9 @@ package de.nulldesign.nd2d.display {
 				texture.dispose();
 				texture = null;
 			}
+
+			faceList = null;
+			animation = null;
 
 			super.dispose();
 		}

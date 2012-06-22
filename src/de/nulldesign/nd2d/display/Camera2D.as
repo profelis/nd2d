@@ -37,7 +37,8 @@ package de.nulldesign.nd2d.display {
 
 	/**
 	 * Camera2D
-	 * <p>The World2D object contains an instance of a Camera2D. Use the cameras x,y, zoom, rotation properties to zoom and pan over your scene.
+	 * <p>The World2D object contains an instance of a Camera2D. Use the cameras
+	 * x,y, zoom, rotation properties to zoom and pan over your scene.
 	 * The camera instance is passed to each active scene.</p>
 	 */
 	public class Camera2D {
@@ -69,7 +70,7 @@ package de.nulldesign.nd2d.display {
 			var magicNumber:Number = Math.tan(VectorUtil.deg2rad(fovDegree * 0.5));
 			var projMat:Matrix3D = makeProjectionMatrix(0.1, 2000.0, fovDegree, w / h);
 			var lookAtPosition:Vector3D = new Vector3D(0.0, 0.0, 0.0);
-			
+
 			// zEye distance from origin: sceneHeight * 0.5 / tan(a) 
 			var eye:Vector3D = new Vector3D(0, 0, -(_sceneHeight * 0.5) / magicNumber);
 			var lookAtMat:Matrix3D = lookAt(lookAtPosition, eye);
@@ -79,7 +80,6 @@ package de.nulldesign.nd2d.display {
 		}
 
 		protected function lookAt(lookAt:Vector3D, position:Vector3D):Matrix3D {
-
 			var up:Vector3D = new Vector3D();
 			up.x = Math.sin(0.0);
 			up.y = -Math.cos(0.0);
@@ -99,9 +99,9 @@ package de.nulldesign.nd2d.display {
 
 			var rawData:Vector.<Number> = new Vector.<Number>();
 			rawData.push(-right.x, -right.y, -right.z, 0,
-					up.x, up.y, up.z, 0,
-					-forward.x, -forward.y, -forward.z, 0,
-					0, 0, 0, 1);
+				up.x, up.y, up.z, 0,
+				-forward.x, -forward.y, -forward.z, 0,
+				0, 0, 0, 1);
 
 			var mat:Matrix3D = new Matrix3D(rawData);
 			mat.prependTranslation(-position.x, -position.y, -position.z);
@@ -118,40 +118,39 @@ package de.nulldesign.nd2d.display {
 
 		protected function makeFrustumMatrix(left:Number, right:Number, top:Number, bottom:Number, zNear:Number, zFar:Number):Matrix3D {
 			return new Matrix3D(
-					Vector.<Number>(
-							[
-								(2 * zNear) / (right - left),
-								0,
-								(right + left) / (right - left),
-								0,
+				Vector.<Number>(
+				[
+				(2 * zNear) / (right - left),
+				0,
+				(right + left) / (right - left),
+				0,
 
-								0,
-								(2 * zNear) / (top - bottom),
-								(top + bottom) / (top - bottom),
-								0,
+				0,
+				(2 * zNear) / (top - bottom),
+				(top + bottom) / (top - bottom),
+				0,
 
-								0,
-								0,
-								zFar / (zNear - zFar),
-								-1,
+				0,
+				0,
+				zFar / (zNear - zFar),
+				-1,
 
-								0,
-								0,
-								(zNear * zFar) / (zNear - zFar),
-								0
-							]
-					)
-			);
+				0,
+				0,
+				(zNear * zFar) / (zNear - zFar),
+				0
+				]
+				)
+				);
 		}
 
 		protected function makeOrtographicMatrix(left:Number, right:Number, top:Number, bottom:Number, zNear:Number = 0, zFar:Number = 1):Matrix3D {
-
 			return new Matrix3D(Vector.<Number>([
-				2 / (right - left), 0, 0,  0,
-				0,  2 / (top - bottom), 0, 0,
-				0,  0, 1 / (zFar - zNear), 0,
+				2 / (right - left), 0, 0, 0,
+				0, 2 / (top - bottom), 0, 0,
+				0, 0, 1 / (zFar - zNear), 0,
 				0, 0, zNear / (zNear - zFar), 1
-			]));
+				]));
 		}
 
 		public function getViewProjectionMatrix(useOrthoMatrix:Boolean = true):Matrix3D {

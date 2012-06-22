@@ -30,39 +30,35 @@
 
 package de.nulldesign.nd2d.materials.texture {
 
-	import de.nulldesign.nd2d.materials.texture.parser.ATextureAtlasParser;
-	import de.nulldesign.nd2d.materials.texture.parser.TexturePackerParser;
-	import de.nulldesign.nd2d.materials.texture.parser.ZwopTexParser;
+	import de.nulldesign.nd2d.materials.texture.parser.ParserBase;
+	import de.nulldesign.nd2d.materials.texture.parser.ParserTexturePacker;
 
-	import flash.geom.Point;
-	import flash.geom.Rectangle;
-
-	public class TextureAtlas extends ASpriteSheetBase {
-
-		public static const XML_FORMAT_COCOS2D:String = "xmlFormatCocos2D";
-		public static const XML_FORMAT_ZWOPTEX:String = "xmlFormatZwoptex";
+	public class TextureAtlas extends TextureSheetBase {
 
 		/**
 		 *
-		 * @param sheetWidth
-		 * @param sheetHeight
+		 * @param texture
 		 * @param xmlData
-		 * @param defaultFPS
-		 * @param spritesPackedWithoutSpace set to true to get rid of pixel bleeding for packed atlases without spaces: http://www.nulldesign.de/2011/08/30/nd2d-pixel-bleeding/
+		 * @param xmlParser		If unset TexturePackerParser(), alternative
+		 * ZwopTexParser(), ...
 		 */
-		public function TextureAtlas(sheetWidth:Number, sheetHeight:Number, xmlData:XML, xmlFormat:String, defaultFPS:uint, spritesPackedWithoutSpace:Boolean = false) {
-			this.defaultFPS = defaultFPS;
-			this.spritesPackedWithoutSpace = spritesPackedWithoutSpace;
-			this._sheetWidth = sheetWidth;
-			this._sheetHeight = sheetHeight;
-
+		public function TextureAtlas(texture:Texture2D, xmlData:XML, xmlParser:ParserBase = null) {
 			if(xmlData) {
-				parse(xmlData, xmlFormat);
+				if(!xmlParser) {
+					xmlParser = new ParserTexturePacker();
+				}
+
+				xmlParser.parse(texture, xmlData);
+
+				frames = xmlParser.frames;
+				offsets = xmlParser.offsets;
+				uvRects = xmlParser.uvRects;
+				frameNameToIndex = xmlParser.frameNameToIndex;
 			}
 		}
 
-		override public function addAnimation(name:String, keyFrames:Array, loop:Boolean):void {
-			if(keyFrames[i] is String) {
+		override public function addAnimation(name:String, keyFrames:Array, loop:Boolean = true, fps:int = 1):void {
+			if(keyFrames[0] is String) {
 				// make indices out of names
 				var keyFramesIndices:Array = [];
 
@@ -70,50 +66,10 @@ package de.nulldesign.nd2d.materials.texture {
 					keyFramesIndices.push(frameNameToIndex[keyFrames[i]]);
 				}
 
-				animationMap[name] = new SpriteSheetAnimation(keyFramesIndices, loop);
+				animationMap[name] = new TextureAnimation(keyFramesIndices, loop, fps);
 			} else {
-				animationMap[name] = new SpriteSheetAnimation(keyFrames, loop);
+				animationMap[name] = new TextureAnimation(keyFrames, loop, fps);
 			}
-		}
-
-		/**
-		 * paeser switch
-		 * @param value
-		 */
-		protected function parse(value:XML, xmlFormat:String):void {
-			var parser:ATextureAtlasParser;
-
-			switch(xmlFormat) {
-				case XML_FORMAT_COCOS2D:
-					parser = new TexturePackerParser();
-					break;
-				case XML_FORMAT_ZWOPTEX:
-					parser = new ZwopTexParser();
-					break;
-			}
-
-			parser.parse(value);
-
-			frameNameToIndex = parser.frameNameToIndex;
-			frames = parser.frames;
-			offsets = parser.offsets;
-
-			uvRects = new Vector.<Rectangle>(frames.length, true);
-			frame = 0;
-		}
-
-		override public function clone():ASpriteSheetBase {
-			var t:TextureAtlas = new TextureAtlas(_sheetWidth, _sheetHeight, null, null, defaultFPS, spritesPackedWithoutSpace);
-
-			t.animationMap = animationMap;
-			t.activeAnimation = activeAnimation;
-			t.frames = frames;
-			t.offsets = offsets;
-			t.frameNameToIndex = frameNameToIndex;
-			t.uvRects = uvRects;
-			t.frame = _frame;
-
-			return t;
 		}
 	}
 }

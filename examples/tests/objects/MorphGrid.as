@@ -36,38 +36,37 @@ package tests.objects {
 
 	public class MorphGrid extends Grid2D {
 
-        private var strength:Number;
+		private var strength:Number;
 
-        public function MorphGrid(stepsX:uint, stepsY:uint, textureObject:Texture2D = null, strength:Number = 0.07) {
-            this.strength = strength;
-            super(stepsX, stepsY, textureObject);
-        }
+		public function MorphGrid(stepsX:uint, stepsY:uint, textureObject:Texture2D = null, strength:Number = 0.07) {
+			this.strength = strength;
+			super(stepsX, stepsY, textureObject);
+		}
 
-        override protected function step(elapsed:Number):void {
+		override protected function step(elapsed:Number):void {
+			var yPos:uint;
+			var xPos:uint;
 
-            var yPos:uint;
-            var xPos:uint;
+			var newX:Number;
+			var newY:Number;
 
-            var newX:Number;
-            var newY:Number;
+			var v:Vertex;
 
-            var v:Vertex;
+			for(var i:int = 0; i < vertexList.length; i++) {
 
-            for(var i:int = 0; i < vertexList.length; i++) {
+				yPos = Math.floor(i / (stepsX + 1));
+				xPos = i % (stepsY + 1);
 
-                yPos= Math.floor(i / (stepsX + 1));
-                xPos = i % (stepsY + 1);
+				v = vertexList[i];
 
-                v = vertexList[i];
+				if(xPos > 0 && yPos > 0 && xPos < stepsX && yPos < stepsY) {
 
-                if(xPos > 0 && yPos > 0 && xPos < stepsX && yPos < stepsY) {
+					newX = v.x + v.x * Math.sin(v.length * 10.0 + timeSinceStartInSeconds * 2.0) * strength;
+					newY = v.y + v.y * Math.cos(v.length * 10.0 + timeSinceStartInSeconds * 2.0) * strength;
 
-                    newX = v.x + v.x * Math.sin(v.length * 10.0 + timeSinceStartInSeconds * 2.0) * strength;
-                    newY = v.y + v.y * Math.cos(v.length * 10.0 + timeSinceStartInSeconds * 2.0) * strength;
-
-                    material.modifyVertexInBuffer(v.bufferIdx, newX, newY);
-                }
-            }
-        }
-    }
+					material.modifyVertexInBuffer(v.bufferIdx, newX, newY);
+				}
+			}
+		}
+	}
 }

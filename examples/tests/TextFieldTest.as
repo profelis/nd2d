@@ -9,6 +9,8 @@ package tests {
 	import de.nulldesign.nd2d.display.TextField2D;
 	import de.nulldesign.nd2d.utils.NumberUtil;
 
+	import flash.filters.GlowFilter;
+
 	import flashx.textLayout.formats.TextAlign;
 
 	public class TextFieldTest extends Scene2D {
@@ -21,10 +23,10 @@ package tests {
 			txt.textColor = 0xFFFFFF;
 			txt.size = 100.0;
 			txt.align = TextAlign.CENTER;
-			txt.text = "Hello ND2D Text!";
+			txt.text = "Hello <font color='#0000ff'>ND2D</font> Text!";
+			txt.filters = [new GlowFilter(0xff0000, 1.0, 8, 8, 10)];
 			addChild(txt);
 		}
-
 
 		override protected function step(elapsed:Number):void {
 			txt.x = stage.stageWidth >> 1;

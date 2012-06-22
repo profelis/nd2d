@@ -31,16 +31,12 @@
 package de.nulldesign.nd2d.display {
 
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
-	import de.nulldesign.nd2d.utils.StatsObject;
-	import de.nulldesign.nd2d.utils.TextureHelper;
 
 	import flash.display3D.Context3D;
-	import flash.display3D.Context3DTextureFormat;
-	import flash.display3D.textures.Texture;
-	import flash.geom.Point;
 
 	/**
-	 * Renders a Node2D to a texture every frame. Can be used to post process a whole scene for example.
+	 * Renders a Node2D to a texture every frame. Can be used to post process a
+	 * whole scene for example.
 	 */
 	public class TextureRenderer extends Node2D {
 
@@ -53,7 +49,6 @@ package de.nulldesign.nd2d.display {
 		private var cameraOffsetY:Number;
 
 		public function TextureRenderer(renderNode:Node2D, texture:Texture2D, cameraOffsetX:Number = NaN, cameraOffsetY:Number = NaN) {
-
 			this.texture = texture;
 			this.renderNode = renderNode;
 			_width = texture.bitmapWidth;
@@ -66,11 +61,11 @@ package de.nulldesign.nd2d.display {
 
 		override public function handleDeviceLoss():void {
 			super.handleDeviceLoss();
+
 			texture.texture = null;
 		}
 
-		override internal function drawNode(context:Context3D, camera:Camera2D, parentMatrixChanged:Boolean, statsObject:StatsObject):void {
-
+		override internal function drawNode(context:Context3D, camera:Camera2D):void {
 			context.setRenderToTexture(texture.getTexture(context), false, 2, 0);
 			context.clear(0.0, 0.0, 0.0, 0.0);
 
@@ -84,7 +79,7 @@ package de.nulldesign.nd2d.display {
 
 			var visibleState:Boolean = renderNode.visible;
 			renderNode.visible = true;
-			renderNode.drawNode(context, texCamera, parentMatrixChanged, statsObject);
+			renderNode.drawNode(context, texCamera);
 			renderNode.visible = visibleState;
 
 			context.setRenderToBackBuffer();
@@ -97,6 +92,9 @@ package de.nulldesign.nd2d.display {
 				texture.dispose();
 				texture = null;
 			}
+
+			texCamera = null;
+			renderNode = null;
 		}
 	}
 }

@@ -30,10 +30,8 @@
 
 package de.nulldesign.nd2d.display {
 
-	import de.nulldesign.nd2d.materials.texture.SpriteSheet;
+	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
-
-	import flash.display.BitmapData;
 
 	import flashx.textLayout.formats.TextAlign;
 
@@ -43,6 +41,8 @@ package de.nulldesign.nd2d.display {
 	 */
 	public class BitmapFont2D extends Sprite2DCloud {
 
+		private var charWidth:Number;
+		private var charHeight:Number;
 		private var charString:String;
 		private var charSpacing:Number;
 
@@ -69,22 +69,22 @@ package de.nulldesign.nd2d.display {
 
 		public function set textAlign(value:String):void {
 			_textAlign = value;
+
 			if(_text != null) {
 				textChanged = true;
 			}
 		}
 
-		public function BitmapFont2D(fontTexture:Texture2D, charWidth:Number, charHeight:Number, charString:String, charSpacing:Number, maxTextLen:uint, spritesPackedWithoutSpaces:Boolean = false) {
-
+		public function BitmapFont2D(fontTexture:Texture2D, charWidth:Number, charHeight:Number, charString:String, charSpacing:Number, maxTextLen:uint) {
 			this.charString = charString;
 			this.charSpacing = charSpacing;
 
 			super(maxTextLen, fontTexture);
-			setSpriteSheet(new SpriteSheet(fontTexture.bitmapWidth, fontTexture.bitmapHeight, charWidth, charHeight, 1, spritesPackedWithoutSpaces));
+
+			fontTexture.setSheet(new TextureSheet(fontTexture, charWidth, charHeight));
 		}
 
 		override protected function step(elapsed:Number):void {
-
 			if(textChanged) {
 				textChanged = false;
 
@@ -92,49 +92,52 @@ package de.nulldesign.nd2d.display {
 				const text_length:int = text.length;
 				const childsNeeded:uint = text_length - numSpaces;
 
-				while(numChildren < maxCapacity && numChildren < childsNeeded) {
+				while(childCount < maxCapacity && childCount < childsNeeded) {
 					addChild(new Sprite2D());
 				}
 
-				while(numChildren > childsNeeded) {
-					removeChildAt(0);
+				// reverse order to speed up Sprite2DCloud
+				while(childCount > childsNeeded) {
+					removeChild(childLast);
 				}
 
 				var s:Sprite2D;
 				var curChar:String;
 				var frame:int;
 				var childIdx:uint = 0;
-				var startX:Number = spriteSheet.spriteWidth >> 1;
+				var startX:Number = charWidth >> 1;
 
 				switch(textAlign) {
-
-					case TextAlign.CENTER:
-						startX -= (text_length * spriteSheet.spriteWidth) >> 1;
+					case TextAlign.CENTER:  {
+						startX -= (text_length * charWidth) >> 1;
 						break;
+					}
 
-					case TextAlign.RIGHT:
-						startX += -(text_length * spriteSheet.spriteWidth);
+					case TextAlign.RIGHT:  {
+						startX += -(text_length * charWidth);
 						break;
+					}
 				}
 
-				for(var i:int = 0; i < text_length; i++) {
+				var i:uint = 0;
 
+				for(var node:Node2D = childFirst; node && i < text_length; i++) {
 					curChar = text.charAt(i);
 					frame = Math.max(0, charString.indexOf(curChar));
 
-					s = Sprite2D(children[childIdx]);
-					s.spriteSheet.frame = frame;
+					s = Sprite2D(node);
+					s.animation.frame = frame;
 
 					s.x = startX + charSpacing * i;
 					s.y = 0.0;
 
 					if(curChar != " ") {
-						++childIdx;
+						node = node.next;
 					}
 				}
 
-				_width = s.x + spriteSheet.spriteWidth;
-				_height = spriteSheet.spriteHeight;
+				_width = s.x + charWidth;
+				_height = charHeight;
 			}
 		}
 	}

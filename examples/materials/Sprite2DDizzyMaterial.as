@@ -30,11 +30,8 @@
 
 package materials {
 
-	import de.nulldesign.nd2d.geom.Face;
-	import de.nulldesign.nd2d.geom.UV;
-	import de.nulldesign.nd2d.geom.Vertex;
 	import de.nulldesign.nd2d.materials.Sprite2DMaterial;
-	import de.nulldesign.nd2d.materials.shader.Shader2D;
+	import de.nulldesign.nd2d.materials.shader.ShaderCache;
 
 	import flash.display3D.Context3D;
 	import flash.display3D.Context3DProgramType;
@@ -42,56 +39,85 @@ package materials {
 
 	public class Sprite2DDizzyMaterial extends Sprite2DMaterial {
 
-        private const DIZZY_VERTEX_SHADER:String =
-                "m44 op, va0, vc0   \n" + // vertex * clipspace
-                "mov v0, va1		\n"; // copy uv
+		private const DIZZY_VERTEX_SHADER:String =
+			"alias va0, position;" +
+			"alias va1.xy, uv;" +
+			"alias vc0, viewProjection;" +
+			"alias vc4, clipSpace;" +
+			"alias vc8, colorMultiplier;" +
+			"alias vc9, colorOffset;" +
+			"alias vc10, uvSheet;" +
+			"alias vc11.xy, uvOffset;" +
+			"alias vc11.zw, uvScale;" +
 
-        private const DIZZY_FRAGMENT_SHADER:String =
-                "mov ft0.xyzw, v0.xy                        \n" + // get interpolated uv coords
-                "mul ft1, ft0, fc2.y                        \n" +
-                "add ft1, ft1, fc2.x                        \n" +
-                "cos ft1.y, ft1.w                           \n" +
-                "sin ft1.x, ft1.z                           \n" +
-                "mul ft1.xy, ft1.xy, fc2.zw                 \n" +
-                "add ft0, ft0, ft1                          \n" +
-                "tex ft0, ft0, fs0 <2d,clamp,linear,nomip>  \n" + // sample texture
-                "mul ft0, ft0, fc0                          \n" + // mult with colorMultiplier
-                "add ft0, ft0, fc1                          \n" + // mult with colorOffset
-                "mov oc, ft0                                \n";
+			"temp0 = mul4x4(position, clipSpace);" +
+			"output = mul4x4(temp0, viewProjection);" +
 
-        private static var dizzyProgramData:Shader2D;
+			"#if USE_UV;" +
+			"	temp0 = uv * uvScale;" +
+			"	temp0 += uvOffset;" +
+			"#else;" +
+			"	temp0 = uv * uvSheet.zw;" +
+			"	temp0 += uvSheet.xy;" +
+			"#endif;" +
 
-        public function Sprite2DDizzyMaterial() {
-            super();
-        }
+			// pass to fragment shader
+			"v0 = temp0;" +
+			"v1 = colorMultiplier;" +
+			"v2 = colorOffset;" +
+			"v3 = uvSheet;";
 
-        override protected function prepareForRender(context:Context3D):void {
+		private const DIZZY_FRAGMENT_SHADER:String =
+			"alias v0, texCoord;" +
+			"alias v1, colorMultiplier;" +
+			"alias v2, colorOffset;" +
+			"alias v3.xy, uvSheetOffset;" +
+			"alias v3.zw, uvSheetScale;" +
 
-            super.prepareForRender(context);
+			"alias fc0, dizzy;" +
 
-            context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 2, Vector.<Number>([ getTimer() * 0.002,
-                                                                                                      8 * Math.PI,
-                                                                                                      0.01,
-                                                                                                      0.02 ]));
-        }
+			"temp1 = texCoord * dizzy.y;" +
+			"temp1 += dizzy.x;" +
+			"temp1.y = cos(temp1.w);" +
+			"temp1.x = sin(temp1.z);" +
+			"temp1.xy *= dizzy.zw;" +
+			"temp0 = texCoord + temp1;" +
 
-        override public function handleDeviceLoss():void {
-            super.handleDeviceLoss();
-            dizzyProgramData = null;
-        }
+			"#if USE_UV;" +
+			"	temp0 = frac(temp0);" +
+			"	temp0 *= uvSheetScale;" +
+			"	temp0 += uvSheetOffset;" +
+			"	temp0 = sampleNoMip(temp0, texture0);" +
+			"#else;" +
+			"	temp0 = sample(temp0, texture0);" +
+			"#endif;" +
 
-        override protected function addVertex(context:Context3D, buffer:Vector.<Number>, v:Vertex, uv:UV, face:Face):void {
+			"output = colorize(temp0, colorMultiplier, colorOffset);";
 
-            fillBuffer(buffer, v, uv, face, "PB3D_POSITION", 2);
-            fillBuffer(buffer, v, uv, face, "PB3D_UV", 2);
-        }
+		public function Sprite2DDizzyMaterial() {
+			super();
+		}
 
-        override protected function initProgram(context:Context3D):void {
-            if(!dizzyProgramData) {
-				dizzyProgramData = new Shader2D(context, DIZZY_VERTEX_SHADER, DIZZY_FRAGMENT_SHADER, 4, texture.textureOptions);
-            }
+		override protected function prepareForRender(context:Context3D):void {
+			super.prepareForRender(context);
 
-            shaderData = dizzyProgramData;
-        }
-    }
+			context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 0, Vector.<Number>([
+				getTimer() * 0.002,
+				8 * Math.PI,
+				0.01,
+				0.02]));
+		}
+
+		override protected function initProgram(context:Context3D):void {
+			if(!shaderData) {
+				var defines:String =
+					"#define PREMULTIPLIED_ALPHA=" + int(texture.hasPremultipliedAlpha) + ";" +
+					"#define USE_UV=" + int(usesUV) + ";" +
+					"#define USE_COLOR=" + int(usesColor) + ";" +
+					"#define USE_COLOR_OFFSET=" + int(usesColorOffset) + ";";
+
+				shaderData = ShaderCache.getShader(context, defines, DIZZY_VERTEX_SHADER, DIZZY_FRAGMENT_SHADER, 4, texture.textureOptions);
+			}
+		}
+	}
 }

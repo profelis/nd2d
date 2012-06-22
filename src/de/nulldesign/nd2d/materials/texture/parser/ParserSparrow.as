@@ -30,66 +30,53 @@
 
 package de.nulldesign.nd2d.materials.texture.parser {
 
+	import de.nulldesign.nd2d.materials.texture.Texture2D;
+
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
-	import flash.utils.Dictionary;
 
-	public class ATextureAtlasParser {
+	public class ParserSparrow extends ParserBase {
 
-		protected var framesList:Vector.<Rectangle> = new Vector.<Rectangle>();
-		protected var offsetList:Vector.<Point> = new Vector.<Point>();
-		protected var frameNameToIndexMap:Dictionary = new Dictionary();
-
-		public function ATextureAtlasParser() {
-
+		public function ParserSparrow() {
 		}
 
-		protected function getValueFromDict(key:String, xmlData:XML):String {
-			var propKeys:XMLList = xmlData.key;
-			var propAll:XMLList = xmlData.*;
-
-			for(var m:uint = 0; m < propKeys.length(); m++) {
-
-				var name:String = propKeys[m].toString();
-				var type:String = propAll[propKeys[m].childIndex() + 1].name();
-				var data:String = propAll[propKeys[m].childIndex() + 1];
-
-				if(key == name) {
-					return data;
-				}
+		override public function parse(texture:Texture2D, xmlData:XML):void {
+			if(!xmlData.SubTexture) {
+				throw new Error("Unrecognised XML Format");
 			}
 
-			return null;
-		}
+			var idx:uint = 0;
 
-		protected function getDict(name:String, xmlData:XML):XML {
-			var topKeys:XMLList = xmlData.dict.key;
-			var topDicts:XMLList = xmlData.dict.dict;
+			for each(var subTexture:XML in xmlData.SubTexture) {
+				var name:String = subTexture.attribute("name");
+				var x:Number = subTexture.attribute("x");
+				var y:Number = subTexture.attribute("y");
+				var width:Number = subTexture.attribute("width");
+				var height:Number = subTexture.attribute("height");
+				var frameX:Number = subTexture.attribute("frameX");
+				var frameY:Number = subTexture.attribute("frameY");
+				var frameWidth:Number = subTexture.attribute("frameWidth");
+				var frameHeight:Number = subTexture.attribute("frameHeight");
 
-			// try to read the format
-			for(var k:uint = 0; k < topKeys.length(); k++) {
+				frameNameToIndex[name] = idx++;
 
-				if(topKeys[k].toString() == name) {
-					return topDicts[k];
+				frames.push(new Rectangle(
+					x, y, width, height));
+
+				uvRects.push(new Rectangle(
+					x / texture.textureWidth,
+					y / texture.textureHeight,
+					width / texture.textureWidth,
+					height / texture.textureHeight));
+
+				if(frameWidth > 0 && frameHeight > 0) {
+					offsets.push(new Point(
+						-((frameWidth - width) >> 1) - frameX,
+						-((frameHeight - height) >> 1) - frameY));
+				} else {
+					offsets.push(new Point());
 				}
 			}
-
-			return null;
-		}
-
-		public function get frames():Vector.<Rectangle> {
-			return framesList;
-		}
-
-		public function get offsets():Vector.<Point> {
-			return offsetList;
-		}
-
-		public function get frameNameToIndex():Dictionary {
-			return frameNameToIndexMap;
-		}
-
-		public function parse(data:XML):void {
 		}
 	}
 }

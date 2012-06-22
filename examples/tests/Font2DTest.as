@@ -37,7 +37,6 @@ package tests {
 	import de.nulldesign.nd2d.utils.ColorUtil;
 	import de.nulldesign.nd2d.utils.NumberUtil;
 
-	import flash.display.BitmapData;
 	import flash.events.Event;
 	import flash.utils.getTimer;
 
@@ -45,61 +44,57 @@ package tests {
 
 	public class Font2DTest extends Scene2D {
 
-        [Embed(source="/assets/kromagrad_18x18_no_bleed.png")]
-        private var fontTexture:Class;
+		[Embed(source="/assets/kromagrad_18x18_no_bleed.png")]
+		private var fontTexture:Class;
 
-        private var fontChars:String = " !\"©♥%<'()^+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+		private var fontChars:String = " !\"©♥%<'()^+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-        private var font:BitmapFont2D;
-        private var counter:BitmapFont2D;
+		private var font:BitmapFont2D;
+		private var counter:BitmapFont2D;
 
-        public function Font2DTest() {
+		public function Font2DTest() {
+			backgroundColor = 0x333333;
+			addEventListener(Event.ADDED_TO_STAGE, addedToStage);
+		}
 
-            backgroundColor = 0x333333;
-            addEventListener(Event.ADDED_TO_STAGE, addedToStage);
-        }
+		private function addedToStage(event:Event):void {
+			removeEventListener(Event.ADDED_TO_STAGE, addedToStage);
 
-        private function addedToStage(event:Event):void {
+			var tex:Texture2D = Texture2D.textureFromBitmapData(new fontTexture().bitmapData);
 
-            removeEventListener(Event.ADDED_TO_STAGE, addedToStage);
+			font = new BitmapFont2D(tex, 18, 18, fontChars, 20, 100);
+			font.text = "HELLO FOLKS!         ND2D JUST GOT NICE BITMAP FONTS.      DON'T YOU JUST ♥ IT? :)";
+			font.x = stage.stageWidth;
+			font.scale = 2.0;
+			addChild(font);
 
-            var fontBmp:BitmapData = new fontTexture().bitmapData;
-			var tex:Texture2D = Texture2D.textureFromBitmapData(fontBmp);
+			counter = new BitmapFont2D(tex, 18, 18, fontChars, 18, 10);
+			counter.textAlign = TextAlign.CENTER;
+			addChild(counter);
+		}
 
-            font = new BitmapFont2D(tex, 18, 18, fontChars, 20, 100, false);
-            font.text = "HELLO FOLKS!         ND2D JUST GOT NICE BITMAP FONTS.      DON'T YOU JUST ♥ IT? :)";
-            font.x = stage.stageWidth;
-            font.scaleX = font.scaleY = 2.0;
-            addChild(font);
+		override protected function step(elapsed:Number):void {
+			counter.x = stage.stageWidth * 0.5;
+			counter.y = 20.0;
+			counter.text = String(getTimer());
 
-            counter = new BitmapFont2D(tex, 18, 18, fontChars, 18, 10, false);
-            counter.textAlign = TextAlign.CENTER;
-            addChild(counter);
-        }
+			font.x -= 3.0;
+			font.y = stage.stageHeight * 0.5;
 
-        override protected function step(elapsed:Number):void {
+			if(font.x < -40 * font.text.length) {
+				font.x = stage.stageWidth;
+			}
 
-            counter.x = stage.stageWidth * 0.5;
-            counter.y = 20.0;
-            counter.text = String(getTimer());
+			var i:uint = 0;
 
-            font.x -= 3.0;
-            font.y = stage.stageHeight * 0.5;
+			for(var n:Node2D = font.childFirst; n; n = n.next, i++) {
+				n.y = Math.sin(i * 0.5 + timeSinceStartInSeconds * 2.0) * 40.0;
+				n.rotation = n.y;
 
-            if(font.x < -40 * font.text.length) {
-                font.x = stage.stageWidth;
-            }
-
-            var n:Node2D;
-            for(var i:int = 0; i < font.children.length; i++) {
-                n = font.children[i];
-                n.y = Math.sin(i * 0.5 + timeSinceStartInSeconds * 2.0) * 40.0;
-                n.rotation = n.y;
-
-                if(i == 50) {
-                    n.tint = ColorUtil.mixColors(0xff0000, 0x00ff00, NumberUtil.sin0_1(timeSinceStartInSeconds));
-                }
-            }
-        }
-    }
+				if(i == 50) {
+					n.tint = ColorUtil.mixColors(0xff0000, 0x00ff00, NumberUtil.sin0_1(timeSinceStartInSeconds));
+				}
+			}
+		}
+	}
 }

@@ -31,7 +31,7 @@
 package de.nulldesign.nd2d.display {
 
 	import de.nulldesign.nd2d.materials.shader.ShaderCache;
-	import de.nulldesign.nd2d.utils.StatsObject;
+	import de.nulldesign.nd2d.utils.Statistics;
 
 	import flash.display.Sprite;
 	import flash.display3D.Context3D;
@@ -48,7 +48,8 @@ package de.nulldesign.nd2d.display {
 	import flash.utils.getTimer;
 
 	/**
-	 * Dispatched when the World2D is initialized and the context3D is available. The flag 'isHardwareAccelerated' is available then
+	 * Dispatched when the World2D is initialized and the context3D is available.
+	 * The flag 'isHardwareAccelerated' is available then
 	 * @eventType flash.events.Event.INIT
 	 */
 	[Event(name="init", type="flash.events.Event")]
@@ -72,7 +73,8 @@ package de.nulldesign.nd2d.display {
 	 * You can switch between scenes with the setActiveScene method of World2D.
 	 * There can be only one active scene.
 	 *
-	 */ public class World2D extends Sprite {
+	 */
+	public class World2D extends Sprite {
 
 		protected var camera:Camera2D = new Camera2D(1, 1);
 		protected var context3D:Context3D;
@@ -90,8 +92,6 @@ package de.nulldesign.nd2d.display {
 		protected var deviceInitialized:Boolean = false;
 		protected var deviceWasLost:Boolean = false;
 
-		protected var statsObject:StatsObject = new StatsObject();
-
 		internal var topMostMouseNode:Node2D;
 
 		public static var isHardwareAccelerated:Boolean;
@@ -108,11 +108,11 @@ package de.nulldesign.nd2d.display {
 			this.frameRate = frameRate;
 			this.bounds = bounds;
 			this.stageID = stageID;
+
 			addEventListener(Event.ADDED_TO_STAGE, addedToStage);
 		}
 
 		protected function addedToStage(event:Event):void {
-
 			removeEventListener(Event.ADDED_TO_STAGE, addedToStage);
 			stage.addEventListener(Event.RESIZE, resizeStage);
 			stage.frameRate = frameRate;
@@ -142,7 +142,6 @@ package de.nulldesign.nd2d.display {
 		}
 
 		protected function context3DCreated(e:Event):void {
-
 			context3D = stage.stage3Ds[stageID].context3D;
 			context3D.enableErrorChecking = enableErrorChecking;
 			context3D.setCulling(Context3DTriangleFace.NONE);
@@ -176,10 +175,9 @@ package de.nulldesign.nd2d.display {
 				mousePosition.w = 1.0;
 
 				var newTopMostMouseNode:Node2D = scene.processMouseEvent(mousePosition, mouseEventType, camera.getViewProjectionMatrix(), true, event.touchPointID);
+
 				if(newTopMostMouseNode) {
-
 					for each(var mouseEvent:Event in newTopMostMouseNode.mouseEvents) {
-
 						if(topMostMouseNode && mouseEvent.type == TouchEvent.TOUCH_OVER) {
 							topMostMouseNode.mouseInNode = false;
 							topMostMouseNode.dispatchEvent(new TouchEvent(TouchEvent.TOUCH_OUT, false, false, -1 /* TODO */, false, topMostMouseNode.mouseX, topMostMouseNode.mouseY));
@@ -205,10 +203,9 @@ package de.nulldesign.nd2d.display {
 				mousePosition.w = 1.0;
 
 				var newTopMostMouseNode:Node2D = scene.processMouseEvent(mousePosition, mouseEventType, camera.getViewProjectionMatrix(), false, 0);
+
 				if(newTopMostMouseNode) {
-
 					for each(var mouseEvent:Event in newTopMostMouseNode.mouseEvents) {
-
 						if(topMostMouseNode && mouseEvent.type == MouseEvent.MOUSE_OVER) {
 							topMostMouseNode.mouseInNode = false;
 							topMostMouseNode.dispatchEvent(new MouseEvent(MouseEvent.MOUSE_OUT, false, false, topMostMouseNode.mouseX, topMostMouseNode.mouseY));
@@ -224,7 +221,9 @@ package de.nulldesign.nd2d.display {
 		}
 
 		protected function resizeStage(e:Event = null):void {
-			if(!context3D || context3D.driverInfo == "Disposed") return;
+			if(!context3D || context3D.driverInfo == "Disposed") {
+				return;
+			}
 
 			var rect:Rectangle = bounds ? bounds : new Rectangle(0, 0, stage.stageWidth, stage.stageHeight);
 			stage.stage3Ds[stageID].x = rect.x;
@@ -235,36 +234,36 @@ package de.nulldesign.nd2d.display {
 		}
 
 		protected function mainLoop(e:Event):void {
-
-			var t:Number = getTimer() * 0.001;
-			var elapsed:Number = t - lastFramesTime;
+			var timeSinceStartInSeconds:Number = getTimer() * 0.001;
+			var elapsed:Number = timeSinceStartInSeconds - lastFramesTime;
 
 			if(scene && context3D && context3D.driverInfo != "Disposed") {
 				context3D.clear(scene.br, scene.bg, scene.bb, 1.0);
 
 				if(!isPaused) {
-					scene.stepNode(elapsed, t);
+					scene.stepNode(elapsed, timeSinceStartInSeconds);
 				}
 
 				if(deviceWasLost) {
-					ShaderCache.getInstance().handleDeviceLoss();
+					ShaderCache.handleDeviceLoss();
 					scene.handleDeviceLoss();
+
+					Statistics.handleDeviceLoss();
+
 					deviceWasLost = false;
 				}
 
-				statsObject.totalDrawCalls = 0;
-				statsObject.totalTris = 0;
+				Statistics.reset();
 
-				scene.drawNode(context3D, camera, false, statsObject);
+				scene.drawNode(context3D, camera);
 
 				context3D.present();
 			}
 
-			lastFramesTime = t;
+			lastFramesTime = timeSinceStartInSeconds;
 		}
 
 		public function setActiveScene(value:Scene2D):void {
-
 			if(scene) {
 				scene.setStageAndCamRef(null, null);
 			}
@@ -298,7 +297,6 @@ package de.nulldesign.nd2d.display {
 		 * Put everything to sleep, no drawing and step loop will be fired
 		 */
 		public function sleep():void {
-
 			removeEventListener(Event.ENTER_FRAME, mainLoop);
 
 			if(context3D) {
@@ -320,8 +318,6 @@ package de.nulldesign.nd2d.display {
 
 			stage.removeEventListener(Event.RESIZE, resizeStage);
 
-			ShaderCache.getInstance().handleDeviceLoss();
-
 			for(var i:int = 0; i < stage.stage3Ds.length; i++) {
 				stage.stage3Ds[i].removeEventListener(Event.CONTEXT3D_CREATE, context3DCreated);
 				stage.stage3Ds[i].removeEventListener(ErrorEvent.ERROR, context3DError);
@@ -339,11 +335,15 @@ package de.nulldesign.nd2d.display {
 
 			if(context3D) {
 				context3D.dispose();
+				context3D = null;
 			}
 
 			if(scene) {
 				scene.dispose();
+				scene = null;
 			}
+
+			camera = null;
 		}
 	}
 }

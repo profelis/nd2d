@@ -28,15 +28,13 @@
  * THE SOFTWARE.
  */
 
-package
-{
+package {
 
 	import avmplus.getQualifiedClassName;
 
-	import com.bit101.components.PushButton;
-
 	import de.nulldesign.nd2d.display.Scene2D;
 	import de.nulldesign.nd2d.display.World2D;
+	import de.nulldesign.nd2d.utils.NumberUtil;
 
 	import flash.display.StageAlign;
 	import flash.display.StageDisplayState;
@@ -44,8 +42,9 @@ package
 	import flash.display3D.Context3DRenderMode;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
-	import flash.events.MouseEvent;
+	import flash.filters.GlowFilter;
 	import flash.text.TextField;
+	import flash.text.TextFieldAutoSize;
 	import flash.text.TextFormat;
 	import flash.ui.Keyboard;
 
@@ -68,20 +67,19 @@ package
 	import tests.SpeedTest;
 	import tests.Sprite2DCloudParticles;
 	import tests.SpriteAnimTest;
+	import tests.SpriteCloudVisibilityTest;
 	import tests.SpriteHierarchyTest;
 	import tests.SpriteHierarchyTest2;
 	import tests.SpriteTest;
 	import tests.StarFieldTest;
-	import tests.SpriteCloudVisibilityTest;
 	import tests.TextFieldTest;
 	import tests.TextureAndRotationOptionsTest;
 	import tests.TextureAtlasTest;
 	import tests.TextureRendererTest;
 	import tests.Transform3DTest;
 
-	[SWF(width = "1000", height = "550", frameRate = "60", backgroundColor = "#000000")]
-	public class Main extends World2D
-	{
+	[SWF(width="1000", height="550", frameRate="60", backgroundColor="#000000")]
+	public class Main extends World2D {
 
 		private var scenes:Vector.<Class> = new Vector.<Class>();
 		private var activeSceneIdx:uint = 0;
@@ -89,13 +87,11 @@ package
 
 		private var sceneText:TextField;
 
-		public function Main()
-		{
+		public function Main() {
 			super(Context3DRenderMode.AUTO, 60);
 		}
 
-		override protected function addedToStage(event:Event):void
-		{
+		override protected function addedToStage(event:Event):void {
 			super.addedToStage(event);
 
 			stage.scaleMode = StageScaleMode.NO_SCALE;
@@ -130,86 +126,90 @@ package
 			scenes.push(BlurTest);
 			scenes.push(SpriteCloudVisibilityTest);
 
-			var tf:TextFormat = new TextFormat("Arial", 11, 0xFFFFFF, true);
+			var tf:TextFormat = new TextFormat("Arial", 12, 0xffffff, true);
 
 			sceneText = new TextField();
-			sceneText.width = 500;
 			sceneText.defaultTextFormat = tf;
+			sceneText.autoSize = TextFieldAutoSize.LEFT;
+			sceneText.filters = [new GlowFilter(0x000000, 1.0, 8, 8, 4)];
 
 			addChild(sceneText);
 
 			addChild(stats);
 
 			stage.addEventListener(Event.RESIZE, stageResize);
-			stageResize(null);
 
-			activeSceneIdx = 14;//scenes.length - 9;
-			nextDemo();
+			if(loaderInfo.parameters.demo) {
+				loadDemo(loaderInfo.parameters.demo);
+			} else {
+				loadDemo(20);
+			}
+
+			stageResize(null);
 
 			stage.addEventListener(KeyboardEvent.KEY_UP, keyUp);
 
 			start();
 		}
 
-		private function keyUp(e:KeyboardEvent):void
-		{
-			if (e.keyCode == Keyboard.D)
-			{
-				// simulate device loss
-				context3D.dispose();
-			}
-			else if (e.keyCode == Keyboard.SPACE)
-			{
-				nextDemo();
-			}
-			else if (e.keyCode == Keyboard.F)
-			{
-				stage.displayState = StageDisplayState.FULL_SCREEN;
+		private function keyUp(e:KeyboardEvent):void {
+			switch(e.keyCode) {
+				case Keyboard.LEFT:  {
+					loadDemo(-1);
+					break;
+				}
+				case Keyboard.RIGHT:
+				case Keyboard.SPACE:  {
+					loadDemo();
+					break;
+				}
+				case Keyboard.D:  {
+					// simulate device loss
+					context3D.dispose();
+					break;
+				}
+				case Keyboard.F:  {
+					stage.displayState = StageDisplayState.FULL_SCREEN;
+					break;
+				}
 			}
 		}
 
-		public function nextDemo():void
-		{
+		public function loadDemo(step:int = 1):void {
 			if(scene) {
 				scene.dispose();
 			}
 
 			camera.reset();
 
-			sceneText.text = "(" + (activeSceneIdx + 1) + "/" + scenes.length + ") " + getQualifiedClassName(scenes[activeSceneIdx]) + " // hit space for next test. f for fullscreen";
+			activeSceneIdx = NumberUtil.mod(activeSceneIdx + step, scenes.length);
 
-			var sceneClass:Class = scenes[activeSceneIdx++] as Class;
+			sceneText.htmlText = "(<font color='#ff0000'>" + (activeSceneIdx + 1) + "</font>/" + scenes.length + ") " + getQualifiedClassName(scenes[activeSceneIdx]) + " // hit <font color='#ffff00'>[SPACE]</font> or use the <font color='#ffff00'>[ARROW]</font> keys to change demo. <font color='#ffff00'>[F]</font> for fullscreen and <font color='#ffff00'>[D]</font> to simulate a device loss.";
+
+			var sceneClass:Class = scenes[activeSceneIdx] as Class;
 			var currentScene:Scene2D = new sceneClass();
 
 			setActiveScene(currentScene);
-
-			if (activeSceneIdx > scenes.length - 1)
-			{
-				activeSceneIdx = 0;
-			}
 		}
 
-		private function stageResize(e:Event):void
-		{
+		private function stageResize(e:Event):void {
 			sceneText.x = 5;
-			sceneText.y = stage.stageHeight - 20;
+			sceneText.y = stage.stageHeight - 5 - sceneText.textHeight;
 		}
 
-		override protected function mainLoop(e:Event):void
-		{
+		override protected function mainLoop(e:Event):void {
 			super.mainLoop(e);
-			stats.update(statsObject.totalDrawCalls, statsObject.totalTris);
+			stats.update();
 		}
 
-		override protected function context3DCreated(e:Event):void
-		{
-
+		override protected function context3DCreated(e:Event):void {
 			super.context3DCreated(e);
 
-			if (context3D)
-			{
+			if(context3D) {
 				stats.driverInfo = context3D.driverInfo;
 			}
 		}
 	}
 }
+
+

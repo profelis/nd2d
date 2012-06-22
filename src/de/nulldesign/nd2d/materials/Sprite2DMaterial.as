@@ -34,118 +34,111 @@ package de.nulldesign.nd2d.materials {
 	import de.nulldesign.nd2d.geom.UV;
 	import de.nulldesign.nd2d.geom.Vertex;
 	import de.nulldesign.nd2d.materials.shader.ShaderCache;
-	import de.nulldesign.nd2d.materials.texture.ASpriteSheetBase;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
 
 	import flash.display3D.Context3D;
 	import flash.display3D.Context3DProgramType;
 	import flash.display3D.Context3DVertexBufferFormat;
-	import flash.display3D.textures.Texture;
+	import flash.display3D.IndexBuffer3D;
+	import flash.display3D.VertexBuffer3D;
 	import flash.geom.ColorTransform;
-	import flash.geom.Point;
 	import flash.geom.Rectangle;
 
-	public class Sprite2DMaterial extends AMaterial {
+	public class Sprite2DMaterial extends BaseMaterial {
 
-		protected const VERTEX_SHADER:String = "m44 op, va0, vc0   \n" + // vertex * clipspace
-				"mov vt0, va1  \n" + // save uv in temp register
-				"mul vt0.xy, vt0.xy, vc4.zw   \n" + // mult with uv-scale
-				"add vt0.xy, vt0.xy, vc4.xy   \n" + // add uv offset
-				"mov v0, vt0 \n"; // copy uv
+		private const VERTEX_SHADER:String =
+			"alias va0, position;" +
+			"alias va1.xy, uv;" +
+			"alias vc0, viewProjection;" +
+			"alias vc4, clipSpace;" +
+			"alias vc8, colorMultiplier;" +
+			"alias vc9, colorOffset;" +
+			"alias vc10, uvSheet;" +
+			"alias vc11.xy, uvOffset;" +
+			"alias vc11.zw, uvScale;" +
 
-		protected const FRAGMENT_SHADER:String =
-				"tex ft0, v0, fs0 <TEXTURE_SAMPLING_OPTIONS>\n" + // sample texture from interpolated uv coords
-						"mul ft0, ft0, fc0\n" + // mult with colorMultiplier
-						"add oc, ft0, fc1\n"; // mult with colorOffset
+			"temp0 = mul4x4(position, clipSpace);" +
+			"output = mul4x4(temp0, viewProjection);" +
 
-		protected const FRAGMENT_SHADER_NO_TINT_ALPHA:String = "tex oc, v0, fs0 <TEXTURE_SAMPLING_OPTIONS>\n";
+			"#if USE_UV;" +
+			"	temp0 = uv * uvScale;" +
+			"	temp0 += uvOffset;" +
+			"#else;" +
+			"	temp0 = uv * uvSheet.zw;" +
+			"	temp0 += uvSheet.xy;" +
+			"#endif;" +
+
+			// pass to fragment shader
+			"v0 = temp0;" +
+			"v1 = colorMultiplier;" +
+			"v2 = colorOffset;" +
+			"v3 = uvSheet;";
+
+		private const FRAGMENT_SHADER:String =
+			"alias v0, texCoord;" +
+			"alias v1, colorMultiplier;" +
+			"alias v2, colorOffset;" +
+			"alias v3.xy, uvSheetOffset;" +
+			"alias v3.zw, uvSheetScale;" +
+
+			"#if USE_UV;" +
+			"	temp0 = frac(texCoord);" +
+			"	temp0 *= uvSheetScale;" +
+			"	temp0 += uvSheetOffset;" +
+			"	temp0 = sampleNoMip(temp0, texture0);" +
+			"#else;" +
+			"	temp0 = sample(texCoord, texture0);" +
+			"#endif;" +
+
+			"output = colorize(temp0, colorMultiplier, colorOffset);";
 
 		public var texture:Texture2D;
-		public var spriteSheet:ASpriteSheetBase;
+		public var animation:SpriteAnimation;
 		public var colorTransform:ColorTransform;
 
-		/**
-		 * Use this property to animate a texture
-		 */
 		public var uvOffsetX:Number = 0.0;
-
-		/**
-		 * Use this property to animate a texture
-		 */
 		public var uvOffsetY:Number = 0.0;
-
-		/**
-		 * Use this property to repeat/scale a texture. Your texture has to be a power of two (256x128, etc)
-		 */
 		public var uvScaleX:Number = 1.0;
-
-		/**
-		 * Use this property to repeat/scale a texture. Your texture has to be a power of two (256x128, etc)
-		 */
 		public var uvScaleY:Number = 1.0;
 
+		private var programConstants:Vector.<Number> = new Vector.<Number>(16, true);
 
 		public function Sprite2DMaterial() {
-			drawCalls = 1;
 		}
 
 		override protected function prepareForRender(context:Context3D):void {
-
 			super.prepareForRender(context);
 
-			var uvOffsetAndScale:Rectangle = new Rectangle(0.0, 0.0, 1.0, 1.0);
-			var textureObj:Texture = texture.getTexture(context);
+			var uvSheet:Rectangle = (texture.sheet ? animation.frameUV : texture.uvRect);
 
-			if(spriteSheet) {
-
-				uvOffsetAndScale = spriteSheet.getUVRectForFrame(texture.textureWidth, texture.textureHeight);
-
-				var offset:Point = spriteSheet.getOffsetForFrame();
-
-				clipSpaceMatrix.identity();
-				clipSpaceMatrix.appendScale(spriteSheet.spriteWidth >> 1, spriteSheet.spriteHeight >> 1, 1.0);
-				clipSpaceMatrix.appendTranslation(offset.x, offset.y, 0.0);
-				clipSpaceMatrix.append(modelMatrix);
-				clipSpaceMatrix.append(viewProjectionMatrix);
-
-			} else {
-				clipSpaceMatrix.identity();
-				clipSpaceMatrix.appendScale(texture.textureWidth >> 1, texture.textureHeight >> 1, 1.0);
-				clipSpaceMatrix.append(modelMatrix);
-				clipSpaceMatrix.append(viewProjectionMatrix);
-			}
-
-			context.setTextureAt(0, textureObj);
+			context.setTextureAt(0, texture.getTexture(context));
 			context.setVertexBufferAt(0, vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_2); // vertex
 			context.setVertexBufferAt(1, vertexBuffer, 2, Context3DVertexBufferFormat.FLOAT_2); // uv
 
-			context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, clipSpaceMatrix, true);
+			programConstants[0] = colorTransform.redMultiplier;
+			programConstants[1] = colorTransform.greenMultiplier;
+			programConstants[2] = colorTransform.blueMultiplier;
+			programConstants[3] = colorTransform.alphaMultiplier;
 
-			programConstVector[0] = uvOffsetAndScale.x + uvOffsetX;
-			programConstVector[1] = uvOffsetAndScale.y + uvOffsetY;
-			programConstVector[2] = uvOffsetAndScale.width * uvScaleX;
-			programConstVector[3] = uvOffsetAndScale.height * uvScaleY;
+			programConstants[4] = colorTransform.redOffset;
+			programConstants[5] = colorTransform.greenOffset;
+			programConstants[6] = colorTransform.blueOffset;
+			programConstants[7] = colorTransform.alphaOffset;
 
-			context.setProgramConstantsFromVector(Context3DProgramType.VERTEX, 4, programConstVector);
+			programConstants[8] = uvSheet.x;
+			programConstants[9] = uvSheet.y;
+			programConstants[10] = uvSheet.width;
+			programConstants[11] = uvSheet.height;
 
-			if(nodeTinted) {
+			programConstants[12] = uvOffsetX;
+			programConstants[13] = uvOffsetY;
+			programConstants[14] = uvScaleX;
+			programConstants[15] = uvScaleY;
 
-				var offsetFactor:Number = 1.0 / 255.0;
+			context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, viewProjectionMatrix, true);
+			context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 4, clipSpaceMatrix, true);
 
-				programConstVector[0] = colorTransform.redMultiplier;
-				programConstVector[1] = colorTransform.greenMultiplier;
-				programConstVector[2] = colorTransform.blueMultiplier;
-				programConstVector[3] = colorTransform.alphaMultiplier;
-
-				context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 0, programConstVector);
-
-				programConstVector[0] = colorTransform.redOffset * offsetFactor;
-				programConstVector[1] = colorTransform.greenOffset * offsetFactor;
-				programConstVector[2] = colorTransform.blueOffset * offsetFactor;
-				programConstVector[3] = colorTransform.alphaOffset * offsetFactor;
-
-				context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 1, programConstVector);
-			}
+			context.setProgramConstantsFromVector(Context3DProgramType.VERTEX, 8, programConstants);
 		}
 
 		override protected function clearAfterRender(context:Context3D):void {
@@ -155,20 +148,27 @@ package de.nulldesign.nd2d.materials {
 		}
 
 		override protected function addVertex(context:Context3D, buffer:Vector.<Number>, v:Vertex, uv:UV, face:Face):void {
-
 			fillBuffer(buffer, v, uv, face, VERTEX_POSITION, 2);
 			fillBuffer(buffer, v, uv, face, VERTEX_UV, 2);
 		}
 
 		override protected function initProgram(context:Context3D):void {
 			if(!shaderData) {
-				shaderData = ShaderCache.getInstance().getShader(context, this, VERTEX_SHADER, nodeTinted ? FRAGMENT_SHADER : FRAGMENT_SHADER_NO_TINT_ALPHA, 4, texture.textureOptions, nodeTinted ? 0 : 1000);
+				var defines:String =
+					"#define PREMULTIPLIED_ALPHA=" + int(texture.hasPremultipliedAlpha) + ";" +
+					"#define USE_UV=" + int(usesUV) + ";" +
+					"#define USE_COLOR=" + int(usesColor) + ";" +
+					"#define USE_COLOR_OFFSET=" + int(usesColorOffset) + ";";
+
+				shaderData = ShaderCache.getShader(context, defines, VERTEX_SHADER, FRAGMENT_SHADER, 4, texture.textureOptions);
 			}
 		}
 
 		public function modifyVertexInBuffer(bufferIdx:uint, x:Number, y:Number):void {
+			if(!mVertexBuffer || mVertexBuffer.length == 0) {
+				return;
+			}
 
-			if(!mVertexBuffer || mVertexBuffer.length == 0) return;
 			const idx:uint = bufferIdx * shaderData.numFloatsPerVertex;
 
 			mVertexBuffer[idx] = x;
@@ -176,5 +176,15 @@ package de.nulldesign.nd2d.materials {
 
 			needUploadVertexBuffer = true;
 		}
+
+		override public function dispose():void {
+			super.dispose();
+
+			texture = null;
+			animation = null;
+			colorTransform = null;
+			programConstants = null;
+		}
+
 	}
 }

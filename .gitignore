@@ -9,6 +9,7 @@ nd2d.iml
 
 # Flash Builder
 bin-debug
+bin-release
 .actionScriptProperties
 .flexLibProperties
 .project

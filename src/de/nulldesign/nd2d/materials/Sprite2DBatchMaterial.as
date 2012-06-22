@@ -36,49 +36,77 @@ package de.nulldesign.nd2d.materials {
 	import de.nulldesign.nd2d.geom.UV;
 	import de.nulldesign.nd2d.geom.Vertex;
 	import de.nulldesign.nd2d.materials.shader.ShaderCache;
+	import de.nulldesign.nd2d.utils.Statistics;
 
 	import flash.display3D.Context3D;
 	import flash.display3D.Context3DProgramType;
 	import flash.display3D.Context3DVertexBufferFormat;
-	import flash.geom.Point;
+	import flash.display3D.IndexBuffer3D;
+	import flash.display3D.VertexBuffer3D;
 	import flash.geom.Rectangle;
 
 	public class Sprite2DBatchMaterial extends Sprite2DMaterial {
 
-		protected const DEFAULT_VERTEX_SHADER:String =
-				"m44 op, va0, vc[va2.x]             \n" + // vertex * clipspace[idx]
-				"mov vt0, va1                       \n" + // save uv in temp register
-				"mul vt0.xy, vt0.xy, vc[va2.w].zw   \n" + // mult with uv-scale
-				"add vt0.xy, vt0.xy, vc[va2.w].xy   \n" + // add uv offset
-				"mov v0, vt0                        \n" + // copy uv
-				"mov v1, vc[va2.y]                  \n" + // copy colorMultiplier[idx]
-				"mov v2, vc[va2.z]                  \n";  // copy colorOffset[idx]
+		private const VERTEX_SHADER:String =
+			"alias va0, position;" +
+			"alias va1.xy, uv;" +
 
-		/*
-		 protected const DEFAULT_VERTEX_SHADER:String =
-		 "m44 op, va0, vc[va2.x]     \n" + // vertex * clipspace[idx]
-		 "add vt0, va1, vc[va2.z]    \n" + // add uvoffset[idx] to uv coords
-		 "mov v0, vt0                \n" + // copy uv
-		 "mov v1, vc[va2.y]	        \n"; // copy color[idx]
-		 */
+			"alias vc0, viewProjection;" +
+			"alias vc[va2.x], clipSpace;" +
+			"alias vc[va2.y], colorMultiplier;" +
+			"alias vc[va2.z], colorOffset;" +
+			"alias vc[va2.w], uvSheet;" +
+			"alias vc[va3.x].xy, uvOffset;" +
+			"alias vc[va3.x].zw, uvScale;" +
 
-		protected const DEFAULT_FRAGMENT_SHADER:String =
-				"tex ft0, v0, fs0 <TEXTURE_SAMPLING_OPTIONS>  \n" + // sample texture from interpolated uv coords
-				"mul ft0, ft0, v1                             \n" + // mult with colorMultiplier
-				"add oc, ft0, v2                              \n";  // add with colorOffset
+			"temp0 = mul4x4(position, clipSpace);" +
+			"output = mul4x4(temp0, viewProjection);" +
 
-		protected var constantsPerSprite:uint = 7; // matrix, colorMultiplier, colorOffset, uvoffset
-		protected var constantsPerMatrix:uint = 4;
-		protected const constants:Vector.<Number> = new Vector.<Number>(12, true);
+			"#if USE_UV;" +
+			"	temp0 = uv * uvScale;" +
+			"	temp0 += uvOffset;" +
+			"#else;" +
+			"	temp0 = uv * uvSheet.zw;" +
+			"	temp0 += uvSheet.xy;" +
+			"#endif;" +
 
-		protected const offsetFactor:Number = 1.0 / 255.0;
+			// pass to fragment shader
+			"v0 = temp0;" +
+			"v1 = colorMultiplier;" +
+			"v2 = colorOffset;" +
+			"v3 = uvSheet;" +
+			"v4 = uvOffset;";	// unused
 
-		protected const BATCH_SIZE:uint = 126 / constantsPerSprite;
-		protected var batchLen:uint = 0;
+		private const FRAGMENT_SHADER:String =
+			"alias v0, texCoord;" +
+			"alias v1, colorMultiplier;" +
+			"alias v2, colorOffset;" +
+			"alias v3.xy, uvOffset;" +
+			"alias v3.zw, uvScale;" +
 
-		protected var currentNodeIsTinted:Boolean = false;
+			"#if USE_UV;" +
+			"	temp0 = frac(texCoord);" +
+			"	temp0 *= uvScale;" +
+			"	temp0 += uvOffset;" +
+			"	temp0 = sampleNoMip(temp0, texture0);" +
+			"#else;" +
+			"	temp0 = sample(texCoord, texture0);" +
+			"#endif;" +
+
+			"output = colorize(temp0, colorMultiplier, colorOffset);";
+
+		private var idx:uint = 0;
+		private const constantsGlobal:uint = 4;
+		private const constantsPerMatrix:uint = 4;
+		private const constantsPerSprite:uint = 4; // colorMultiplier, colorOffset, uvSheet, uvOffsetAndScale
+
+		private var batchLen:uint = 0;
+		private const BATCH_SIZE:uint = (126 - constantsGlobal) / (constantsPerMatrix + constantsPerSprite);
+
+		private var programConstants:Vector.<Number> = new Vector.<Number>(4 * constantsPerSprite * BATCH_SIZE, true);
 
 		public static const VERTEX_IDX:String = "PB3D_IDX";
+		public static const VERTEX_IDX2:String = "PB3D_IDX2";
 
 		public function Sprite2DBatchMaterial() {
 			super();
@@ -116,47 +144,52 @@ package de.nulldesign.nd2d.materials {
 		}
 
 		override protected function prepareForRender(context:Context3D):void {
+			updateProgram(context);
 			context.setProgram(shaderData.shader);
 			context.setBlendFactors(blendMode.src, blendMode.dst);
 			context.setTextureAt(0, texture.getTexture(context));
 			context.setVertexBufferAt(0, vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_2); // vertex
 			context.setVertexBufferAt(1, vertexBuffer, 2, Context3DVertexBufferFormat.FLOAT_2); // uv
 			context.setVertexBufferAt(2, vertexBuffer, 4, Context3DVertexBufferFormat.FLOAT_4); // idx
+			context.setVertexBufferAt(3, vertexBuffer, 8, Context3DVertexBufferFormat.FLOAT_1); // idx2
+
+			context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, viewProjectionMatrix, true);
 		}
 
 		public function renderBatch(context:Context3D, faceList:Vector.<Face>, childList:Node2D):void {
-			drawCalls = 0;
-			numTris = 0;
-			batchLen = 0;
-			currentNodeIsTinted = nodeTinted;
-			previousTintedState = currentNodeIsTinted;
-
 			if(!childList) {
 				return;
 			}
+
+			batchLen = 0;
+
+			usesUV = childList.usesUV;
+			usesColor = usesColor || childList.usesColor;
+			usesColorOffset = usesColorOffset || childList.usesColorOffset;
 
 			generateBufferData(context, faceList);
 			prepareForRender(context);
 
 			processAndRenderNodes(context, childList);
 
-			if(batchLen != 0) {
-				drawCurrentBatch(context);
-			}
+			drawCurrentBatch(context);
 
 			clearAfterRender(context);
 		}
 
-		protected function setupShader(context:Context3D):void {
-			shaderData = null;
-			initProgram(context);
-			context.setProgram(shaderData.shader);
-		}
-
 		protected function drawCurrentBatch(context:Context3D):void {
-			context.drawTriangles(indexBuffer, 0, batchLen * 2);
+			if(batchLen) {
+				context.setProgramConstantsFromVector(Context3DProgramType.VERTEX,
+					constantsGlobal + BATCH_SIZE * constantsPerMatrix, programConstants, batchLen * constantsPerSprite);
+
+				context.drawTriangles(indexBuffer, 0, batchLen << 1);
+
+				Statistics.drawCalls++;
+				Statistics.triangles += (batchLen << 1);
+			}
+
+			idx = 0;
 			batchLen = 0;
-			drawCalls++;
 		}
 
 		protected function processAndRenderNodes(context:Context3D, childList:Node2D):void {
@@ -164,86 +197,70 @@ package de.nulldesign.nd2d.materials {
 				return;
 			}
 
-			var childNode:Node2D;
 			var child:Sprite2D;
-
-			currentNodeIsTinted = nodeTinted || childList.nodeIsTinted;
+			var childNode:Node2D;
 
 			for(childNode = childList; childNode; childNode = childNode.next) {
 				if(!childNode.visible) {
 					continue;
 				}
 
+				if(childNode.invalidateUV) {
+					childNode.updateUV();
+				}
+
 				if(childNode.invalidateColors) {
 					childNode.updateColors();
 				}
 
-				if(childNode.invalidateMatrix) {
-					childNode.updateLocalMatrix();
-					childNode.updateWorldMatrix();
-					childNode.invalidateMatrix = true;
-				}
+				if(childNode.invalidateMatrix || childNode.parent.invalidateMatrix) {
+					if(childNode.invalidateMatrix) {
+						childNode.updateLocalMatrix();
+					}
 
-				if(childNode.parent.invalidateMatrix) {
 					childNode.updateWorldMatrix();
 					childNode.invalidateMatrix = true;
+				} else if(childNode.invalidateClipSpace) {
+					childNode.updateClipSpace();
 				}
 
 				child = childNode as Sprite2D;
 
 				if(child) {
-					currentNodeIsTinted = nodeTinted || child.nodeIsTinted;
+					usesUV = child.usesUV;
+					usesColor = child.usesColor;
+					usesColorOffset = child.usesColorOffset;
 
-					if(currentNodeIsTinted != previousTintedState) {
-						drawCurrentBatch(context);
-						setupShader(context);
-					}
+					updateProgram(context);
 
-					var uvOffsetAndScale:Rectangle = new Rectangle(0.0, 0.0, 1.0, 1.0);
-
-					// TODO: Matrix operations are slow in AS3, move calculation to shader
-					if(spriteSheet) {
-						uvOffsetAndScale = child.spriteSheet.getUVRectForFrame(texture.textureWidth, texture.textureHeight);
-
-						var offset:Point = child.spriteSheet.getOffsetForFrame();
-
-						clipSpaceMatrix.identity();
-						clipSpaceMatrix.appendScale(child.spriteSheet.spriteWidth >> 1, child.spriteSheet.spriteHeight >> 1, 1.0);
-						clipSpaceMatrix.appendTranslation(offset.x, offset.y, 0.0);
-						clipSpaceMatrix.append(child.worldModelMatrix);
-						clipSpaceMatrix.append(viewProjectionMatrix);
-					} else {
-						clipSpaceMatrix.identity();
-						clipSpaceMatrix.appendScale(texture.textureWidth >> 1, texture.textureHeight >> 1, 1.0);
-						clipSpaceMatrix.append(child.worldModelMatrix);
-						clipSpaceMatrix.append(viewProjectionMatrix);
-					}
-
-					constants[0] = child.combinedColorTransform.redMultiplier;
-					constants[1] = child.combinedColorTransform.greenMultiplier;
-					constants[2] = child.combinedColorTransform.blueMultiplier;
-					constants[3] = child.combinedColorTransform.alphaMultiplier;
-
-					constants[4] = child.combinedColorTransform.redOffset * offsetFactor;
-					constants[5] = child.combinedColorTransform.greenOffset * offsetFactor;
-					constants[6] = child.combinedColorTransform.blueOffset * offsetFactor;
-					constants[7] = child.combinedColorTransform.alphaOffset * offsetFactor;
-
-					constants[8] = uvOffsetAndScale.x;
-					constants[9] = uvOffsetAndScale.y;
-					constants[10] = uvOffsetAndScale.width;
-					constants[11] = uvOffsetAndScale.height;
+					var uvSheet:Rectangle = (texture.sheet ? child.animation.frameUV : texture.uvRect);
 
 					context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX,
-							batchLen * constantsPerSprite, clipSpaceMatrix, true);
+						constantsGlobal + batchLen * constantsPerMatrix, child.clipSpaceMatrix, true);
 
-					context.setProgramConstantsFromVector(Context3DProgramType.VERTEX,
-							batchLen * constantsPerSprite + constantsPerMatrix,
-							constants, 3);
+					programConstants[idx++] = child.combinedColorTransform.redMultiplier;
+					programConstants[idx++] = child.combinedColorTransform.greenMultiplier;
+					programConstants[idx++] = child.combinedColorTransform.blueMultiplier;
+					programConstants[idx++] = child.combinedColorTransform.alphaMultiplier;
+
+					programConstants[idx++] = child.combinedColorTransform.redOffset;
+					programConstants[idx++] = child.combinedColorTransform.greenOffset;
+					programConstants[idx++] = child.combinedColorTransform.blueOffset;
+					programConstants[idx++] = child.combinedColorTransform.alphaOffset;
+
+					programConstants[idx++] = uvSheet.x;
+					programConstants[idx++] = uvSheet.y;
+					programConstants[idx++] = uvSheet.width;
+					programConstants[idx++] = uvSheet.height;
+
+					programConstants[idx++] = child.uvOffsetX;
+					programConstants[idx++] = child.uvOffsetY;
+					programConstants[idx++] = child.uvScaleX;
+					programConstants[idx++] = child.uvScaleY;
 
 					batchLen++;
 
-					numTris += 2;
+					Statistics.sprites++;
 
 					if(batchLen == BATCH_SIZE) {
 						drawCurrentBatch(context);
@@ -253,7 +270,6 @@ package de.nulldesign.nd2d.materials {
 				processAndRenderNodes(context, childNode.childFirst);
 
 				childNode.invalidateMatrix = false;
-				previousTintedState = currentNodeIsTinted;
 			}
 		}
 
@@ -262,11 +278,32 @@ package de.nulldesign.nd2d.materials {
 			context.setVertexBufferAt(0, null);
 			context.setVertexBufferAt(1, null);
 			context.setVertexBufferAt(2, null);
+			context.setVertexBufferAt(3, null);
+		}
+
+		override protected function updateProgram(context:Context3D):void {
+			if(usesUV != lastUsesUV || usesColor != lastUsesColor || usesColorOffset != lastUsesColorOffset) {
+				drawCurrentBatch(context);
+
+				shaderData = null;
+				initProgram(context);
+				context.setProgram(shaderData.shader);
+
+				lastUsesUV = usesUV;
+				lastUsesColor = usesColor;
+				lastUsesColorOffset = usesColorOffset;
+			}
 		}
 
 		override protected function initProgram(context:Context3D):void {
 			if(!shaderData) {
-				shaderData = ShaderCache.getInstance().getShader(context, this, DEFAULT_VERTEX_SHADER, currentNodeIsTinted ? DEFAULT_FRAGMENT_SHADER : FRAGMENT_SHADER_NO_TINT_ALPHA, 8, texture.textureOptions, currentNodeIsTinted ? 0 : 1000);
+				var defines:String =
+					"#define PREMULTIPLIED_ALPHA=" + int(texture.hasPremultipliedAlpha) + ";" +
+					"#define USE_UV=" + int(usesUV) + ";" +
+					"#define USE_COLOR=" + int(usesColor) + ";" +
+					"#define USE_COLOR_OFFSET=" + int(usesColorOffset) + ";";
+
+				shaderData = ShaderCache.getShader(context, defines, VERTEX_SHADER, FRAGMENT_SHADER, 9, texture.textureOptions);
 			}
 		}
 
@@ -274,18 +311,21 @@ package de.nulldesign.nd2d.materials {
 			fillBuffer(buffer, v, uv, face, VERTEX_POSITION, 2);
 			fillBuffer(buffer, v, uv, face, VERTEX_UV, 2);
 			fillBuffer(buffer, v, uv, face, VERTEX_IDX, 4);
+			fillBuffer(buffer, v, uv, face, VERTEX_IDX2, 1);
 		}
 
 		override protected function fillBuffer(buffer:Vector.<Number>, v:Vertex, uv:UV, face:Face, semanticsID:String, floatFormat:int):void {
 			if(semanticsID == VERTEX_IDX) {
 				// first float will be used for matrix index
-				buffer.push(face.idx * constantsPerSprite);
+				buffer.push(constantsGlobal + face.idx * constantsPerMatrix);
 				// second, colorMultiplier idx
-				buffer.push(face.idx * constantsPerSprite + constantsPerMatrix);
+				buffer.push(constantsGlobal + BATCH_SIZE * constantsPerMatrix + face.idx * constantsPerSprite);
 				// second, colorOffset idx
-				buffer.push(face.idx * constantsPerSprite + constantsPerMatrix + 1);
+				buffer.push(constantsGlobal + BATCH_SIZE * constantsPerMatrix + face.idx * constantsPerSprite + 1);
 				// third uv offset idx
-				buffer.push(face.idx * constantsPerSprite + constantsPerMatrix + 2);
+				buffer.push(constantsGlobal + BATCH_SIZE * constantsPerMatrix + face.idx * constantsPerSprite + 2);
+			} else if(semanticsID == VERTEX_IDX2) {
+				buffer.push(constantsGlobal + BATCH_SIZE * constantsPerMatrix + face.idx * constantsPerSprite + 3);
 			} else {
 				super.fillBuffer(buffer, v, uv, face, semanticsID, floatFormat);
 			}
@@ -293,6 +333,9 @@ package de.nulldesign.nd2d.materials {
 
 		override public function dispose():void {
 			super.dispose();
+
+			programConstants = null;
 		}
+
 	}
 }

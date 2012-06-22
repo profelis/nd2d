@@ -30,25 +30,25 @@
 
 package de.nulldesign.nd2d.geom {
 
-    public class UV {
+	public class UV {
 
-        private static var UID_COUNT:uint = 0;
-        public const uid:Number = ++UID_COUNT;
+		private static var UID_COUNT:uint = 0;
+		public const uid:Number = ++UID_COUNT;
 
-        public var u:Number;
-        public var v:Number;
+		public var u:Number;
+		public var v:Number;
 
-        public function UV(u:Number = 0, v:Number = 0) {
-            this.u = u;
-            this.v = v;
-        }
+		public function UV(u:Number = 0, v:Number = 0) {
+			this.u = u;
+			this.v = v;
+		}
 
-        public function toString():String {
-            return "UV: " + u + " / " + v;
-        }
+		public function toString():String {
+			return "UV: " + u + " / " + v;
+		}
 
-        public function clone():UV {
-            return new UV(u, v);
-        }
-    }
+		public function clone():UV {
+			return new UV(u, v);
+		}
+	}
 }

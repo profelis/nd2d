@@ -38,22 +38,22 @@ package tests {
 
 	public class Grid2DTest extends Scene2D {
 
-        [Embed(source="/assets/water_texture.jpg")]
-        private var spriteTexture:Class;
+		[Embed(source="/assets/water_texture.jpg")]
+		private var spriteTexture:Class;
 
-        private var grid:Grid2D;
+		private var grid:Grid2D;
 
-        public function Grid2DTest() {
+		public function Grid2DTest() {
 
-            grid = new MorphGrid(16, 16, Texture2D.textureFromBitmapData(new spriteTexture().bitmapData));
-            addChild(grid);
-        }
+			grid = new MorphGrid(16, 16, Texture2D.textureFromBitmapData(new spriteTexture().bitmapData));
+			addChild(grid);
+		}
 
-        override protected function step(elapsed:Number):void {
-            grid.x = stage.stageWidth * 0.5;
-            grid.y = stage.stageHeight * 0.5;
-            grid.width = stage.stageWidth;
-            grid.height = stage.stageHeight;
-        }
-    }
+		override protected function step(elapsed:Number):void {
+			grid.x = stage.stageWidth * 0.5;
+			grid.y = stage.stageHeight * 0.5;
+			grid.width = stage.stageWidth;
+			grid.height = stage.stageHeight;
+		}
+	}
 }

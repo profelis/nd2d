@@ -41,43 +41,35 @@ package tests {
 
 	public class PostProcessingTest extends SideScrollerTest {
 
-        protected var sceneNode:Node2D;
-        protected var textureRenderer:TextureRenderer;
-        protected var postProcessedScene:Sprite2D;
+		public function PostProcessingTest() {
+			super();
+		}
 
-        public function PostProcessingTest() {
-            super();
-        }
+		override protected function addedToStage(e:Event):void {
+			super.addedToStage(e);
 
-        override protected function addedToStage(e:Event):void {
-            super.addedToStage(e);
+			var sceneNode:Node2D = new Node2D();
 
-            sceneNode = new Node2D();
+			// move whole SideScrollerTest into our node
+			while(childFirst) {
+				sceneNode.addChild(childFirst);
+			}
 
-            while(children.length > 0) {
-                sceneNode.addChild(getChildAt(0));
-                removeChildAt(0);
-            }
-
-            addChild(sceneNode);
-            sceneNode.visible = false;
+			// hide it, we will render it through TextureRenderer()
+			sceneNode.visible = false;
+			addChild(sceneNode);
 
 			var renderTexture:Texture2D = Texture2D.textureFromSize(stage.stageWidth, stage.stageHeight);
 
-            textureRenderer = new TextureRenderer(sceneNode, renderTexture, 0.0, 0.0);
-            addChild(textureRenderer);
+			var textureRenderer:TextureRenderer = new TextureRenderer(sceneNode, renderTexture, 0.0, 0.0);
+			addChild(textureRenderer);
 
-			postProcessedScene = new Sprite2D(renderTexture);
-            postProcessedScene.setMaterial(new Sprite2DDizzyMaterial());
-            //postProcessedScene.blendMode = BlendModePresets.ADD;
-            postProcessedScene.tint = 0xAA99FF;
-            postProcessedScene.x = textureRenderer.width * 0.5;
-            postProcessedScene.y = textureRenderer.height * 0.5;
-            addChild(postProcessedScene);
-        }
-
-        override protected function step(elapsed:Number):void {
-            super.step(elapsed);
-        }
-    }
+			var postProcessedScene:Sprite2D = new Sprite2D(renderTexture);
+			postProcessedScene.setMaterial(new Sprite2DDizzyMaterial());
+			postProcessedScene.tint = 0xFF00FF; //0xAA99FF;
+			postProcessedScene.x = textureRenderer.width * 0.5;
+			postProcessedScene.y = textureRenderer.height * 0.5;
+			addChild(postProcessedScene);
+		}
+	}
 }

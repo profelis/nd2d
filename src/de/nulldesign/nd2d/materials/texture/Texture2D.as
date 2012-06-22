@@ -29,6 +29,7 @@
  */
 package de.nulldesign.nd2d.materials.texture {
 
+	import de.nulldesign.nd2d.utils.Statistics;
 	import de.nulldesign.nd2d.utils.TextureHelper;
 
 	import flash.display.BitmapData;
@@ -36,6 +37,7 @@ package de.nulldesign.nd2d.materials.texture {
 	import flash.display3D.Context3DTextureFormat;
 	import flash.display3D.textures.Texture;
 	import flash.geom.Point;
+	import flash.geom.Rectangle;
 	import flash.utils.ByteArray;
 
 	public class Texture2D {
@@ -57,9 +59,12 @@ package de.nulldesign.nd2d.materials.texture {
 		public var bitmap:BitmapData;
 		public var compressedBitmap:ByteArray;
 
+		public var sheet:TextureSheetBase;
+
 		/*
 		 * These sizes are needed to calculate the UV offset in a texture.
-		 * because the GPU texturesize can differ from the provided bitmap (not a 2^n size)
+		 * because the GPU texturesize can differ from the provided bitmap (not a
+		 * 2^n size)
 		 * This is the BitmapData's or the ATF textures original size
 		 */
 		public var bitmapWidth:Number;
@@ -68,96 +73,134 @@ package de.nulldesign.nd2d.materials.texture {
 		public var textureWidth:Number;
 		public var textureHeight:Number;
 
+		public var uvRect:Rectangle = new Rectangle(0, 0, 1, 1);
+
 		public var hasPremultipliedAlpha:Boolean = true;
 		public var textureFilteringOptionChanged:Boolean = true;
+
+		public var memoryUsed:uint = 0;
 
 		protected var autoCleanUpResources:Boolean;
 
 		/**
 		 * Texture2D object
-		 * @param autoCleanUpResources if you set it to true, the bitmap or the ATF texture will be disposed after creating the texture. This will save memory, but ND2D is not able to recover from a device loss then (Which is unlikely on a mobile device, but not on a desktop machine)
+		 * @param autoCleanUpResources	If set to true, the Bitmap and the
+		 * SpriteSheet/Atlas will be disposed with the texture.
+		 * This will prevent most memory leaks but if you need to dispose and
+		 * recreate Sprite2D's set this to false and dispose the texture
+		 * manually.
 		 */
-		public function Texture2D(autoCleanUpResources:Boolean = false) {
+		public function Texture2D(autoCleanUpResources:Boolean = true) {
 			this.autoCleanUpResources = autoCleanUpResources;
 		}
 
-		public static function textureFromBitmapData(bitmap:BitmapData, autoCleanUpResources:Boolean = false):Texture2D {
-
-			var t:Texture2D = new Texture2D(autoCleanUpResources);
+		public static function textureFromBitmapData(bitmap:BitmapData, autoCleanUpResources:Boolean = true):Texture2D {
+			var tex:Texture2D = new Texture2D(autoCleanUpResources);
 
 			if(bitmap) {
-				t.bitmap = bitmap;
-				t.bitmapWidth = bitmap.width;
-				t.bitmapHeight = bitmap.height;
+				tex.bitmap = bitmap;
+				tex.bitmapWidth = bitmap.width;
+				tex.bitmapHeight = bitmap.height;
 
 				var dimensions:Point = TextureHelper.getTextureDimensionsFromBitmap(bitmap);
-				t.textureWidth = dimensions.x;
-				t.textureHeight = dimensions.y;
-				t.hasPremultipliedAlpha = true
+				tex.textureWidth = dimensions.x;
+				tex.textureHeight = dimensions.y;
+				tex.hasPremultipliedAlpha = true;
+
+				tex.updateUvRect();
 			}
 
-			return t;
+			return tex;
 		}
 
-		public static function textureFromATF(atf:ByteArray, autoCleanUpResources:Boolean = false):Texture2D {
-
-			var t:Texture2D = new Texture2D(autoCleanUpResources);
+		public static function textureFromATF(atf:ByteArray, autoCleanUpResources:Boolean = true):Texture2D {
+			var tex:Texture2D = new Texture2D(autoCleanUpResources);
 
 			if(atf) {
-
 				var w:int = Math.pow(2, atf[7]);
 				var h:int = Math.pow(2, atf[8]);
 
-				t.compressedBitmap = atf;
-				t.textureWidth = t.bitmapWidth = w;
-				t.textureHeight = t.bitmapHeight = h;
-				t.hasPremultipliedAlpha = false;
+				tex.compressedBitmap = atf;
+				tex.textureWidth = tex.bitmapWidth = w;
+				tex.textureHeight = tex.bitmapHeight = h;
+				tex.hasPremultipliedAlpha = false;
+
+				tex.updateUvRect();
 			}
 
-			return t;
+			return tex;
 		}
 
 		public static function textureFromSize(textureWidth:uint, textureHeight:uint):Texture2D {
-
+			var tex:Texture2D = new Texture2D();
 			var size:Point = TextureHelper.getTextureDimensionsFromSize(textureWidth, textureHeight);
-			var t:Texture2D = new Texture2D();
-			t.textureWidth = size.x;
-			t.textureHeight = size.y;
-			t.bitmapWidth = size.x;
-			t.bitmapHeight = size.y;
 
-			return t;
+			tex.textureWidth = size.x;
+			tex.textureHeight = size.y;
+			tex.bitmapWidth = size.x;
+			tex.bitmapHeight = size.y;
+
+			tex.updateUvRect();
+
+			return tex;
+		}
+
+		protected function updateUvRect():void {
+			uvRect.width = bitmapWidth / textureWidth;
+			uvRect.height = bitmapHeight / textureHeight;
+		}
+
+		/**
+		 *
+		 * @param value		TextureSheet or TextureAtlas
+		 */
+		public function setSheet(value:TextureSheetBase):void {
+			sheet = value;
 		}
 
 		public function getTexture(context:Context3D):Texture {
 			if(!texture) {
+				memoryUsed = 0;
 
-				if(compressedBitmap) {
-					texture = TextureHelper.generateTextureFromByteArray(context, compressedBitmap);
-				} else if(bitmap) {
+				if(bitmap) {
 					var useMipMapping:Boolean = (_textureOptions & TextureOption.MIPMAP_LINEAR) + (_textureOptions & TextureOption.MIPMAP_NEAREST) > 0;
-					texture = TextureHelper.generateTextureFromBitmap(context, bitmap, useMipMapping);
+
+					texture = TextureHelper.generateTextureFromBitmap(context, bitmap, useMipMapping, this);
+				} else if(compressedBitmap) {
+					texture = TextureHelper.generateTextureFromByteArray(context, compressedBitmap);
 				} else {
 					texture = context.createTexture(textureWidth, textureHeight, Context3DTextureFormat.BGRA, true);
+					memoryUsed = textureWidth * textureHeight * 4;
 				}
 
-				if(autoCleanUpResources) {
-					if(bitmap) {
-						bitmap.dispose();
-						bitmap = null;
-					}
-
-					compressedBitmap = null;
-				}
+				Statistics.textures++;
+				Statistics.texturesMem += memoryUsed;
 			}
 
 			return texture;
 		}
 
-		public function dispose():void {
+		public function dispose(forceCleanUpResources:Boolean = false):void {
 			if(texture) {
 				texture.dispose();
 				texture = null;
+
+				Statistics.textures--;
+				Statistics.texturesMem -= memoryUsed;
+			}
+
+			if(forceCleanUpResources || autoCleanUpResources) {
+				if(bitmap) {
+					bitmap.dispose();
+					bitmap = null;
+				}
+
+				if(sheet) {
+					sheet.dispose();
+					sheet = null;
+				}
+
+				compressedBitmap = null;
 			}
 		}
 	}

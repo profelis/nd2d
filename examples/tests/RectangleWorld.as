@@ -40,35 +40,35 @@ package tests {
 
 	public class RectangleWorld extends World2D {
 
-        [Embed(source="/assets/crate.jpg")]
-        private var texture:Class;
+		[Embed(source="/assets/crate.jpg")]
+		private var texture:Class;
 
-        private var _scene:Scene2D;
-        private var s1:Sprite2D;
-        private var s2:Sprite2D;
+		private var _scene:Scene2D;
+		private var s1:Sprite2D;
+		private var s2:Sprite2D;
 
-        public function RectangleWorld(renderMode:String, frameRate:uint, bounds:Rectangle = null) {
-            super(renderMode, frameRate, bounds);
+		public function RectangleWorld(renderMode:String, frameRate:uint, bounds:Rectangle = null) {
+			super(renderMode, frameRate, bounds);
 
-            _scene = new Scene2D();
-            _scene.backgroundColor = 0xDDDDDD;
+			_scene = new Scene2D();
+			_scene.backgroundColor = 0xDDDDDD;
 
 			var tex:Texture2D = Texture2D.textureFromBitmapData(new texture().bitmapData);
 
-            s1 = new Sprite2D(tex);
-            _scene.addChild(s1);
+			s1 = new Sprite2D(tex);
+			_scene.addChild(s1);
 
-            s2 = new Sprite2D(tex);
-            s2.x = bounds.width;
-            s2.y = bounds.height;
-            _scene.addChild(s2);
+			s2 = new Sprite2D(tex);
+			s2.x = bounds.width;
+			s2.y = bounds.height;
+			_scene.addChild(s2);
 
-            setActiveScene(_scene);
-            addEventListener(Event.ENTER_FRAME, loop);
-        }
+			setActiveScene(_scene);
+			addEventListener(Event.ENTER_FRAME, loop);
+		}
 
-        private function loop(e:Event):void {
-            s1.rotation = s2.rotation += 1;
-        }
-    }
+		private function loop(e:Event):void {
+			s1.rotation = s2.rotation += 1;
+		}
+	}
 }

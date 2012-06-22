@@ -45,7 +45,10 @@ package de.nulldesign.nd2d.display {
 	/**
 	 * TextField2D
 	 * <p>Renders a flash native textfield to a bitmap / texture.</p>
-	 * Note that changing the text in the textfield will cause a complete invalidation and therefore a new texture upload to the GPU, in other words: It's slow! It's good for static text. For dynamic text try to use the BitmapFont2D
+	 * Note that changing the text in the textfield will cause a complete
+	 * invalidation and therefore a new texture upload to the GPU, in other
+	 * words: It's slow! It's good for static text. For dynamic text try to use
+	 * the BitmapFont2D
 	 * @author Ryan
 	 */
 	public class TextField2D extends Sprite2D {
@@ -148,8 +151,9 @@ package de.nulldesign.nd2d.display {
 		public function set textWidth(v:int):void {
 			_textWidth = Math.max(0, v);
 
-			if(_autoWrap)
+			if(_autoWrap) {
 				_wordWrap = _textWidth > 0;
+			}
 
 			_needsRedraw = true;
 		}
@@ -321,15 +325,15 @@ package de.nulldesign.nd2d.display {
 			_nativeTextField.height = _textHeight > 0 ? _textHeight : _nativeTextField.textHeight;
 
 			switch(_type) {
-				case TextFieldType.DYNAMIC:
+				case TextFieldType.DYNAMIC:  {
 
 					// Draw textfield onto bitmap data.
 					_textBitmapData = new BitmapData(
-							_nativeTextField.width + _borderPadding,
-							_nativeTextField.height + _borderPadding,
-							true,
-							0
-					);
+						_nativeTextField.width + _borderPadding,
+						_nativeTextField.height + _borderPadding,
+						true,
+						0);
+
 					_textBitmapData.draw(_nativeTextField);
 
 					_textTexture = Texture2D.textureFromBitmapData(_textBitmapData);
@@ -338,18 +342,22 @@ package de.nulldesign.nd2d.display {
 					// Set pivot to top left corner because it's better for laying out text than a center pivot point.
 					// NOTE: Rounding with int() because blurryness can occur if x/y values for pivot are not whole numbers.
 					switch(align) {
-						case TextFormatAlign.LEFT:
+						case TextFormatAlign.LEFT:  {
 							pivot = new Point(int(-_nativeTextField.width / 2), /*int(-_nativeTextField.height / 2)*/ 0.0);
 							break;
-						case TextFormatAlign.CENTER:
+						}
+						case TextFormatAlign.CENTER:  {
 							pivot = new Point(0.0, /*int(-_nativeTextField.height / 2)*/ 0.0);
 							break;
-						case TextFormatAlign.RIGHT:
+						}
+						case TextFormatAlign.RIGHT:  {
 							pivot = new Point(int(_nativeTextField.width / 2), /*int(-_nativeTextField.height / 2)*/ 0.0);
 							break;
+						}
 					}
 
 					break;
+				}
 
 				// Since you can't select or input text in Stage3D, we "simulate" an input text field by
 				// adding a native TextField to the regular stage where the TextField2D would be located.
@@ -357,9 +365,10 @@ package de.nulldesign.nd2d.display {
 					// TODO: Draw native text field on stage.
 					break;
 
-				default:
+				default:  {
 					throw new Error("The type specified is not a member of flash.text.TextFieldType");
 					break;
+				}
 			}
 
 			_needsRedraw = false;
@@ -383,6 +392,8 @@ package de.nulldesign.nd2d.display {
 			_textBitmapData = null;
 
 			_textFormat = null;
+
+			_nativeTextField = null;
 
 			super.dispose();
 		}

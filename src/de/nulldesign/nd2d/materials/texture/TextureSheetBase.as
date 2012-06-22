@@ -30,16 +30,52 @@
 
 package de.nulldesign.nd2d.materials.texture {
 
-    public class SpriteSheetAnimation {
+	import flash.events.EventDispatcher;
+	import flash.geom.Point;
+	import flash.geom.Rectangle;
+	import flash.utils.Dictionary;
 
-        public var loop:Boolean;
-        public var frames:Array;
-        public var numFrames:uint;
+	public class TextureSheetBase extends EventDispatcher {
 
-        public function SpriteSheetAnimation(frames:Array, loop:Boolean) {
-            this.loop = loop;
-            this.frames = frames;
-            this.numFrames = frames.length;
-        }
-    }
+		protected var texture:Texture2D;
+
+		public var frames:Vector.<Rectangle>;
+		public var offsets:Vector.<Point>;
+		public var uvRects:Vector.<Rectangle>;
+
+		public var animationMap:Dictionary = new Dictionary();
+
+		protected var frameNameToIndex:Dictionary = new Dictionary();
+		protected var triggerEventOnLastFrame:Boolean = false;
+
+		public function TextureSheetBase() {
+		}
+
+		public function get totalFrames():uint {
+			return frames.length;
+		}
+
+		public function getDimensionForFrame(frameIdx:uint):Rectangle {
+			return frames[frameIdx];
+		}
+
+		public function getIndexForFrame(name:String):uint {
+			return frameNameToIndex[name];
+		}
+
+		public function addAnimation(name:String, keyFrames:Array, loop:Boolean = true, fps:int = 1):void {
+			// override this
+		}
+
+		public function dispose():void {
+			texture = null;
+
+			frames = null;
+			offsets = null;
+			uvRects = null;
+
+			animationMap = null;
+			frameNameToIndex = null;
+		}
+	}
 }

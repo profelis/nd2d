@@ -28,43 +28,52 @@
  * THE SOFTWARE.
  */
 
-package de.nulldesign.nd2d.utils {
+package de.nulldesign.nd2d.materials.texture {
 
 	import flash.geom.Point;
+	import flash.geom.Rectangle;
 
-	public class ParticleSystemPreset {
+	public class TextureSheet extends TextureSheetBase {
 
-		public var minStartPosition:Point = new Point(-5.0, 0.0);
-		public var maxStartPosition:Point = new Point(5.0, 0.0);
+		/**
+		 *
+		 * @param texture
+		 * @param spriteWidth
+		 * @param spriteHeight
+		 */
+		public function TextureSheet(texture:Texture2D, spriteWidth:Number, spriteHeight:Number) {
+			var numCols:uint = texture.bitmapWidth / spriteWidth;
+			var numRows:uint = texture.bitmapHeight / spriteHeight;
+			var numSheets:uint = numCols * numRows;
+			var rowIdx:uint;
+			var colIdx:uint;
 
-		public var minSpeed:Number = 100.0;
-		public var maxSpeed:Number = 300.0;
+			frames = new Vector.<Rectangle>(numSheets, true);
+			offsets = new Vector.<Point>(numSheets, true);
+			uvRects = new Vector.<Rectangle>(numSheets, true);
 
-		public var minEmitAngle:Number = 0.0;
-		public var maxEmitAngle:Number = 360.0;
+			for(var i:uint = 0; i < numSheets; i++) {
+				rowIdx = i % numCols;
+				colIdx = i / numCols;
 
-		public var startColor:Number = 0xD60606;
-		public var startColorVariance:Number = 0xD60606;
+				frames[i] = new Rectangle(
+					spriteWidth * rowIdx,
+					spriteHeight * colIdx,
+					spriteWidth,
+					spriteHeight);
 
-		public var startAlpha:Number = 1.0;
+				offsets[i] = new Point(0.0, 0.0);
 
-		public var endColor:Number = 0xF9D101;
-		public var endColorVariance:Number = 0xF9D101;
+				uvRects[i] = new Rectangle(
+					(spriteWidth * rowIdx) / texture.textureWidth,
+					(spriteHeight * colIdx) / texture.textureHeight,
+					(spriteWidth) / texture.textureWidth,
+					(spriteHeight) / texture.textureHeight);
+			}
+		}
 
-		public var endAlpha:Number = 0.0;
-
-		public var spawnDelay:Number = 10.0;
-
-		public var minLife:Number = 2000.0;
-		public var maxLife:Number = 3000.0;
-
-		public var minStartSize:Number = 1.0;
-		public var maxStartSize:Number = 1.0;
-
-		public var minEndSize:Number = 1.0;
-		public var maxEndSize:Number = 2.0;
-
-		public function ParticleSystemPreset() {
+		override public function addAnimation(name:String, keyFrames:Array, loop:Boolean = true, fps:int = 1):void {
+			animationMap[name] = new TextureAnimation(keyFrames, loop, fps);
 		}
 	}
 }

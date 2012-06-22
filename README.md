@@ -1,12 +1,6 @@
-# ND2D - A Flash Molehill (Stage3D) GPU accelerated 2D engine.
+# ND2D - A Flash (Molehill/Stage3D) GPU accelerated 2D engine.
 
-ND2D is a 2D framework using the new GPU hardware features of flash. To run this engine you must download and install the latest flash player:
-
-[Flash Player 11 & playerglobal.swc](http://get.adobe.com/de/flashplayer/)
-
-You have to compile ND2D with the FP11 playerglobal.swc and the compiler option -swf-version=13 to get it to work.
-
-ND2D was built to make an ease use of hardware accelerated 2D content in the Flashplayer. The aim is to keep things simple and reintroduce familiar concepts. ND2D has a displaylist and quite the same methods to modify sprites as you are used to, but a few things are different. There are optimizations in ND2D, that enable you to display thousands of sprites at a high framerate. Have a look at the examples for the Sprite2DCloud or Sprite2DBatch and in the Wiki.
+ND2D was built to make an ease use of hardware accelerated 2D content in the Flash Player. The aim is to keep things simple and reintroduce familiar concepts. ND2D has a displaylist and quite the same methods to modify sprites as you are used to, but a few things are different. There are optimizations in ND2D, that enable you to display thousands of sprites at a high framerate. Have a look at the examples for the Sprite2DCloud or Sprite2DBatch and in the Wiki.
 
 If you want to contribute, make bugfixes or extend the engine, feel free to fork it or email me: lars[at]nulldesign.de
 
