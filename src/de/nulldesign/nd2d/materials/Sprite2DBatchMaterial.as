@@ -41,8 +41,6 @@ package de.nulldesign.nd2d.materials {
 	import flash.display3D.Context3D;
 	import flash.display3D.Context3DProgramType;
 	import flash.display3D.Context3DVertexBufferFormat;
-	import flash.display3D.IndexBuffer3D;
-	import flash.display3D.VertexBuffer3D;
 	import flash.geom.Rectangle;
 
 	public class Sprite2DBatchMaterial extends Sprite2DMaterial {
@@ -152,6 +150,10 @@ package de.nulldesign.nd2d.materials {
 			context.setVertexBufferAt(1, vertexBuffer, 2, Context3DVertexBufferFormat.FLOAT_2); // uv
 			context.setVertexBufferAt(2, vertexBuffer, 4, Context3DVertexBufferFormat.FLOAT_4); // idx
 			context.setVertexBufferAt(3, vertexBuffer, 8, Context3DVertexBufferFormat.FLOAT_1); // idx2
+
+			if(scrollRect) {
+				context.setScissorRectangle(scrollRect);
+			}
 
 			context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, viewProjectionMatrix, true);
 		}
@@ -279,6 +281,7 @@ package de.nulldesign.nd2d.materials {
 			context.setVertexBufferAt(1, null);
 			context.setVertexBufferAt(2, null);
 			context.setVertexBufferAt(3, null);
+			context.setScissorRectangle(null);
 		}
 
 		override protected function updateProgram(context:Context3D):void {

@@ -42,6 +42,7 @@ package de.nulldesign.nd2d.display {
 	import flash.geom.ColorTransform;
 	import flash.geom.Matrix3D;
 	import flash.geom.Point;
+	import flash.geom.Rectangle;
 	import flash.geom.Vector3D;
 
 	/**
@@ -495,6 +496,27 @@ package de.nulldesign.nd2d.display {
 			}
 		}
 
+		/**
+		 * @private
+		 */
+		public var localScrollRect:Rectangle;
+
+		/**
+		 * @private
+		 */
+		public var worldScrollRect:Rectangle;
+
+		public function get scrollRect():Rectangle {
+			return localScrollRect;
+		}
+
+		public function set scrollRect(value:Rectangle):void {
+			if(!localScrollRect || localScrollRect.x != value.x || localScrollRect.y != value.y || localScrollRect.width != value.width || localScrollRect.height != value.height) {
+				localScrollRect = value;
+				invalidateMatrix = true;
+			}
+		}
+
 		public function set rotation(value:Number):void {
 			if(_rotationZ != value) {
 				_rotationZ = value;
@@ -590,7 +612,31 @@ package de.nulldesign.nd2d.display {
 				worldModelMatrix.append(parent.worldModelMatrix);
 			}
 
+			updateScrollRect();
 			updateClipSpace();
+		}
+
+		/**
+		 * @private
+		 */
+		public function updateScrollRect():void {
+			if(localScrollRect) {
+				var pos:Point = localToWorld(new Point(-localScrollRect.width >> 1, -localScrollRect.height >> 1));
+
+				worldScrollRect = localScrollRect.clone();
+				worldScrollRect.x = pos.x;
+				worldScrollRect.y = pos.y;
+
+				if(parent && parent.worldScrollRect) {
+					worldScrollRect = worldScrollRect.intersection(parent.worldScrollRect);
+				}
+			} else if(parent && parent.worldScrollRect) {
+				worldScrollRect = parent.worldScrollRect.clone();
+			}
+
+			if(localScrollRect) {
+				worldModelMatrix.prependTranslation(-localScrollRect.x, -localScrollRect.y, 0);
+			}
 		}
 
 		/**
@@ -601,6 +647,8 @@ package de.nulldesign.nd2d.display {
 
 			clipSpaceMatrix.identity();
 			clipSpaceMatrix.append(worldModelMatrix);
+
+			// extended in Sprite2D
 		}
 
 		private static const offsetFactor:Number = 1.0 / 255.0;
@@ -1167,6 +1215,8 @@ package de.nulldesign.nd2d.display {
 			blendMode = null;
 			mouseEvents = null;
 			_colorTransform = null;
+			localScrollRect = null;
+			worldScrollRect = null;
 			localModelMatrix = null;
 			worldModelMatrix = null;
 			localMouseMatrix = null;
@@ -1174,5 +1224,3 @@ package de.nulldesign.nd2d.display {
 		}
 	}
 }
-
-

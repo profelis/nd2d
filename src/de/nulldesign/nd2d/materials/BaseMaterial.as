@@ -41,11 +41,14 @@ package de.nulldesign.nd2d.materials {
 	import flash.display3D.IndexBuffer3D;
 	import flash.display3D.VertexBuffer3D;
 	import flash.geom.Matrix3D;
+	import flash.geom.Rectangle;
 	import flash.utils.Dictionary;
 
 	public class BaseMaterial {
 
 		public var viewProjectionMatrix:Matrix3D;
+
+		public var scrollRect:Rectangle;
 
 		public var modelMatrix:Matrix3D;
 
@@ -257,6 +260,7 @@ package de.nulldesign.nd2d.materials {
 
 			blendMode = null;
 			shaderData = null;
+			scrollRect = null;
 			mIndexBuffer = null;
 			mVertexBuffer = null;
 

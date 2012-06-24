@@ -134,6 +134,7 @@ package de.nulldesign.nd2d.display {
 
 		override protected function draw(context:Context3D, camera:Camera2D):void {
 			material.blendMode = blendMode;
+			material.scrollRect = worldScrollRect;
 			material.modelMatrix = worldModelMatrix;
 			material.viewProjectionMatrix = camera.getViewProjectionMatrix(false);
 			material.texture = texture;

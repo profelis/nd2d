@@ -34,8 +34,8 @@ package de.nulldesign.nd2d.display {
 	import de.nulldesign.nd2d.materials.BlendModePresets;
 	import de.nulldesign.nd2d.materials.Sprite2DMaskMaterial;
 	import de.nulldesign.nd2d.materials.Sprite2DMaterial;
-	import de.nulldesign.nd2d.materials.texture.Texture2D;
 	import de.nulldesign.nd2d.materials.SpriteAnimation;
+	import de.nulldesign.nd2d.materials.texture.Texture2D;
 	import de.nulldesign.nd2d.utils.Statistics;
 	import de.nulldesign.nd2d.utils.TextureHelper;
 
@@ -133,6 +133,7 @@ package de.nulldesign.nd2d.display {
 
 		override protected function draw(context:Context3D, camera:Camera2D):void {
 			material.blendMode = blendMode;
+			material.scrollRect = worldScrollRect;
 			material.modelMatrix = worldModelMatrix;
 			material.clipSpaceMatrix = clipSpaceMatrix;
 			material.viewProjectionMatrix = camera.getViewProjectionMatrix(false);
@@ -200,16 +201,14 @@ package de.nulldesign.nd2d.display {
 		}
 
 		override public function updateClipSpace():void {
-			clipSpaceMatrix.identity();
+			super.updateClipSpace();
 
 			if(texture.sheet) {
-				clipSpaceMatrix.appendScale(animation.frameRect.width >> 1, animation.frameRect.height >> 1, 1.0);
-				clipSpaceMatrix.appendTranslation(animation.frameOffset.x, animation.frameOffset.y, 0.0);
+				clipSpaceMatrix.prependScale(animation.frameRect.width >> 1, animation.frameRect.height >> 1, 1.0);
+				clipSpaceMatrix.prependTranslation(animation.frameOffset.x, animation.frameOffset.y, 0.0);
 			} else {
-				clipSpaceMatrix.appendScale(texture.bitmapWidth >> 1, texture.bitmapHeight >> 1, 1.0);
+				clipSpaceMatrix.prependScale(texture.bitmapWidth >> 1, texture.bitmapHeight >> 1, 1.0);
 			}
-
-			clipSpaceMatrix.append(worldModelMatrix);
 		}
 
 		override public function handleDeviceLoss():void {

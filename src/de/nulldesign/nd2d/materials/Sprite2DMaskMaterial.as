@@ -119,6 +119,10 @@ package de.nulldesign.nd2d.materials {
 			context.setVertexBufferAt(0, vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_2); // vertex
 			context.setVertexBufferAt(1, vertexBuffer, 2, Context3DVertexBufferFormat.FLOAT_2); // uv
 
+			if(scrollRect) {
+				context.setScissorRectangle(scrollRect);
+			}
+
 			var uvSheet:Rectangle;
 
 			if(texture.sheet) {
@@ -195,6 +199,7 @@ package de.nulldesign.nd2d.materials {
 			context.setVertexBufferAt(0, null);
 			context.setVertexBufferAt(1, null);
 			context.setVertexBufferAt(2, null);
+			context.setScissorRectangle(null);
 		}
 
 		override protected function addVertex(context:Context3D, buffer:Vector.<Number>, v:Vertex, uv:UV, face:Face):void {

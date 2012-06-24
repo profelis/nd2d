@@ -63,6 +63,7 @@ package {
 	import tests.ParticleSystemTest;
 	import tests.PostProcessingTest;
 	import tests.QuadMaterialTest;
+	import tests.ScrollRectTest;
 	import tests.SideScrollerTest;
 	import tests.SpeedTest;
 	import tests.Sprite2DCloudParticles;
@@ -125,6 +126,7 @@ package {
 			scenes.push(QuadMaterialTest);
 			scenes.push(BlurTest);
 			scenes.push(SpriteCloudVisibilityTest);
+			scenes.push(ScrollRectTest);
 
 			var tf:TextFormat = new TextFormat("Arial", 12, 0xffffff, true);
 
@@ -211,5 +213,3 @@ package {
 		}
 	}
 }
-
-

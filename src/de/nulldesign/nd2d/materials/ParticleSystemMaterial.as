@@ -168,6 +168,7 @@ package de.nulldesign.nd2d.materials {
 			context.setVertexBufferAt(3, null);
 			context.setVertexBufferAt(4, null);
 			context.setVertexBufferAt(5, null);
+			context.setScissorRectangle(null);
 		}
 
 		override protected function addVertex(context:Context3D, buffer:Vector.<Number>, v:Vertex, uv:UV, face:Face):void {

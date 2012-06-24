@@ -152,30 +152,33 @@ package tests {
 			}
 
 			var tex:Texture2D;
+			var scaleFactor:Number = 1.0;
 
-			if(textureComboBox.selectedIndex == 0) {
+			if(!textureComboBox.selectedIndex) {
 				tex = Texture2D.textureFromBitmapData(new crateTexture().bitmapData);
 			} else {
 				tex = Texture2D.textureFromBitmapData(new spriteTexture().bitmapData);
 
 				var sheet:TextureSheet = new TextureSheet(tex, 24, 32);
 				sheet.addAnimation("blah", [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], true, 2);
+
+				scaleFactor = 5.0;
 			}
 
 			s = new Sprite2D(tex);
 			s.position = new Vector3D(stage.stageWidth / 2 - 300.0, stage.stageHeight / 2);
-			s.scaleX = s.scaleY = 0.5;
+			s.scale = 0.5 * scaleFactor;
 			s.animation.play("blah");
 			addChild(s);
 
 			s2 = new Sprite2D(tex);
-			s2.scaleX = s2.scaleY = 1.0;
 			s2.position = new Vector3D(stage.stageWidth / 2 - 50, stage.stageHeight / 2);
+			s2.scale = 1.0 * scaleFactor;
 			s2.animation.play("blah");
 			addChild(s2);
 
 			s3 = new Sprite2D(tex);
-			s3.scaleX = s3.scaleY = 1.5;
+			s3.scale = 1.5 * scaleFactor;
 			s3.position = new Vector3D(stage.stageWidth / 2 + 300.0, stage.stageHeight / 2);
 			s3.animation.play("blah");
 			addChild(s3);
@@ -245,5 +248,3 @@ package tests {
 
 	}
 }
-
-

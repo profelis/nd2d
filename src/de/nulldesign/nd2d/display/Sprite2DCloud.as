@@ -45,7 +45,6 @@ package de.nulldesign.nd2d.display {
 	import flash.display3D.Context3DVertexBufferFormat;
 	import flash.display3D.IndexBuffer3D;
 	import flash.display3D.VertexBuffer3D;
-	import flash.geom.Matrix3D;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 
@@ -508,6 +507,10 @@ package de.nulldesign.nd2d.display {
 			context.setVertexBufferAt(3, vertexBuffer, 8, Context3DVertexBufferFormat.FLOAT_4); // colorMultiplier
 			context.setVertexBufferAt(4, vertexBuffer, 12, Context3DVertexBufferFormat.FLOAT_4); // colorOffset
 
+			if(worldScrollRect) {
+				context.setScissorRectangle(worldScrollRect);
+			}
+
 			context.setTextureAt(0, texture.getTexture(context));
 			context.setBlendFactors(blendMode.src, blendMode.dst);
 
@@ -526,6 +529,7 @@ package de.nulldesign.nd2d.display {
 			context.setVertexBufferAt(2, null);
 			context.setVertexBufferAt(3, null);
 			context.setVertexBufferAt(4, null);
+			context.setScissorRectangle(null);
 		}
 
 		override public function handleDeviceLoss():void {

@@ -188,6 +188,7 @@ package tests {
 						case 10:
 						case 11:  {
 							var rndTex:Texture2D = Texture2D.textureFromBitmapData(new spriteTexture().bitmapData, false);
+							rndTex.setSheet(sheet);
 
 							// optional, just makes it more obvious
 							var c:ColorTransform = new ColorTransform();
@@ -259,5 +260,3 @@ package tests {
 		}
 	}
 }
-
-
