@@ -201,14 +201,18 @@ package de.nulldesign.nd2d.display {
 		}
 
 		override public function updateClipSpace():void {
-			super.updateClipSpace();
+			invalidateClipSpace = false;
+
+			clipSpaceMatrix.identity();
 
 			if(texture.sheet) {
-				clipSpaceMatrix.prependScale(animation.frameRect.width >> 1, animation.frameRect.height >> 1, 1.0);
-				clipSpaceMatrix.prependTranslation(animation.frameOffset.x, animation.frameOffset.y, 0.0);
+				clipSpaceMatrix.appendScale(animation.frameRect.width >> 1, animation.frameRect.height >> 1, 1.0);
+				clipSpaceMatrix.appendTranslation(animation.frameOffset.x, animation.frameOffset.y, 0.0);
 			} else {
-				clipSpaceMatrix.prependScale(texture.bitmapWidth >> 1, texture.bitmapHeight >> 1, 1.0);
+				clipSpaceMatrix.appendScale(texture.bitmapWidth >> 1, texture.bitmapHeight >> 1, 1.0);
 			}
+
+			clipSpaceMatrix.append(worldModelMatrix);
 		}
 
 		override public function handleDeviceLoss():void {

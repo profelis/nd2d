@@ -104,6 +104,14 @@ package tests {
 					sprite.y = NumberUtil.rndMinMaxInt(-100, 100);
 					sprite.animation.play("blah", Math.random() * 100);
 
+					if(node is Sprite2DBatch) {
+						sprite.tint = 0x00ff00;
+					} else if(node is Sprite2DCloud) {
+						sprite.tint = 0x0000ff;
+					} else {
+						sprite.tint = 0xff0000;
+					}
+
 					node.addChild(sprite);
 				}
 			}

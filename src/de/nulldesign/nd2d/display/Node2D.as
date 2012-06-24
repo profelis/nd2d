@@ -647,8 +647,6 @@ package de.nulldesign.nd2d.display {
 
 			clipSpaceMatrix.identity();
 			clipSpaceMatrix.append(worldModelMatrix);
-
-			// extended in Sprite2D
 		}
 
 		private static const offsetFactor:Number = 1.0 / 255.0;
