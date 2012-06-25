@@ -38,13 +38,14 @@ package de.nulldesign.nd2d.materials.texture.parser {
 
 	public class ParserBase {
 
-		protected var framesList:Vector.<Rectangle> = new Vector.<Rectangle>();
-		protected var offsetsList:Vector.<Point> = new Vector.<Point>();
-		protected var uvRectsList:Vector.<Rectangle> = new Vector.<Rectangle>();
-		protected var frameNameToIndexMap:Dictionary = new Dictionary();
+		public var frames:Vector.<Rectangle> = new Vector.<Rectangle>();
+		public var offsets:Vector.<Point> = new Vector.<Point>();
+		public var uvRects:Vector.<Rectangle> = new Vector.<Rectangle>();
+
+		public var frameNames:Array = [];
+		public var frameNameToIndex:Dictionary = new Dictionary();
 
 		public function ParserBase() {
-
 		}
 
 		protected function getValueFromDict(key:String, xmlData:XML):String {
@@ -76,22 +77,6 @@ package de.nulldesign.nd2d.materials.texture.parser {
 			}
 
 			return null;
-		}
-
-		public function get frames():Vector.<Rectangle> {
-			return framesList;
-		}
-
-		public function get offsets():Vector.<Point> {
-			return offsetsList;
-		}
-
-		public function get uvRects():Vector.<Rectangle> {
-			return uvRectsList;
-		}
-
-		public function get frameNameToIndex():Dictionary {
-			return frameNameToIndexMap;
 		}
 
 		public function parse(texture:Texture2D, xmlData:XML):void {

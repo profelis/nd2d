@@ -1,6 +1,5 @@
 - move AGAL/MacroAssembler into our package
 - desync mouse/touch events (or at least move events) and execute them in the main loop
-- move/bundle SpriteSheet into Texture2D and get rid of cloning. update frame in Sprite2D
 - cache/reuse index- and vertexBuffer, especially for Sprite2D to get around the 4096 limit
 - Dynamic TextureAtlas
 	Packing algorithm: http://www.codeproject.com/KB/web-image/rectanglepacker.aspx.
@@ -13,9 +12,6 @@
 - PARTICLESYSTEM2D rotation
 - multiple cameras for scenes? splitscreen mode?
 
-What I don't like about the spritesheets is:
-- it's a pain to declare animations from a (cocos2D) spritesheet - it needs a simpler way like just sheet.playAnimation("foo*") and it would automatically build the animation with all assets named "foo001.png", "foo002.png", etc.
-
 - Button2D
 - Node2D.getBounds()
 - animated masks
@@ -23,6 +19,3 @@ What I don't like about the spritesheets is:
 BitmapFont2D - Cocos2D font generator hiero, etc...
 
 shader example: distortions
-
-I think that would be better to have some API for adding custom parsers for TextureAtlas, since some people can't use Zwoptex (no Mac) or TexturePacker (too costly). Something like this:
-TextureAtlas.registerParser(name:String, parser:ATextureAtlasParser):void;

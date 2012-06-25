@@ -45,8 +45,8 @@ package de.nulldesign.nd2d.materials.texture {
 
 		public var animationMap:Dictionary = new Dictionary();
 
-		protected var frameNameToIndex:Dictionary = new Dictionary();
-		protected var triggerEventOnLastFrame:Boolean = false;
+		protected var frameNames:Array;
+		protected var frameNameToIndex:Dictionary;
 
 		public function TextureSheetBase() {
 		}

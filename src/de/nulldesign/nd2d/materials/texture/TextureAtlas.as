@@ -53,6 +53,8 @@ package de.nulldesign.nd2d.materials.texture {
 				frames = xmlParser.frames;
 				offsets = xmlParser.offsets;
 				uvRects = xmlParser.uvRects;
+
+				frameNames = xmlParser.frameNames;
 				frameNameToIndex = xmlParser.frameNameToIndex;
 
 				// distribute to texture
@@ -60,13 +62,44 @@ package de.nulldesign.nd2d.materials.texture {
 			}
 		}
 
+		/**
+		 * Adds a new animation to this Atlas. Frames can be Integers or Strings
+		 * to represent the frame name.
+		 *
+		 * <p>Frame names support wildcards with <em>*</em> (asterisk) and
+		 * <em>?</em> (questionmark) to match multiple frames. Frame order is
+		 * defined by the XML, no sort is applied.</p>
+		 *
+		 * <pre>
+		 * atlas.addAnimation("shoot", [4, 5, 6, 7]);
+		 * atlas.addAnimation("run", ["run*", "walk_end", "walk_stand"]);
+		 * </pre>
+		 *
+		 * @param name			Animation name
+		 * @param keyFrames		Integer or String array
+		 * @param loop			If true, the animation will start over when finished
+		 * @param fps			Frames per second
+		 */
 		override public function addAnimation(name:String, keyFrames:Array, loop:Boolean = true, fps:int = 1):void {
 			if(keyFrames[0] is String) {
 				// make indices out of names
 				var keyFramesIndices:Array = [];
 
 				for(var i:int = 0; i < keyFrames.length; i++) {
-					keyFramesIndices.push(frameNameToIndex[keyFrames[i]]);
+					var frameName:String = keyFrames[i];
+
+					// wildcard match
+					if(frameName.indexOf("?") >= 0 || frameName.indexOf("*") >= 0) {
+						var pattern:RegExp = new RegExp("^" + frameName.replace(/\^|\$|\\|\.|\+|\(|\)|\[|\]|\||\{|\}/g, "\\$1").replace(/\?/g, ".").replace(/\*/g, ".*") + "$");
+
+						for each(frameName in frameNames) {
+							if(frameName.search(pattern) >= 0) {
+								keyFramesIndices.push(frameNameToIndex[frameName]);
+							}
+						}
+					} else {
+						keyFramesIndices.push(frameNameToIndex[frameName]);
+					}
 				}
 
 				animationMap[name] = new TextureAnimation(keyFramesIndices, loop, fps);
@@ -76,5 +109,4 @@ package de.nulldesign.nd2d.materials.texture {
 		}
 	}
 }
-
 

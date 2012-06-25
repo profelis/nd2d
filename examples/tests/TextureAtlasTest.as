@@ -77,7 +77,7 @@ package tests {
 			var atlasTex:Texture2D = Texture2D.textureFromBitmapData(new textureAtlasBitmapZwoptex().bitmapData);
 			var atlas:TextureAtlas = new TextureAtlas(atlasTex, new XML(new textureAtlasXMLZwoptex()), new ParserZwopTex());
 
-			atlas.addAnimation("blah", ["c01", "c02", "c03", "c04", "c05", "c06", "c07", "c08", "c09", "c10", "c11", "c12", "b01", "b02", "b03", "b04", "b05", "b06", "b07", "b08", "b09", "b10", "b11", "b12"], true, 5);
+			atlas.addAnimation("blah", ["c*", "b*"], true, 5);
 
 			s = addChild(new Sprite2D(atlasTex)) as Sprite2D;
 			s.animation.play("blah");
@@ -124,5 +124,4 @@ package tests {
 		}
 	}
 }
-
 

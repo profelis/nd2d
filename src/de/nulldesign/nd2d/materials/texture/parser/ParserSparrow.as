@@ -58,6 +58,7 @@ package de.nulldesign.nd2d.materials.texture.parser {
 				var frameWidth:Number = subTexture.attribute("frameWidth");
 				var frameHeight:Number = subTexture.attribute("frameHeight");
 
+				frameNames.push(name);
 				frameNameToIndex[name] = idx++;
 
 				frames.push(new Rectangle(

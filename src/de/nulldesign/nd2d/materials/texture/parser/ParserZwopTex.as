@@ -80,6 +80,7 @@ package de.nulldesign.nd2d.materials.texture.parser {
 							var propKeys:XMLList = frameDicts[l].key;
 							var propAll:XMLList = frameDicts[l].*;
 
+							frameNames.push(keyName);
 							frameNameToIndex[keyName] = l;
 
 							for(var m:uint = 0; m < propKeys.length(); m++) {
