@@ -56,6 +56,7 @@ package de.nulldesign.nd2d.materials {
 		protected var parent:Sprite2D;
 		protected var frameIdx:uint = 0;
 		protected var texture:Texture2D;
+		protected var finished:Boolean = false;
 		protected var frameInterpolation:Number = 0.0;
 		protected var activeAnimation:TextureAnimation;
 
@@ -124,6 +125,7 @@ package de.nulldesign.nd2d.materials {
 				activeAnimation = texture.sheet.animationMap[name];
 				frameIdx = startIdx % activeAnimation.numFrames;
 				frame = activeAnimation.frames[frameIdx];
+				finished = false;
 
 				this.fps = (!fps ? activeAnimation.fps : fps);
 			}
@@ -134,7 +136,7 @@ package de.nulldesign.nd2d.materials {
 		}
 
 		public function update(elapsed:Number):void {
-			if(!activeAnimation || !fps) {
+			if(finished || !activeAnimation || !fps) {
 				return;
 			}
 
@@ -156,7 +158,7 @@ package de.nulldesign.nd2d.materials {
 
 				if(!activeAnimation.loop) {
 					frame = activeAnimation.frames[activeAnimation.numFrames - 1];
-					activeAnimation = null;
+					finished = true;
 					return;
 				}
 			}
