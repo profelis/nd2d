@@ -54,42 +54,26 @@ package de.nulldesign.nd2d.materials {
 			"alias vc[va2.y], colorMultiplier;" +
 			"alias vc[va2.z], colorOffset;" +
 			"alias vc[va2.w], uvSheet;" +
-			"alias vc[va3.x].xy, uvOffset;" +
-			"alias vc[va3.x].zw, uvScale;" +
+			"alias vc[va3.x], uvScroll;" +
 
 			"temp0 = mul4x4(position, clipSpace);" +
 			"output = mul4x4(temp0, viewProjection);" +
 
-			"#if USE_UV;" +
-			"	temp0 = uv * uvScale;" +
-			"	temp0 += uvOffset;" +
-			"#else;" +
-			"	temp0 = uv * uvSheet.zw;" +
-			"	temp0 += uvSheet.xy;" +
-			"#endif;" +
+			"temp0 = applyUV(uv, uvScroll, uvSheet);" +
 
 			// pass to fragment shader
 			"v0 = temp0;" +
 			"v1 = colorMultiplier;" +
 			"v2 = colorOffset;" +
-			"v3 = uvSheet;" +
-			"v4 = uvOffset;";	// unused
+			"v3 = uvSheet;";
 
 		private const FRAGMENT_SHADER:String =
 			"alias v0, texCoord;" +
 			"alias v1, colorMultiplier;" +
 			"alias v2, colorOffset;" +
-			"alias v3.xy, uvOffset;" +
-			"alias v3.zw, uvScale;" +
+			"alias v3, uvSheet;" +
 
-			"#if USE_UV;" +
-			"	temp0 = frac(texCoord);" +
-			"	temp0 *= uvScale;" +
-			"	temp0 += uvOffset;" +
-			"	temp0 = sampleNoMip(temp0, texture0);" +
-			"#else;" +
-			"	temp0 = sample(texCoord, texture0);" +
-			"#endif;" +
+			"temp0 = sampleUV(texCoord, texture0, uvSheet);" +
 
 			"output = colorize(temp0, colorMultiplier, colorOffset);";
 

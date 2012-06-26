@@ -76,18 +76,19 @@ package de.nulldesign.nd2d.display {
 	 */
 	public class Sprite2DCloud extends Node2D {
 
-		protected var texture:Texture2D;
-		protected var faceList:Vector.<Face>;
+		public var texture:Texture2D;
+
+		protected var uv1:UV;
+		protected var uv2:UV;
+		protected var uv3:UV;
+		protected var uv4:UV;
 
 		protected var v1:Vertex;
 		protected var v2:Vertex;
 		protected var v3:Vertex;
 		protected var v4:Vertex;
 
-		protected var uv1:UV;
-		protected var uv2:UV;
-		protected var uv3:UV;
-		protected var uv4:UV;
+		protected var faceList:Vector.<Face>;
 
 		private const numFloatsPerVertex:uint = 16;
 
@@ -120,17 +121,9 @@ package de.nulldesign.nd2d.display {
 			"alias v0, texCoord;" +
 			"alias v1, colorMultiplier;" +
 			"alias v2, colorOffset;" +
-			"alias v3.xy, uvOffset;" +
-			"alias v3.zw, uvScale;" +
+			"alias v3, uvSheet;" +
 
-			"#if USE_UV;" +
-			"	temp0 = frac(texCoord);" +
-			"	temp0 *= uvScale;" +
-			"	temp0 += uvOffset;" +
-			"	temp0 = sampleNoMip(temp0, texture0);" +
-			"#else;" +
-			"	temp0 = sample(texCoord, texture0);" +
-			"#endif;" +
+			"temp0 = sampleUV(texCoord, texture0, uvSheet);" +
 
 			"output = colorize(temp0, colorMultiplier, colorOffset);";
 
@@ -289,36 +282,40 @@ package de.nulldesign.nd2d.display {
 				child = node as Sprite2D;
 
 				if(child.invalidateUV || child.animation.frameUpdated) {
+					if(child.invalidateUV) {
+						child.updateUV();
+					}
+
 					uvSheet = (texture.sheet ? child.animation.frameUV : texture.uvRect);
 					child.animation.frameUpdated = false;
 
 					// v1
-					mVertexBuffer[vIdx + 2] = child.uvScaleX * uv1.u + child.uvOffsetX;
-					mVertexBuffer[vIdx + 3] = child.uvScaleY * uv1.v + child.uvOffsetY;
+					mVertexBuffer[vIdx + 2] = uv1.u * child.uvScaleX + child.uvOffsetX;
+					mVertexBuffer[vIdx + 3] = uv1.v * child.uvScaleY + child.uvOffsetY;
 					mVertexBuffer[vIdx + 4] = uvSheet.x;
 					mVertexBuffer[vIdx + 5] = uvSheet.y;
 					mVertexBuffer[vIdx + 6] = uvSheet.width;
 					mVertexBuffer[vIdx + 7] = uvSheet.height;
 
 					// v2
-					mVertexBuffer[vIdx + 18] = child.uvScaleX * uv2.u + child.uvOffsetX;
-					mVertexBuffer[vIdx + 19] = child.uvScaleY * uv2.v + child.uvOffsetY;
+					mVertexBuffer[vIdx + 18] = uv2.u * child.uvScaleX + child.uvOffsetX;
+					mVertexBuffer[vIdx + 19] = uv2.v * child.uvScaleY + child.uvOffsetY;
 					mVertexBuffer[vIdx + 20] = uvSheet.x;
 					mVertexBuffer[vIdx + 21] = uvSheet.y;
 					mVertexBuffer[vIdx + 22] = uvSheet.width;
 					mVertexBuffer[vIdx + 23] = uvSheet.height;
 
 					// v3
-					mVertexBuffer[vIdx + 34] = child.uvScaleX * uv3.u + child.uvOffsetX;
-					mVertexBuffer[vIdx + 35] = child.uvScaleY * uv3.v + child.uvOffsetY;
+					mVertexBuffer[vIdx + 34] = uv3.u * child.uvScaleX + child.uvOffsetX;
+					mVertexBuffer[vIdx + 35] = uv3.v * child.uvScaleY + child.uvOffsetY;
 					mVertexBuffer[vIdx + 36] = uvSheet.x;
 					mVertexBuffer[vIdx + 37] = uvSheet.y;
 					mVertexBuffer[vIdx + 38] = uvSheet.width;
 					mVertexBuffer[vIdx + 39] = uvSheet.height;
 
 					// v4
-					mVertexBuffer[vIdx + 50] = child.uvScaleX * uv4.u + child.uvOffsetX;
-					mVertexBuffer[vIdx + 51] = child.uvScaleY * uv4.v + child.uvOffsetY;
+					mVertexBuffer[vIdx + 50] = uv4.u * child.uvScaleX + child.uvOffsetX;
+					mVertexBuffer[vIdx + 51] = uv4.v * child.uvScaleY + child.uvOffsetY;
 					mVertexBuffer[vIdx + 52] = uvSheet.x;
 					mVertexBuffer[vIdx + 53] = uvSheet.y;
 					mVertexBuffer[vIdx + 54] = uvSheet.width;

@@ -56,19 +56,12 @@ package de.nulldesign.nd2d.materials {
 			"alias vc8, colorMultiplier;" +
 			"alias vc9, colorOffset;" +
 			"alias vc10, uvSheet;" +
-			"alias vc11.xy, uvOffset;" +
-			"alias vc11.zw, uvScale;" +
+			"alias vc11, uvScroll;" +
 
 			"temp0 = mul4x4(position, clipSpace);" +
 			"output = mul4x4(temp0, viewProjection);" +
 
-			"#if USE_UV;" +
-			"	temp0 = uv * uvScale;" +
-			"	temp0 += uvOffset;" +
-			"#else;" +
-			"	temp0 = uv * uvSheet.zw;" +
-			"	temp0 += uvSheet.xy;" +
-			"#endif;" +
+			"temp0 = applyUV(uv, uvScroll, uvSheet);" +
 
 			// pass to fragment shader
 			"v0 = temp0;" +

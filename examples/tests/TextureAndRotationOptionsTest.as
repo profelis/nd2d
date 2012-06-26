@@ -36,6 +36,8 @@ package tests {
 
 	import de.nulldesign.nd2d.display.Scene2D;
 	import de.nulldesign.nd2d.display.Sprite2D;
+	import de.nulldesign.nd2d.display.Sprite2DBatch;
+	import de.nulldesign.nd2d.display.Sprite2DCloud;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
 	import de.nulldesign.nd2d.materials.texture.TextureOption;
 	import de.nulldesign.nd2d.materials.texture.TextureSheet;
@@ -52,9 +54,9 @@ package tests {
 		[Embed(source="/assets/spritechar1.png")]
 		private var spriteTexture:Class;
 
-		private var s:Sprite2D;
-		private var s2:Sprite2D;
-		private var s3:Sprite2D;
+		private var sprite:Sprite2D;
+		private var batch:Sprite2DBatch;
+		private var cloud:Sprite2DCloud;
 
 		private var container:Sprite;
 
@@ -145,10 +147,16 @@ package tests {
 		}
 
 		private function onTextureOptionChange(e:Event = null):void {
-			if(s) {
-				s.dispose();
-				s2.dispose();
-				s3.dispose();
+			if(sprite) {
+				sprite.dispose();
+			}
+
+			if(batch) {
+				batch.dispose();
+			}
+
+			if(cloud) {
+				cloud.dispose();
 			}
 
 			var tex:Texture2D;
@@ -165,24 +173,6 @@ package tests {
 				scaleFactor = 5.0;
 			}
 
-			s = new Sprite2D(tex);
-			s.position = new Vector3D(stage.stageWidth / 2 - 300.0, stage.stageHeight / 2);
-			s.scale = 0.5 * scaleFactor;
-			s.animation.play("blah");
-			addChild(s);
-
-			s2 = new Sprite2D(tex);
-			s2.position = new Vector3D(stage.stageWidth / 2 - 50, stage.stageHeight / 2);
-			s2.scale = 1.0 * scaleFactor;
-			s2.animation.play("blah");
-			addChild(s2);
-
-			s3 = new Sprite2D(tex);
-			s3.scale = 1.5 * scaleFactor;
-			s3.position = new Vector3D(stage.stageWidth / 2 + 300.0, stage.stageHeight / 2);
-			s3.animation.play("blah");
-			addChild(s3);
-
 			tex.textureOptions = 0;
 			tex.textureOptions |= (mipMapComboBox.selectedIndex == 0 ? TextureOption.MIPMAP_DISABLE : 0);
 			tex.textureOptions |= (mipMapComboBox.selectedIndex == 1 ? TextureOption.MIPMAP_NEAREST : 0);
@@ -191,6 +181,35 @@ package tests {
 			tex.textureOptions |= (filteringComboBox.selectedIndex == 1 ? TextureOption.FILTERING_LINEAR : 0);
 			tex.textureOptions |= (repeatComboBox.selectedIndex == 0 ? TextureOption.REPEAT_NORMAL : 0);
 			tex.textureOptions |= (repeatComboBox.selectedIndex == 1 ? TextureOption.REPEAT_CLAMP : 0);
+
+			// sprite
+			sprite = new Sprite2D(tex);
+			sprite.position = new Vector3D(stage.stageWidth / 2 - 300.0, stage.stageHeight / 2);
+			sprite.scale = 0.5 * scaleFactor;
+			sprite.animation.play("blah");
+			addChild(sprite);
+
+			var s:Sprite2D;
+
+			// batch
+			batch = new Sprite2DBatch(tex);
+			addChild(batch);
+
+			s = new Sprite2D();
+			batch.addChild(s);
+			s.position = new Vector3D(stage.stageWidth / 2 - 50, stage.stageHeight / 2);
+			s.scale = 1.0 * scaleFactor;
+			s.animation.play("blah");
+
+			// cloud
+			cloud = new Sprite2DCloud(1, tex);
+			addChild(cloud);
+
+			s = new Sprite2D();
+			cloud.addChild(s);
+			s.position = new Vector3D(stage.stageWidth / 2 + 300.0, stage.stageHeight / 2);
+			s.scale = 1.5 * scaleFactor;
+			s.animation.play("blah");
 		}
 
 		private function sliderChanged(e:Event):void {
@@ -198,37 +217,37 @@ package tests {
 
 			switch(slider.label) {
 				case "uvOffsetX":  {
-					s.uvOffsetX = s2.uvOffsetX = s3.uvOffsetX = slider.value;
+					sprite.uvOffsetX = batch.childFirst.uvOffsetX = cloud.childFirst.uvOffsetX = slider.value;
 					break;
 				}
 				case "uvOffsetY":  {
-					s.uvOffsetY = s2.uvOffsetY = s3.uvOffsetY = slider.value;
+					sprite.uvOffsetY = batch.childFirst.uvOffsetY = cloud.childFirst.uvOffsetY = slider.value;
 					break;
 				}
 				case "uvScaleX":  {
-					s.uvScaleX = s2.uvScaleX = s3.uvScaleX = slider.value;
+					sprite.uvScaleX = batch.childFirst.uvScaleX = cloud.childFirst.uvScaleX = slider.value;
 					break;
 				}
 				case "uvScaleY":  {
-					s.uvScaleY = s2.uvScaleY = s3.uvScaleY = slider.value;
+					sprite.uvScaleY = batch.childFirst.uvScaleY = cloud.childFirst.uvScaleY = slider.value;
 					break;
 				}
 				case "rotationX":  {
-					s.rotationX = s2.rotationX = s3.rotationX = slider.value;
+					sprite.rotationX = batch.childFirst.rotationX = cloud.childFirst.rotationX = slider.value;
 					break;
 				}
 				case "rotationY":  {
-					s.rotationY = s2.rotationY = s3.rotationY = slider.value;
+					sprite.rotationY = batch.childFirst.rotationY = cloud.childFirst.rotationY = slider.value;
 					break;
 				}
 			}
 		}
 
 		override protected function step(elapsed:Number):void {
-			if(s && s2 && s3) {
-				s.rotation += 0.2;
-				s2.rotation += 0.2;
-				s3.rotation += 0.2;
+			if(sprite && batch && cloud) {
+				sprite.rotation += 0.2;
+				batch.childFirst.rotation += 0.2;
+				cloud.childFirst.rotation += 0.2;
 			}
 		}
 

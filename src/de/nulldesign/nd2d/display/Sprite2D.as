@@ -200,6 +200,17 @@ package de.nulldesign.nd2d.display {
 			}
 		}
 
+		override public function updateUV():void {
+			super.updateUV();
+
+			// fall back to cheap uv scroll
+			if(usesUV && texture && !texture.sheet) {
+				usesUV = (texture.bitmapWidth != texture.textureWidth && texture.bitmapHeight != texture.textureHeight)
+					|| (texture.bitmapWidth != texture.textureWidth && _uvOffsetX != 0.0 && _uvScaleX != 1.0)
+					|| (texture.bitmapHeight != texture.textureHeight && _uvOffsetY != 0.0 && _uvScaleY != 1.0);
+			}
+		}
+
 		override public function updateClipSpace():void {
 			invalidateClipSpace = false;
 

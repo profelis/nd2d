@@ -80,7 +80,17 @@ package de.nulldesign.nd2d.materials.shader {
 			"alias vt4, temp4;" +
 			"alias vt5, temp5;" +
 			"alias vt6, temp6;" +
-			"alias vt7, temp7;";
+			"alias vt7, temp7;" +
+
+			"macro applyUV( uv, uvScroll, uvSheet ) {" +
+			"	out = uv * uvScroll.zw;" +
+			"	out += uvScroll.xy;" +
+
+			"	#if !USE_UV;" +
+			"		out *= uvSheet.zw;" +
+			"		out += uvSheet.xy;" +
+			"	#endif;" +
+			"}";
 
 		public static const FRAGMENT_LIB:String =
 			"alias oc, output;" +
@@ -111,6 +121,18 @@ package de.nulldesign.nd2d.materials.shader {
 			// sample texture without mipmap
 			"macro sampleNoMip( texCoord, texture ) {" +
 			"	tex out, texCoord, texture <???,mipnone>;" +
+			"}" +
+
+			// sample texture with UV scroll
+			"macro sampleUV( texCoord, texture, uvSheet ) {" +
+			"	#if USE_UV;" +
+			"		out = frac(texCoord);" +
+			"		out *= uvSheet.zw;" +
+			"		out += uvSheet.xy;" +
+			"		out = sampleNoMip(temp0, texture);" +
+			"	#else;" +
+			"		out = sample(texCoord, texture);" +
+			"	#endif;" +
 			"}" +
 
 			// colorize (uses temp7.a)

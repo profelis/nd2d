@@ -52,19 +52,12 @@ package de.nulldesign.nd2d.materials {
 			"alias vc8, colorMultiplier;" +
 			"alias vc9, colorOffset;" +
 			"alias vc10, uvSheet;" +
-			"alias vc11.xy, uvOffset;" +
-			"alias vc11.zw, uvScale;" +
+			"alias vc11, uvScroll;" +
 
 			"temp0 = mul4x4(position, clipSpace);" +
 			"output = mul4x4(temp0, viewProjection);" +
 
-			"#if USE_UV;" +
-			"	temp0 = uv * uvScale;" +
-			"	temp0 += uvOffset;" +
-			"#else;" +
-			"	temp0 = uv * uvSheet.zw;" +
-			"	temp0 += uvSheet.xy;" +
-			"#endif;" +
+			"temp0 = applyUV(uv, uvScroll, uvSheet);" +
 
 			// pass to fragment shader
 			"v0 = temp0;" +
@@ -76,17 +69,9 @@ package de.nulldesign.nd2d.materials {
 			"alias v0, texCoord;" +
 			"alias v1, colorMultiplier;" +
 			"alias v2, colorOffset;" +
-			"alias v3.xy, uvSheetOffset;" +
-			"alias v3.zw, uvSheetScale;" +
+			"alias v3, uvSheet;" +
 
-			"#if USE_UV;" +
-			"	temp0 = frac(texCoord);" +
-			"	temp0 *= uvSheetScale;" +
-			"	temp0 += uvSheetOffset;" +
-			"	temp0 = sampleNoMip(temp0, texture0);" +
-			"#else;" +
-			"	temp0 = sample(texCoord, texture0);" +
-			"#endif;" +
+			"temp0 = sampleUV(texCoord, texture0, uvSheet);" +
 
 			"output = colorize(temp0, colorMultiplier, colorOffset);";
 
