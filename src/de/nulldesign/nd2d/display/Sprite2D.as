@@ -55,7 +55,7 @@ package de.nulldesign.nd2d.display {
 		public var texture:Texture2D;
 		public var animation:SpriteAnimation;
 
-		protected var material:Sprite2DMaterial;
+		public var material:Sprite2DMaterial;
 
 		public var usePixelPerfectHitTest:Boolean = false;
 

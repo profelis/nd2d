@@ -42,7 +42,7 @@ package de.nulldesign.nd2d.materials {
 	import flash.display3D.Context3DVertexBufferFormat;
 	import flash.geom.Point;
 
-	public class ParticleSystemMaterial extends BaseMaterial {
+	public class ParticleSystemMaterial extends MaterialBase {
 
 		private const VERTEX_SHADER:String =
 			"alias va0, position;" +

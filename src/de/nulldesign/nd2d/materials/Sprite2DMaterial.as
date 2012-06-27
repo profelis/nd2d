@@ -42,7 +42,7 @@ package de.nulldesign.nd2d.materials {
 	import flash.geom.ColorTransform;
 	import flash.geom.Rectangle;
 
-	public class Sprite2DMaterial extends BaseMaterial {
+	public class Sprite2DMaterial extends MaterialBase {
 
 		private const VERTEX_SHADER:String =
 			"alias va0, position;" +

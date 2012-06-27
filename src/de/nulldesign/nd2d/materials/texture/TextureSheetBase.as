@@ -45,8 +45,8 @@ package de.nulldesign.nd2d.materials.texture {
 
 		public var animationMap:Dictionary = new Dictionary();
 
-		protected var frameNames:Array;
-		protected var frameNameToIndex:Dictionary;
+		public var frameNames:Array;
+		public var frameNameToIndex:Dictionary;
 
 		public function TextureSheetBase() {
 		}
@@ -63,6 +63,10 @@ package de.nulldesign.nd2d.materials.texture {
 			return frameNameToIndex[name];
 		}
 
+		public function hasFrame(name:String):Boolean {
+			return frameNameToIndex[name] != null;
+		}
+
 		public function addAnimation(name:String, keyFrames:Array, loop:Boolean = true, fps:int = 1):void {
 			// override this
 		}
@@ -74,6 +78,7 @@ package de.nulldesign.nd2d.materials.texture {
 			offsets = null;
 			uvRects = null;
 
+			frameNames = null;
 			animationMap = null;
 			frameNameToIndex = null;
 		}

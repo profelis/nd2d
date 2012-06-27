@@ -36,17 +36,19 @@ package de.nulldesign.nd2d.materials.texture {
 	public class TextureSheet extends TextureSheetBase {
 
 		/**
+		 * Divides one texture into equal smaller sprites.
 		 *
 		 * @param texture
 		 * @param spriteWidth
 		 * @param spriteHeight
+		 * @param distribute		If true, applies this sheet to the texture
 		 */
-		public function TextureSheet(texture:Texture2D, spriteWidth:Number, spriteHeight:Number) {
+		public function TextureSheet(texture:Texture2D, spriteWidth:Number, spriteHeight:Number, distribute:Boolean = true) {
+			var rowIdx:uint;
+			var colIdx:uint;
 			var numCols:uint = texture.bitmapWidth / spriteWidth;
 			var numRows:uint = texture.bitmapHeight / spriteHeight;
 			var numSheets:uint = numCols * numRows;
-			var rowIdx:uint;
-			var colIdx:uint;
 
 			frames = new Vector.<Rectangle>(numSheets, true);
 			offsets = new Vector.<Point>(numSheets, true);
@@ -72,11 +74,27 @@ package de.nulldesign.nd2d.materials.texture {
 			}
 
 			// distribute to texture
-			texture.setSheet(this);
+			if(distribute) {
+				texture.setSheet(this);
+			}
 		}
 
+		/**
+		 * Adds a new animation to this sheet.
+		 *
+		 * <pre>
+		 * atlas.addAnimation("shoot", [4, 5, 6, 5, 6, 7]);
+		 * </pre>
+		 *
+		 * @param name			Animation name
+		 * @param keyFrames		Integer array containing the frame indices
+		 * @param loop			If true, the animation will start over when finished
+		 * @param fps			Frames per second
+		 */
 		override public function addAnimation(name:String, keyFrames:Array, loop:Boolean = true, fps:int = 1):void {
-			animationMap[name] = new TextureAnimation(keyFrames, loop, fps);
+			if(keyFrames.length) {
+				animationMap[name] = new TextureAnimation(keyFrames, loop, fps);
+			}
 		}
 	}
 }

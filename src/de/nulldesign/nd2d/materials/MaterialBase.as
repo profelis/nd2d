@@ -44,7 +44,7 @@ package de.nulldesign.nd2d.materials {
 	import flash.geom.Rectangle;
 	import flash.utils.Dictionary;
 
-	public class BaseMaterial {
+	public class MaterialBase {
 
 		public var viewProjectionMatrix:Matrix3D;
 
@@ -79,7 +79,7 @@ package de.nulldesign.nd2d.materials {
 		public static const VERTEX_UV:String = "PB3D_UV";
 		public static const VERTEX_COLOR:String = "PB3D_COLOR";
 
-		public function BaseMaterial() {
+		public function MaterialBase() {
 		}
 
 		protected function generateBufferData(context:Context3D, faceList:Vector.<Face>):void {

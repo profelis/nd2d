@@ -39,7 +39,7 @@ package de.nulldesign.nd2d.materials {
 	import flash.display3D.Context3DProgramType;
 	import flash.display3D.Context3DVertexBufferFormat;
 
-	public class Quad2DColorMaterial extends BaseMaterial {
+	public class Quad2DColorMaterial extends MaterialBase {
 
 		private const VERTEX_SHADER:String =
 			"alias va0, position;" +
