@@ -40,6 +40,7 @@ package tests {
 	import de.nulldesign.nd2d.display.Sprite2DCloud;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
 	import de.nulldesign.nd2d.materials.texture.TextureSheet;
+	import de.nulldesign.nd2d.utils.NumberUtil;
 
 	import flash.events.Event;
 	import flash.geom.ColorTransform;
@@ -150,6 +151,10 @@ package tests {
 		override protected function step(elapsed:Number):void {
 			super.step(elapsed);
 
+			// camera movement comes for "free", keep that in mind! it's
+			// faster to move the camera instead of hundreds of sprites
+			camera.x = Math.cos(timeSinceStartInSeconds * 2) * 50;
+
 			if(Main.stats.measuredFPS >= stage.frameRate) {
 				var s:Sprite2D;
 
@@ -204,8 +209,8 @@ package tests {
 					}
 
 					if(s) {
-						s.x = Math.round(stage.stageWidth * Math.random());
-						s.y = Math.round(stage.stageHeight * Math.random());
+						s.x = Math.round(camera.sceneWidth * Math.random());
+						s.y = Math.round(camera.sceneHeight * Math.random());
 
 						switch(selectedTestIdx) {
 							case 1:

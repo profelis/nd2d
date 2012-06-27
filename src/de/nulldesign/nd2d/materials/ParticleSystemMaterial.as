@@ -204,9 +204,9 @@ package de.nulldesign.nd2d.materials {
 
 		override protected function initProgram(context:Context3D):void {
 			if(!shaderData) {
-				var defines:String =
-					"#define PREMULTIPLIED_ALPHA=" + int(texture.hasPremultipliedAlpha) + ";" +
-					"#define BURST=" + int(burst) + ";";
+				var defines:Array = ["ParticleSystem2D",
+					"PREMULTIPLIED_ALPHA", int(texture.hasPremultipliedAlpha),
+					"BURST", int(burst)];
 
 				shaderData = ShaderCache.getShader(context, defines, VERTEX_SHADER, FRAGMENT_SHADER, 20, texture.textureOptions);
 			}

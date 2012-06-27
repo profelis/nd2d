@@ -487,11 +487,11 @@ package de.nulldesign.nd2d.display {
 			}
 
 			if(!shaderData) {
-				var defines:String =
-					"#define PREMULTIPLIED_ALPHA=" + int(texture.hasPremultipliedAlpha) + ";" +
-					"#define USE_UV=" + int(currentUsesUV) + ";" +
-					"#define USE_COLOR=" + int(currentUsesColor) + ";" +
-					"#define USE_COLOR_OFFSET=" + int(currentUsesColorOffset) + ";";
+				var defines:Array = ["Sprite2DCloud",
+					"PREMULTIPLIED_ALPHA", int(texture.hasPremultipliedAlpha),
+					"USE_UV", int(currentUsesUV),
+					"USE_COLOR", int(currentUsesColor),
+					"USE_COLOR_OFFSET", int(currentUsesColorOffset)];
 
 				shaderData = ShaderCache.getShader(context, defines, VERTEX_SHADER, FRAGMENT_SHADER, numFloatsPerVertex, texture.textureOptions);
 			}

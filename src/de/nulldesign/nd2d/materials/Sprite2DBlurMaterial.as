@@ -341,13 +341,16 @@ package de.nulldesign.nd2d.materials {
 
 		override protected function initProgram(context:Context3D):void {
 			if(!shaderData) {
-				var defines:String =
-					"#define PREMULTIPLIED_ALPHA=" + int(texture.hasPremultipliedAlpha) + ";" +
-					"#define USE_UV=" + int(usesUV) + ";" +
-					"#define USE_COLOR=" + int(usesColor) + ";" +
-					"#define USE_COLOR_OFFSET=" + int(usesColorOffset) + ";";
+				var defines:Array = ["Sprite2DBlur",
+					"PREMULTIPLIED_ALPHA", int(texture.hasPremultipliedAlpha),
+					"USE_UV", int(usesUV),
+					"USE_COLOR", int(usesColor),
+					"USE_COLOR_OFFSET", int(usesColorOffset)];
 
+				defines[0] = "Sprite2DBlurX";
 				horizontalShader = ShaderCache.getShader(context, defines, VERTEX_SHADER, HORIZONTAL_FRAGMENT_SHADER, 4, texture.textureOptions);
+
+				defines[0] = "Sprite2DBlurY";
 				verticalShader = ShaderCache.getShader(context, defines, VERTEX_SHADER, VERTICAL_FRAGMENT_SHADER, 4, texture.textureOptions);
 
 				shaderData = horizontalShader;

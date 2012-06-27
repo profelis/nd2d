@@ -110,11 +110,11 @@ package materials {
 
 		override protected function initProgram(context:Context3D):void {
 			if(!shaderData) {
-				var defines:String =
-					"#define PREMULTIPLIED_ALPHA=" + int(texture.hasPremultipliedAlpha) + ";" +
-					"#define USE_UV=" + int(usesUV) + ";" +
-					"#define USE_COLOR=" + int(usesColor) + ";" +
-					"#define USE_COLOR_OFFSET=" + int(usesColorOffset) + ";";
+				var defines:Array = ["Sprite2DDizzy",
+					"PREMULTIPLIED_ALPHA", int(texture.hasPremultipliedAlpha),
+					"USE_UV", int(usesUV),
+					"USE_COLOR", int(usesColor),
+					"USE_COLOR_OFFSET", int(usesColorOffset)];
 
 				shaderData = ShaderCache.getShader(context, defines, DIZZY_VERTEX_SHADER, DIZZY_FRAGMENT_SHADER, 4, texture.textureOptions);
 			}

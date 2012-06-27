@@ -40,18 +40,24 @@ package de.nulldesign.nd2d.materials.shader {
 		public function ShaderCache() {
 		}
 
-		public static function getShader(context:Context3D, commonShaderString:String, vertexShaderString:String, fragmentShaderString:String, numFloatsPerVertex:uint, textureOptions:uint):Shader2D {
+		public static function getShader(context:Context3D, defines:Array, vertexShaderString:String, fragmentShaderString:String, numFloatsPerVertex:uint, textureOptions:uint):Shader2D {
 			var shaders:Dictionary = cache[context];
 
 			if(!shaders) {
-				shaders = cache[context] = new Dictionary(true);
+				shaders = cache[context] = new Dictionary();
 			}
 
-			var key:String = textureOptions + commonShaderString + vertexShaderString + fragmentShaderString;
+			var key:String = defines.join() + "," + textureOptions;
 			var shader:Shader2D = shaders[key];
 
 			if(shader) {
 				return shader;
+			}
+
+			var commonShaderString:String = "";
+
+			for(var i:uint = 1; i < defines.length; i += 2) {
+				commonShaderString += "#define " + defines[i] + "=" + defines[i + 1] + ";";
 			}
 
 			shader = shaders[key] = new Shader2D(context, commonShaderString, vertexShaderString, fragmentShaderString, numFloatsPerVertex, textureOptions);
