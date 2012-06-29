@@ -126,9 +126,15 @@ package de.nulldesign.nd2d.materials.shader {
 			// sample texture with UV scroll
 			"macro sampleUV( texCoord, texture, uvSheet ) {" +
 			"	#if USE_UV;" +
-			"		out = frac(texCoord);" +
+			"		#if REPEAT_CLAMP;" +
+			"			out = clamp(texCoord);" +
+			"		#else;" +
+			"			out = frac(texCoord);" +
+			"		#endif;" +
+
 			"		out *= uvSheet.zw;" +
 			"		out += uvSheet.xy;" +
+
 			"		out = sampleNoMip(temp0, texture);" +
 			"	#else;" +
 			"		out = sample(texCoord, texture);" +

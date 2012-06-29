@@ -47,19 +47,12 @@ package materials {
 			"alias vc8, colorMultiplier;" +
 			"alias vc9, colorOffset;" +
 			"alias vc10, uvSheet;" +
-			"alias vc11.xy, uvOffset;" +
-			"alias vc11.zw, uvScale;" +
+			"alias vc11, uvScroll;" +
 
 			"temp0 = mul4x4(position, clipSpace);" +
 			"output = mul4x4(temp0, viewProjection);" +
 
-			"#if USE_UV;" +
-			"	temp0 = uv * uvScale;" +
-			"	temp0 += uvOffset;" +
-			"#else;" +
-			"	temp0 = uv * uvSheet.zw;" +
-			"	temp0 += uvSheet.xy;" +
-			"#endif;" +
+			"temp0 = applyUV(uv, uvScroll, uvSheet);" +
 
 			// pass to fragment shader
 			"v0 = temp0;" +
@@ -71,8 +64,7 @@ package materials {
 			"alias v0, texCoord;" +
 			"alias v1, colorMultiplier;" +
 			"alias v2, colorOffset;" +
-			"alias v3.xy, uvSheetOffset;" +
-			"alias v3.zw, uvSheetScale;" +
+			"alias v3, uvSheet;" +
 
 			"alias fc0, dizzy;" +
 
@@ -83,14 +75,7 @@ package materials {
 			"temp1.xy *= dizzy.zw;" +
 			"temp0 = texCoord + temp1;" +
 
-			"#if USE_UV;" +
-			"	temp0 = frac(temp0);" +
-			"	temp0 *= uvSheetScale;" +
-			"	temp0 += uvSheetOffset;" +
-			"	temp0 = sampleNoMip(temp0, texture0);" +
-			"#else;" +
-			"	temp0 = sample(temp0, texture0);" +
-			"#endif;" +
+			"temp0 = sampleUV(temp0, texture0, uvSheet);" +
 
 			"output = colorize(temp0, colorMultiplier, colorOffset);";
 
@@ -111,12 +96,11 @@ package materials {
 		override protected function initProgram(context:Context3D):void {
 			if(!shaderData) {
 				var defines:Array = ["Sprite2DDizzy",
-					"PREMULTIPLIED_ALPHA", int(texture.hasPremultipliedAlpha),
-					"USE_UV", int(usesUV),
-					"USE_COLOR", int(usesColor),
-					"USE_COLOR_OFFSET", int(usesColorOffset)];
+					"USE_UV", usesUV,
+					"USE_COLOR", usesColor,
+					"USE_COLOR_OFFSET", usesColorOffset];
 
-				shaderData = ShaderCache.getShader(context, defines, DIZZY_VERTEX_SHADER, DIZZY_FRAGMENT_SHADER, 4, texture.textureOptions);
+				shaderData = ShaderCache.getShader(context, defines, DIZZY_VERTEX_SHADER, DIZZY_FRAGMENT_SHADER, 4, texture);
 			}
 		}
 	}

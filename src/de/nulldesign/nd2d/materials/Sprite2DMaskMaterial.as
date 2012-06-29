@@ -210,12 +210,11 @@ package de.nulldesign.nd2d.materials {
 		override protected function initProgram(context:Context3D):void {
 			if(!shaderData) {
 				var defines:Array = ["Sprite2DMask",
-					"PREMULTIPLIED_ALPHA", int(texture.hasPremultipliedAlpha),
-					"USE_UV", int(usesUV),
-					"USE_COLOR", int(usesColor),
-					"USE_COLOR_OFFSET", int(usesColorOffset)];
+					"USE_UV", usesUV,
+					"USE_COLOR", usesColor,
+					"USE_COLOR_OFFSET", usesColorOffset];
 
-				shaderData = ShaderCache.getShader(context, defines, VERTEX_SHADER, FRAGMENT_SHADER, 4, texture.textureOptions);
+				shaderData = ShaderCache.getShader(context, defines, VERTEX_SHADER, FRAGMENT_SHADER, 4, texture);
 			}
 		}
 

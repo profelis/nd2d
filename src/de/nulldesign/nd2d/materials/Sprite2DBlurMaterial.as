@@ -73,13 +73,17 @@ package de.nulldesign.nd2d.materials {
 			"alias v0, texCoord;" +
 			"alias v1, colorMultiplier;" +
 			"alias v2, colorOffset;" +
-			"alias v3.xy, uvSheetOffset;" +
-			"alias v3.zw, uvSheetScale;" +
+			"alias v3.xy, uvSheet;" +
 
 			"#if USE_UV;" +
-			"	temp0 = frac(texCoord);" +
-			"	temp0 *= uvSheetScale;" +
-			"	temp0 += uvSheetOffset;" +
+			"	#if REPEAT_CLAMP;" +
+			"		temp0 = clamp(texCoord);" +
+			"	#else;" +
+			"		temp0 = frac(texCoord);" +
+			"	#endif;" +
+
+			"	temp0 *= uvSheet.zw;" +
+			"	temp0 += uvSheet.xy;" +
 			"#else;" +
 			"	temp0 = texCoord;" +
 			"#endif;" +
@@ -342,16 +346,15 @@ package de.nulldesign.nd2d.materials {
 		override protected function initProgram(context:Context3D):void {
 			if(!shaderData) {
 				var defines:Array = ["Sprite2DBlur",
-					"PREMULTIPLIED_ALPHA", int(texture.hasPremultipliedAlpha),
-					"USE_UV", int(usesUV),
-					"USE_COLOR", int(usesColor),
-					"USE_COLOR_OFFSET", int(usesColorOffset)];
+					"USE_UV", usesUV,
+					"USE_COLOR", usesColor,
+					"USE_COLOR_OFFSET", usesColorOffset];
 
 				defines[0] = "Sprite2DBlurX";
-				horizontalShader = ShaderCache.getShader(context, defines, VERTEX_SHADER, HORIZONTAL_FRAGMENT_SHADER, 4, texture.textureOptions);
+				horizontalShader = ShaderCache.getShader(context, defines, VERTEX_SHADER, HORIZONTAL_FRAGMENT_SHADER, 4, texture);
 
 				defines[0] = "Sprite2DBlurY";
-				verticalShader = ShaderCache.getShader(context, defines, VERTEX_SHADER, VERTICAL_FRAGMENT_SHADER, 4, texture.textureOptions);
+				verticalShader = ShaderCache.getShader(context, defines, VERTEX_SHADER, VERTICAL_FRAGMENT_SHADER, 4, texture);
 
 				shaderData = horizontalShader;
 			}

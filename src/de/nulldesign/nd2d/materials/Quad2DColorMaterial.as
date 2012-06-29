@@ -83,7 +83,7 @@ package de.nulldesign.nd2d.materials {
 
 		override protected function initProgram(context:Context3D):void {
 			if(!shaderData) {
-				shaderData = ShaderCache.getShader(context, ["Quad2D"], VERTEX_SHADER, FRAGMENT_SHADER, 6, 0);
+				shaderData = ShaderCache.getShader(context, ["Quad2D"], VERTEX_SHADER, FRAGMENT_SHADER, 6, null);
 			}
 		}
 

@@ -30,6 +30,9 @@
 
 package de.nulldesign.nd2d.materials.shader {
 
+	import de.nulldesign.nd2d.materials.texture.Texture2D;
+	import de.nulldesign.nd2d.materials.texture.TextureOption;
+
 	import flash.display3D.Context3D;
 	import flash.utils.Dictionary;
 
@@ -40,27 +43,32 @@ package de.nulldesign.nd2d.materials.shader {
 		public function ShaderCache() {
 		}
 
-		public static function getShader(context:Context3D, defines:Array, vertexShaderString:String, fragmentShaderString:String, numFloatsPerVertex:uint, textureOptions:uint):Shader2D {
+		public static function getShader(context:Context3D, defines:Array, vertexShaderString:String, fragmentShaderString:String, numFloatsPerVertex:uint, texture:Texture2D):Shader2D {
 			var shaders:Dictionary = cache[context];
 
 			if(!shaders) {
 				shaders = cache[context] = new Dictionary();
 			}
 
-			var key:String = defines.join() + "," + textureOptions;
+			var key:String = defines.join() + (texture ? "," + texture.textureOptions + "," + texture.hasPremultipliedAlpha : "");
 			var shader:Shader2D = shaders[key];
 
 			if(shader) {
 				return shader;
 			}
 
+			if(texture) {
+				defines.push("PREMULTIPLIED_ALPHA", texture.hasPremultipliedAlpha);
+				defines.push("REPEAT_CLAMP", texture.textureOptions & TextureOption.REPEAT_CLAMP);
+			}
+
 			var commonShaderString:String = "";
 
 			for(var i:uint = 1; i < defines.length; i += 2) {
-				commonShaderString += "#define " + defines[i] + "=" + defines[i + 1] + ";";
+				commonShaderString += "#define " + defines[i] + "=" + int(defines[i + 1]) + ";";
 			}
 
-			shader = shaders[key] = new Shader2D(context, commonShaderString, vertexShaderString, fragmentShaderString, numFloatsPerVertex, textureOptions);
+			shader = shaders[key] = new Shader2D(context, commonShaderString, vertexShaderString, fragmentShaderString, numFloatsPerVertex, texture ? texture.textureOptions : 0);
 
 			return shader;
 		}

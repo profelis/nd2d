@@ -128,11 +128,11 @@ package tests {
 			var slider:HUISlider;
 
 			slider = new HUISlider(panel, 0, 0, "x", changeHandler);
-			slider.setSliderParams(-100, 100, 0);
+			slider.setSliderParams(-50, 50, 0);
 			sliders.push(slider);
 
 			slider = new HUISlider(panel, 0, 20, "y", changeHandler);
-			slider.setSliderParams(-100, 100, 0);
+			slider.setSliderParams(-50, 50, 0);
 			sliders.push(slider);
 
 			slider = new HUISlider(panel, 0, 40, "width", changeHandler);
