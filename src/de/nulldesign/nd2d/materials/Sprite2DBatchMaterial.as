@@ -30,6 +30,7 @@
 
 package de.nulldesign.nd2d.materials {
 
+	import de.nulldesign.nd2d.display.Camera2D;
 	import de.nulldesign.nd2d.display.Node2D;
 	import de.nulldesign.nd2d.display.Sprite2D;
 	import de.nulldesign.nd2d.geom.Face;
@@ -87,6 +88,8 @@ package de.nulldesign.nd2d.materials {
 
 		private var programConstants:Vector.<Number> = new Vector.<Number>(4 * constantsPerSprite * BATCH_SIZE, true);
 
+		public var camera:Camera2D;
+
 		public static const VERTEX_IDX:String = "PB3D_IDX";
 		public static const VERTEX_IDX2:String = "PB3D_IDX2";
 
@@ -127,9 +130,11 @@ package de.nulldesign.nd2d.materials {
 
 		override protected function prepareForRender(context:Context3D):void {
 			updateProgram(context);
+
 			context.setProgram(shaderData.shader);
-			context.setBlendFactors(blendMode.src, blendMode.dst);
 			context.setTextureAt(0, texture.getTexture(context));
+			context.setBlendFactors(blendMode.src, blendMode.dst);
+
 			context.setVertexBufferAt(0, vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_2); // vertex
 			context.setVertexBufferAt(1, vertexBuffer, 2, Context3DVertexBufferFormat.FLOAT_2); // uv
 			context.setVertexBufferAt(2, vertexBuffer, 4, Context3DVertexBufferFormat.FLOAT_4); // idx
@@ -219,8 +224,6 @@ package de.nulldesign.nd2d.materials {
 
 					updateProgram(context);
 
-					var uvSheet:Rectangle = (texture.sheet ? child.animation.frameUV : texture.uvRect);
-
 					context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX,
 						constantsGlobal + batchLen * constantsPerMatrix, child.clipSpaceMatrix, true);
 
@@ -234,10 +237,10 @@ package de.nulldesign.nd2d.materials {
 					programConstants[idx++] = child.combinedColorTransform.blueOffset;
 					programConstants[idx++] = child.combinedColorTransform.alphaOffset;
 
-					programConstants[idx++] = uvSheet.x;
-					programConstants[idx++] = uvSheet.y;
-					programConstants[idx++] = uvSheet.width;
-					programConstants[idx++] = uvSheet.height;
+					programConstants[idx++] = child.animation.frameUV.x;
+					programConstants[idx++] = child.animation.frameUV.y;
+					programConstants[idx++] = child.animation.frameUV.width;
+					programConstants[idx++] = child.animation.frameUV.height;
 
 					programConstants[idx++] = child.uvOffsetX;
 					programConstants[idx++] = child.uvOffsetY;
@@ -302,15 +305,16 @@ package de.nulldesign.nd2d.materials {
 
 		override protected function fillBuffer(buffer:Vector.<Number>, v:Vertex, uv:UV, face:Face, semanticsID:String, floatFormat:int):void {
 			if(semanticsID == VERTEX_IDX) {
-				// first float will be used for matrix index
+				// va2.x	clipSpace index
 				buffer.push(constantsGlobal + face.idx * constantsPerMatrix);
-				// second, colorMultiplier idx
+				// va2.y	colorMultiplier index
 				buffer.push(constantsGlobal + BATCH_SIZE * constantsPerMatrix + face.idx * constantsPerSprite);
-				// second, colorOffset idx
+				// va2.z	colorOffset index
 				buffer.push(constantsGlobal + BATCH_SIZE * constantsPerMatrix + face.idx * constantsPerSprite + 1);
-				// third uv offset idx
+				// va2.w	uvSheet index
 				buffer.push(constantsGlobal + BATCH_SIZE * constantsPerMatrix + face.idx * constantsPerSprite + 2);
 			} else if(semanticsID == VERTEX_IDX2) {
+				// va3.x	uvOffset index
 				buffer.push(constantsGlobal + BATCH_SIZE * constantsPerMatrix + face.idx * constantsPerSprite + 3);
 			} else {
 				super.fillBuffer(buffer, v, uv, face, semanticsID, floatFormat);
@@ -320,8 +324,8 @@ package de.nulldesign.nd2d.materials {
 		override public function dispose():void {
 			super.dispose();
 
+			camera = null;
 			programConstants = null;
 		}
-
 	}
 }

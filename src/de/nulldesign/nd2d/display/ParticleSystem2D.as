@@ -191,7 +191,7 @@ package de.nulldesign.nd2d.display {
 			}
 		}
 
-		override protected function draw(context:Context3D, camera:Camera2D):void {
+		override public function draw(context:Context3D, camera:Camera2D):void {
 			if(burstDone) {
 				return;
 			}

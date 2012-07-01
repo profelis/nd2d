@@ -74,6 +74,12 @@ package de.nulldesign.nd2d.materials.shader {
 		}
 
 		public static function handleDeviceLoss():void {
+			for each(var shaders:Dictionary in cache) {
+				for each(var shader:Shader2D in shaders) {
+					shader.dispose();
+				}
+			}
+
 			cache = new Dictionary(true);
 		}
 	}

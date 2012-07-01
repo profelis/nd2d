@@ -54,7 +54,6 @@ package de.nulldesign.nd2d.display {
 
 		public var texture:Texture2D;
 		public var animation:SpriteAnimation;
-
 		public var material:Sprite2DMaterial;
 
 		public var usePixelPerfectHitTest:Boolean = false;
@@ -131,7 +130,11 @@ package de.nulldesign.nd2d.display {
 			}
 		}
 
-		override protected function draw(context:Context3D, camera:Camera2D):void {
+		override public function draw(context:Context3D, camera:Camera2D):void {
+			if(!material) {
+				return;
+			}
+
 			material.blendMode = blendMode;
 			material.scrollRect = worldScrollRect;
 			material.modelMatrix = worldModelMatrix;
@@ -153,11 +156,11 @@ package de.nulldesign.nd2d.display {
 					mask.updateLocalMatrix();
 				}
 
-				var maskMat:Sprite2DMaskMaterial = Sprite2DMaskMaterial(material);
-
-				maskMat.maskAlpha = mask.alpha;
-				maskMat.maskTexture = mask.texture;
-				maskMat.maskModelMatrix = mask.localModelMatrix;
+				with(material as Sprite2DMaskMaterial) {
+					maskAlpha = mask.alpha;
+					maskTexture = mask.texture;
+					maskModelMatrix = mask.localModelMatrix;
+				}
 			}
 
 			material.render(context, faceList, 0, faceList.length);
@@ -213,6 +216,10 @@ package de.nulldesign.nd2d.display {
 
 		override public function updateClipSpace():void {
 			invalidateClipSpace = false;
+
+			if(!texture) {
+				return;
+			}
 
 			clipSpaceMatrix.identity();
 

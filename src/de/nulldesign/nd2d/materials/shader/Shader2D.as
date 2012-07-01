@@ -216,5 +216,12 @@ package de.nulldesign.nd2d.materials.shader {
 
 			this.numFloatsPerVertex = numFloatsPerVertex;
 		}
+
+		public function dispose():void {
+			if(shader) {
+				shader.dispose();
+				shader = null;
+			}
+		}
 	}
 }

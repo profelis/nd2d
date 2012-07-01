@@ -31,6 +31,7 @@
 package de.nulldesign.nd2d.display {
 
 	import de.nulldesign.nd2d.geom.Face;
+	import de.nulldesign.nd2d.materials.Sprite2DBatchDynamicMaterial;
 	import de.nulldesign.nd2d.materials.Sprite2DBatchMaterial;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
 	import de.nulldesign.nd2d.utils.TextureHelper;
@@ -39,36 +40,48 @@ package de.nulldesign.nd2d.display {
 
 	/**
 	 * Sprite2DBatch
-	 * <p>Use a sprite cloud to batch sprites with the same Texture, SpriteSheet
-	 * or TextureAtlas. The SpriteSheet or TextureAtlas is cloned and passed to
-	 * each child. So you can control each child individually.</p>
+	 *
+	 * <p>Batches as many sprites as possible, sharing the same Texture,
+	 * TextureSheet or TextureAtlas into one drawcall.</p>
 	 *
 	 * <p>Similar to a Sprite2DCloud, the main difference it that the Batch
 	 * supports nested nodes, while the cloud just draws it's own children and
 	 * not the subchilds.
-	 * It uses less CPU resources and does more processing on the GPU than the
-	 * Sprite2DCloud. Depending on your target system, it can be faster than
-	 * the cloud.
-	 * It supports mouseevents for childs and adding or removing childs doesn't
-	 * slow down the rendering, it's free.
-	 * So in particular cases it could be faster.</p>
 	 *
-	 * <p>If you have a SpriteSheet or TextureAtlas for your batch, make sure to
-	 * add animations BEFORE you add any childs to the batch, because the
-	 * SpriteSheet/TextureAtlas get's cloned and is copied to each added
-	 * child</p>
+	 * It uses less CPU resources and does more processing on the GPU. Depending
+	 * on your target system, it can be faster than the cloud.
+	 *
+	 * It supports mouse events for childs and adding or removing childs doesn't
+	 * slow down the rendering, it's free.
+	 *
+	 * So in particular cases it could be faster.</p>
 	 */
 	public class Sprite2DBatch extends Node2D {
 
 		public var texture:Texture2D;
 
+		private var dynamic:Boolean;
 		private var faceList:Vector.<Face>;
 		private var material:Sprite2DBatchMaterial;
 
-		public function Sprite2DBatch(textureObject:Texture2D) {
-			texture = textureObject;
-			material = new Sprite2DBatchMaterial();
+		/**
+		 * Batches multiple sprites sharing the same texture into one drawcall.
+		 *
+		 * @param texture
+		 * @param dynamic	If true, allows childs to use different textures and
+		 * even materials (blur, mask, etc.)
+		 */
+		public function Sprite2DBatch(texture:Texture2D, dynamic:Boolean = false) {
+			this.texture = texture;
+			this.dynamic = dynamic;
+
 			faceList = TextureHelper.generateQuadFromDimensions(2, 2);
+
+			if(dynamic) {
+				material = new Sprite2DBatchDynamicMaterial();
+			} else {
+				material = new Sprite2DBatchMaterial();
+			}
 		}
 
 		public function addBatchParent(child:Node2D):void {
@@ -132,7 +145,8 @@ package de.nulldesign.nd2d.display {
 			invalidateMatrix = false;
 		}
 
-		override protected function draw(context:Context3D, camera:Camera2D):void {
+		override public function draw(context:Context3D, camera:Camera2D):void {
+			material.camera = camera;
 			material.blendMode = blendMode;
 			material.scrollRect = worldScrollRect;
 			material.modelMatrix = worldModelMatrix;

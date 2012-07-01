@@ -215,18 +215,20 @@ package de.nulldesign.nd2d.materials {
 
 				if(floatFormat >= 3) {
 					buffer.push(v.z);
-				}
 
-				if(floatFormat == 4) {
-					buffer.push(v.w);
+					if(floatFormat == 4) {
+						buffer.push(v.w);
+					}
 				}
 			} else if(semanticsID == VERTEX_UV) {
 				buffer.push(uv.u, uv.v);
 
-				if(floatFormat == 3) {
+				if(floatFormat >= 3) {
 					buffer.push(0.0);
-				} else if(floatFormat == 4) {
-					buffer.push(0.0, 0.0);
+
+					if(floatFormat == 4) {
+						buffer.push(0.0);
+					}
 				}
 			} else if(semanticsID == VERTEX_COLOR) {
 				buffer.push(v.r, v.g, v.b);

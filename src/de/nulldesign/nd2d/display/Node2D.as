@@ -860,7 +860,7 @@ package de.nulldesign.nd2d.display {
 			invalidateMatrix = false;
 		}
 
-		protected function draw(context:Context3D, camera:Camera2D):void {
+		public function draw(context:Context3D, camera:Camera2D):void {
 			// overwrite in extended classes
 		}
 
