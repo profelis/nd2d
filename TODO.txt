@@ -1,21 +1,33 @@
+- add depth sort example
+
 - move AGAL/MacroAssembler into our package
+
 - desync mouse/touch events (or at least move events) and execute them in the main loop
+
 - cache/reuse index- and vertexBuffer, especially for Sprite2D to get around the 4096 limit
+
 - Dynamic TextureAtlas
 	Packing algorithm: http://www.codeproject.com/KB/web-image/rectanglepacker.aspx.
 	font from bmp / font from textfield? new Font2D class!
 	with textureatlas http://ge.runcode.us/q/get-bounds-of-filters-applied-to-flash-sprite-within-sprite
 	http://www.blackpawn.com/texts/lightmaps/
+	
 - Sprite2DBatch with multiple textures 4?
+
 - iPhone retina management (assetloader, positions)
+
 - convertTextureToBitmapData
+
 - PARTICLESYSTEM2D rotation
+
 - multiple cameras for scenes? splitscreen mode?
 
 - Button2D
+
 - Node2D.getBounds()
+
 - animated masks
 
-BitmapFont2D - Cocos2D font generator hiero, etc...
+- BitmapFont2D - Cocos2D font generator hiero, etc...
 
-shader example: distortions
+- shader example: distortions

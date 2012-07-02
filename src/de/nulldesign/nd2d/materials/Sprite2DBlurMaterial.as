@@ -34,8 +34,8 @@ package de.nulldesign.nd2d.materials {
 	import de.nulldesign.nd2d.geom.Face;
 	import de.nulldesign.nd2d.materials.shader.Shader2D;
 	import de.nulldesign.nd2d.materials.shader.ShaderCache;
-	import de.nulldesign.nd2d.materials.texture.TextureSheetBase;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
+	import de.nulldesign.nd2d.materials.texture.TextureSheetBase;
 	import de.nulldesign.nd2d.utils.Statistics;
 
 	import flash.display3D.Context3D;
@@ -145,6 +145,8 @@ package de.nulldesign.nd2d.materials {
 
 		private var VERTICAL_FRAGMENT_SHADER:String;
 
+		private var invalidate:Boolean = true;
+
 		protected var horizontalShader:Shader2D;
 		protected var verticalShader:Shader2D;
 
@@ -175,8 +177,12 @@ package de.nulldesign.nd2d.materials {
 		}
 
 		public function setBlur(blurX:uint = 4, blurY:uint = 4):void {
-			this.blurX = blurX;
-			this.blurY = blurY;
+			if(blurX != this.blurX || blurY != this.blurY) {
+				this.blurX = blurX;
+				this.blurY = blurY;
+
+				invalidate = true;
+			}
 		}
 
 		protected function updateBlurKernel(radius:uint, direction:uint):void {
@@ -191,7 +197,7 @@ package de.nulldesign.nd2d.materials {
 			programConstants[7] = 0.0;  // fc3.w
 
 			// http://stackoverflow.com/questions/1696113/how-do-i-gaussian-blur-an-image-without-using-any-in-built-gaussian-functions
-			if(radius == 0) {
+			if(!radius) {
 				return;
 			}
 
@@ -252,81 +258,86 @@ package de.nulldesign.nd2d.materials {
 		override public function render(context:Context3D, faceList:Vector.<Face>, startTri:uint, numTris:uint):void {
 			generateBufferData(context, faceList);
 
-			// set up camera for blurry texture
-			blurredTextureCam.resizeCameraStage(texture.textureWidth, texture.textureHeight);
-			blurredTextureCam.x = -texture.bitmapWidth * 0.5;
-			blurredTextureCam.y = -texture.bitmapHeight * 0.5;
+			if(invalidate) {
+				invalidate = false;
 
-			blurredMatrix.identity();
-			blurredMatrix.appendScale(texture.bitmapWidth >> 1, texture.bitmapHeight >> 1, 1.0);
+				// set up camera for blurry texture
+				blurredTextureCam.resizeCameraStage(texture.textureWidth, texture.textureHeight);
+				blurredTextureCam.x = -texture.bitmapWidth * 0.5;
+				blurredTextureCam.y = -texture.bitmapHeight * 0.5;
 
-			// save camera matrix
-			var savedCamMatrix:Matrix3D = viewProjectionMatrix;
-			var savedSpriteSheet:TextureSheetBase = texture.sheet;
-			var savedClipSpaceMatrix:Matrix3D = clipSpaceMatrix;
-			var savedUvOffsetX:Number = uvOffsetX;
-			var savedUvOffsetY:Number = uvOffsetY;
-			var savedUvScaleX:Number = uvScaleX;
-			var savedUvScaleY:Number = uvScaleY;
-			viewProjectionMatrix = blurredTextureCam.getViewProjectionMatrix();
-			texture.sheet = null;
-			clipSpaceMatrix = blurredMatrix;
-			uvOffsetX = 0.0;
-			uvOffsetY = 0.0;
-			uvScaleX = 1.0;
-			uvScaleY = 1.0;
+				blurredMatrix.identity();
+				blurredMatrix.appendScale(texture.bitmapWidth >> 1, texture.bitmapHeight >> 1, 1.0);
 
-			updateBlurKernel(MAX_BLUR, BLUR_DIRECTION_HORIZONTAL);
-			prepareForRender(context);
+				// save camera matrix
+				var savedCamMatrix:Matrix3D = viewProjectionMatrix;
+				var savedSpriteSheet:TextureSheetBase = texture.sheet;
+				var savedClipSpaceMatrix:Matrix3D = clipSpaceMatrix;
+				var savedUvOffsetX:Number = uvOffsetX;
+				var savedUvOffsetY:Number = uvOffsetY;
+				var savedUvScaleX:Number = uvScaleX;
+				var savedUvScaleY:Number = uvScaleY;
+				viewProjectionMatrix = blurredTextureCam.getViewProjectionMatrix();
+				texture.sheet = null;
+				clipSpaceMatrix = blurredMatrix;
+				uvOffsetX = 0.0;
+				uvOffsetY = 0.0;
+				uvScaleX = 1.0;
+				uvScaleY = 1.0;
 
-			activeRenderToTexture = null;
-			var totalSteps:int;
-			var i:uint;
+				updateBlurKernel(MAX_BLUR, BLUR_DIRECTION_HORIZONTAL);
+				prepareForRender(context);
 
-			// BLUR X
-			totalSteps = Math.floor(blurX / MAX_BLUR);
+				activeRenderToTexture = null;
+				var totalSteps:int;
+				var i:uint;
 
-			for(i = 0; i < totalSteps; i++) {
-				renderBlur(context, startTri, numTris);
-			}
+				// BLUR X
+				totalSteps = Math.floor(blurX / MAX_BLUR);
 
-			if(blurX % MAX_BLUR != 0) {
-				updateBlurKernel(blurX % MAX_BLUR, BLUR_DIRECTION_HORIZONTAL);
+				for(i = 0; i < totalSteps; i++) {
+					renderBlur(context, startTri, numTris);
+				}
+
+				if(blurX % MAX_BLUR != 0) {
+					updateBlurKernel(blurX % MAX_BLUR, BLUR_DIRECTION_HORIZONTAL);
+					context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 2, programConstants, 2);
+
+					renderBlur(context, startTri, numTris);
+				}
+
+				// BLUR Y
+				context.setProgram(verticalShader.shader);
+				updateBlurKernel(MAX_BLUR, BLUR_DIRECTION_VERTICAL);
 				context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 2, programConstants, 2);
 
-				renderBlur(context, startTri, numTris);
+				totalSteps = Math.floor(blurY / MAX_BLUR);
+
+				for(i = 0; i < totalSteps; i++) {
+					renderBlur(context, startTri, numTris);
+				}
+
+				if(blurY % MAX_BLUR != 0) {
+					updateBlurKernel(blurY % MAX_BLUR, BLUR_DIRECTION_VERTICAL);
+					context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 2, programConstants, 2);
+
+					renderBlur(context, startTri, numTris);
+				}
+
+				context.setRenderToBackBuffer();
+
+				// FINAL PASS
+				viewProjectionMatrix = savedCamMatrix;
+				texture.sheet = savedSpriteSheet;
+				clipSpaceMatrix = savedClipSpaceMatrix;
+				uvOffsetX = savedUvOffsetX;
+				uvOffsetY = savedUvOffsetY;
+				uvScaleX = savedUvScaleX;
+				uvScaleY = savedUvScaleY;
+
+				updateBlurKernel(0, BLUR_DIRECTION_HORIZONTAL);
 			}
 
-			// BLUR Y
-			context.setProgram(verticalShader.shader);
-			updateBlurKernel(MAX_BLUR, BLUR_DIRECTION_VERTICAL);
-			context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 2, programConstants, 2);
-
-			totalSteps = Math.floor(blurY / MAX_BLUR);
-
-			for(i = 0; i < totalSteps; i++) {
-				renderBlur(context, startTri, numTris);
-			}
-
-			if(blurY % MAX_BLUR != 0) {
-				updateBlurKernel(blurY % MAX_BLUR, BLUR_DIRECTION_VERTICAL);
-				context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 2, programConstants, 2);
-
-				renderBlur(context, startTri, numTris);
-			}
-
-			context.setRenderToBackBuffer();
-
-			// FINAL PASS
-			viewProjectionMatrix = savedCamMatrix;
-			texture.sheet = savedSpriteSheet;
-			clipSpaceMatrix = savedClipSpaceMatrix;
-			uvOffsetX = savedUvOffsetX;
-			uvOffsetY = savedUvOffsetY;
-			uvScaleX = savedUvScaleX;
-			uvScaleY = savedUvScaleY;
-
-			updateBlurKernel(0, BLUR_DIRECTION_HORIZONTAL);
 			prepareForRender(context);
 
 			if(!blurX && !blurY) {
@@ -363,6 +374,7 @@ package de.nulldesign.nd2d.materials {
 		override public function handleDeviceLoss():void {
 			super.handleDeviceLoss();
 
+			invalidate = true;
 			blurredTexture.texture = null;
 			blurredTexture2.texture = null;
 		}
