@@ -59,16 +59,20 @@ package de.nulldesign.nd2d.display {
 			resizeCameraStage(w, h);
 		}
 
-		public function resizeCameraStage(w:Number, h:Number):void {
-			_sceneWidth = w;
-			_sceneHeight = h;
+		public function resizeCameraStage(width:Number, height:Number):void {
+			if(width == _sceneWidth && height == _sceneHeight) {
+				return;
+			}
+
+			_sceneWidth = width;
+			_sceneHeight = height;
 			invalidated = true;
 
-			orthoProjectionMatrix = makeOrtographicMatrix(0, w, 0, h);
+			orthoProjectionMatrix = makeOrtographicMatrix(0, width, 0, height);
 
 			var fovDegree:Number = 60.0;
 			var magicNumber:Number = Math.tan(VectorUtil.deg2rad(fovDegree * 0.5));
-			var projMat:Matrix3D = makeProjectionMatrix(0.1, 2000.0, fovDegree, w / h);
+			var projMat:Matrix3D = makeProjectionMatrix(0.1, 2000.0, fovDegree, width / height);
 			var lookAtPosition:Vector3D = new Vector3D(0.0, 0.0, 0.0);
 
 			// zEye distance from origin: sceneHeight * 0.5 / tan(a) 
@@ -117,9 +121,7 @@ package de.nulldesign.nd2d.display {
 		}
 
 		protected function makeFrustumMatrix(left:Number, right:Number, top:Number, bottom:Number, zNear:Number, zFar:Number):Matrix3D {
-			return new Matrix3D(
-				Vector.<Number>(
-				[
+			return new Matrix3D(Vector.<Number>([
 				(2 * zNear) / (right - left),
 				0,
 				(right + left) / (right - left),
@@ -139,9 +141,7 @@ package de.nulldesign.nd2d.display {
 				0,
 				(zNear * zFar) / (zNear - zFar),
 				0
-				]
-				)
-				);
+				]));
 		}
 
 		protected function makeOrtographicMatrix(left:Number, right:Number, top:Number, bottom:Number, zNear:Number = 0, zFar:Number = 1):Matrix3D {

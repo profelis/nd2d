@@ -88,13 +88,13 @@ package tests {
 			Style.LABEL_TEXT = 0xFFFFFF;
 
 			slider = new HUISlider(container, 0, 130, "uvOffsetX", sliderChanged);
-			slider.minimum = 0.0;
-			slider.maximum = 5.0;
+			slider.minimum = -2.0;
+			slider.maximum = 2.0;
 			slider.value = 0.0;
 
 			slider = new HUISlider(container, 0, 150, "uvOffsetY", sliderChanged);
-			slider.minimum = 0.0;
-			slider.maximum = 5.0;
+			slider.minimum = -2.0;
+			slider.maximum = 2.0;
 			slider.value = 0.0;
 
 			slider = new HUISlider(container, 0, 170, "uvScaleX", sliderChanged);
@@ -133,13 +133,13 @@ package tests {
 
 			repeatComboBox = new ComboBox(container, 10, 270, "texture repeat", ["repeat", "clamp"]);
 			repeatComboBox.width = 120;
-			repeatComboBox.selectedIndex = 0;
+			repeatComboBox.selectedIndex = 1;
 			repeatComboBox.addEventListener(Event.SELECT, onTextureOptionChange);
 			repeatComboBox.numVisibleItems = 2;
 
 			textureComboBox = new ComboBox(container, 10, 300, "texture image", ["crate", "sprites"]);
 			textureComboBox.width = 120;
-			textureComboBox.selectedIndex = 0;
+			textureComboBox.selectedIndex = 1;
 			textureComboBox.addEventListener(Event.SELECT, onTextureOptionChange);
 			textureComboBox.numVisibleItems = 2;
 

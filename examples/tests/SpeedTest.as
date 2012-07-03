@@ -40,7 +40,6 @@ package tests {
 	import de.nulldesign.nd2d.display.Sprite2DCloud;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
 	import de.nulldesign.nd2d.materials.texture.TextureSheet;
-	import de.nulldesign.nd2d.utils.NumberUtil;
 
 	import flash.events.Event;
 	import flash.geom.ColorTransform;
@@ -61,7 +60,7 @@ package tests {
 		private var selectedTestIdx:int = -1;
 		private var maxCloudSize:uint = 16383;
 
-		private var spritesPerFrame:uint = 128;
+		private var spritesPerFrame:uint = 32;
 
 		public function SpeedTest() {
 			mouseEnabled = false;
@@ -153,7 +152,7 @@ package tests {
 
 			// camera movement comes for "free", keep that in mind! it's
 			// faster to move the camera instead of hundreds of sprites
-			camera.x = Math.cos(timeSinceStartInSeconds * 2) * 50;
+			camera.x = Math.cos(timeSinceStartInSeconds) * 50;
 
 			if(Main.stats.measuredFPS >= stage.frameRate) {
 				var s:Sprite2D;
@@ -217,7 +216,7 @@ package tests {
 							case 4:
 							case 7:
 							case 10:  {
-								s.animation.play("blah", 1000 * Math.random());
+								s.animation.play("blah", 1000 * Math.random(), 1 + 4 * Math.random());
 								break;
 							}
 						}
@@ -233,10 +232,10 @@ package tests {
 					for(var p:Node2D = childFirst; p; p = p.next) {
 						if(p is Sprite2DBatch || p is Sprite2DCloud) {
 							for(var n:Node2D = p.childFirst; n; n = n.next) {
-								n.rotation += 10.0;
+								n.rotation += 100 * elapsed;
 							}
 						} else {
-							p.rotation += 10.0;
+							p.rotation += 100 * elapsed;
 						}
 					}
 					break;

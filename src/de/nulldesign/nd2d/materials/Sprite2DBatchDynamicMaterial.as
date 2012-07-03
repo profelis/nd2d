@@ -245,5 +245,11 @@ package de.nulldesign.nd2d.materials {
 				}
 			}
 		}
+
+		override public function dispose():void {
+			super.dispose();
+
+			programConstants = null;
+		}
 	}
 }
