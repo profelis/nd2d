@@ -17,22 +17,40 @@ package tests {
 
 		private var txt:TextField2D;
 
+		private var lastUpdate:Number = 0;
+
 		public function TextFieldTest() {
+			backgroundColor = 0x666666;
+
 			txt = new TextField2D();
-			txt.font = "Helvetica";
+			txt.font = "Webdings";
 			txt.textColor = 0xFFFFFF;
 			txt.size = 100.0;
 			txt.align = TextAlign.CENTER;
-			txt.text = "Hello <font color='#0000ff'>ND2D</font> Text!";
-			txt.filters = [new GlowFilter(0xff0000, 1.0, 8, 8, 10)];
+			txt.text = "Hello <font color='#FA8072'>N</font><font color='#98FB98'>D</font><font color='#6495ED'>2</font><font color='#F0E68C'>D</font> Text!";
+			txt.filters = [new GlowFilter(0x000000, 1.0, 8, 8, 10)];
+
 			addChild(txt);
 		}
 
 		override protected function step(elapsed:Number):void {
 			txt.x = stage.stageWidth >> 1;
 			txt.y = stage.stageHeight >> 1;
-			txt.rotation += 4.0;
-			txt.scaleX = txt.scaleY = NumberUtil.sin(timeSinceStartInSeconds);
+			txt.rotation += 50 * elapsed;
+			txt.scale = NumberUtil.sin(timeSinceStartInSeconds, 0.25, 1);
+
+			lastUpdate += elapsed;
+
+			// change font every 2.5 seconds
+			if(lastUpdate >= 2.5) {
+				lastUpdate = 0;
+
+				if(txt.font == "Webdings") {
+					txt.font = "Arial";
+				} else {
+					txt.font = "Webdings";
+				}
+			}
 		}
 	}
 }

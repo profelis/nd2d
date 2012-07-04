@@ -299,7 +299,6 @@ package de.nulldesign.nd2d.display {
 		}
 
 		public function redraw():void {
-
 			// Set text field properties.
 			_nativeTextField.defaultTextFormat = _textFormat;
 			_nativeTextField.htmlText = _text;
@@ -326,7 +325,6 @@ package de.nulldesign.nd2d.display {
 
 			switch(_type) {
 				case TextFieldType.DYNAMIC:  {
-
 					// Draw textfield onto bitmap data.
 					_textBitmapData = new BitmapData(
 						_nativeTextField.width + _borderPadding,
@@ -335,6 +333,10 @@ package de.nulldesign.nd2d.display {
 						0);
 
 					_textBitmapData.draw(_nativeTextField);
+
+					if(_textTexture) {
+						_textTexture.dispose();
+					}
 
 					_textTexture = Texture2D.textureFromBitmapData(_textBitmapData);
 					setTexture(_textTexture);
@@ -361,9 +363,10 @@ package de.nulldesign.nd2d.display {
 
 				// Since you can't select or input text in Stage3D, we "simulate" an input text field by
 				// adding a native TextField to the regular stage where the TextField2D would be located.
-				case TextFieldType.INPUT:
+				case TextFieldType.INPUT:  {
 					// TODO: Draw native text field on stage.
 					break;
+				}
 
 				default:  {
 					throw new Error("The type specified is not a member of flash.text.TextFieldType");
@@ -397,7 +400,5 @@ package de.nulldesign.nd2d.display {
 
 			super.dispose();
 		}
-
 	}
-
 }
