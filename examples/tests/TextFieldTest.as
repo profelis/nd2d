@@ -32,7 +32,7 @@ package tests {
 			txt.x = stage.stageWidth >> 1;
 			txt.y = stage.stageHeight >> 1;
 			txt.rotation += 4.0;
-			txt.scaleX = txt.scaleY = NumberUtil.sin0_1(timeSinceStartInSeconds);
+			txt.scaleX = txt.scaleY = NumberUtil.sin(timeSinceStartInSeconds);
 		}
 	}
 }

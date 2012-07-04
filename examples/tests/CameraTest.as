@@ -69,9 +69,9 @@ package tests {
 
 			for(var i:int = 0; i < 5; i++) {
 				s = new Sprite2D(tex);
-				s.x = NumberUtil.rndMinMax(100.0, stage.stageWidth - 100.0);
-				s.y = NumberUtil.rndMinMax(100.0, stage.stageHeight - 100.0);
-				s.rotation = NumberUtil.rndMinMax(0.0, 360.0);
+				s.x = NumberUtil.random(100.0, stage.stageWidth - 100.0);
+				s.y = NumberUtil.random(100.0, stage.stageHeight - 100.0);
+				s.rotation = NumberUtil.random(0.0, 360.0);
 				s.mouseEnabled = true;
 				s.addEventListener(MouseEvent.CLICK, spriteClick);
 				addChild(s);

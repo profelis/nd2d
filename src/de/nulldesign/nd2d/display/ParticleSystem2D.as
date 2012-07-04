@@ -79,8 +79,10 @@ package de.nulldesign.nd2d.display {
 
 		public function ParticleSystem2D(textureObject:Texture2D, maxCapacity:uint, preset:ParticleSystemPreset, burst:Boolean = false) {
 			super();
+
 			this.preset = preset;
 			this.burst = burst;
+
 			init(textureObject, maxCapacity);
 		}
 
@@ -118,23 +120,23 @@ package de.nulldesign.nd2d.display {
 				faceList[f++] = new Face(particles[i].v1, particles[i].v3, particles[i].v4, particles[i].uv1,
 					particles[i].uv3, particles[i].uv4);
 
-				var angle:Number = NumberUtil.rndMinMax(VectorUtil.deg2rad(preset.minEmitAngle),
+				var angle:Number = NumberUtil.random(VectorUtil.deg2rad(preset.minEmitAngle),
 					VectorUtil.deg2rad(preset.maxEmitAngle));
 
-				var speed:Number = NumberUtil.rndMinMax(preset.minSpeed, preset.maxSpeed);
+				var speed:Number = NumberUtil.random(preset.minSpeed, preset.maxSpeed);
 
 				var particleStartColor:Number = ColorUtil.mixColors(preset.startColor, preset.startColorVariance,
-					NumberUtil.rnd0_1());
+					NumberUtil.random());
 				var particleEndColor:Number = ColorUtil.mixColors(preset.endColor, preset.endColorVariance,
-					NumberUtil.rnd0_1());
+					NumberUtil.random());
 
-				initParticle(NumberUtil.rndMinMax(preset.minStartPosition.x, preset.maxStartPosition.x),
-					NumberUtil.rndMinMax(preset.minStartPosition.y, preset.maxStartPosition.y),
+				initParticle(NumberUtil.random(preset.minStartPosition.x, preset.maxStartPosition.x),
+					NumberUtil.random(preset.minStartPosition.y, preset.maxStartPosition.y),
 					Math.sin(angle) * speed, Math.cos(angle) * speed, particleStartColor, particleEndColor,
 					preset.startAlpha, preset.endAlpha,
-					NumberUtil.rndMinMax(preset.minStartSize, preset.maxStartSize),
-					NumberUtil.rndMinMax(preset.minEndSize, preset.maxEndSize),
-					NumberUtil.rndMinMax(preset.minLife, preset.maxLife), preset.spawnDelay * i);
+					NumberUtil.random(preset.minStartSize, preset.maxStartSize),
+					NumberUtil.random(preset.minEndSize, preset.maxEndSize),
+					NumberUtil.random(preset.minLife, preset.maxLife), preset.spawnDelay * i);
 			}
 
 			activeParticles = 1;

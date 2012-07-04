@@ -100,8 +100,8 @@ package tests {
 				for(i = 0; i < 50; i++) {
 					sprite = new Sprite2D(tex);
 
-					sprite.x = NumberUtil.rndMinMaxInt(-100, 100);
-					sprite.y = NumberUtil.rndMinMaxInt(-100, 100);
+					sprite.x = NumberUtil.random(-100, 100);
+					sprite.y = NumberUtil.random(-100, 100);
 					sprite.animation.play("blah", Math.random() * 100);
 
 					if(node is Sprite2DBatch) {

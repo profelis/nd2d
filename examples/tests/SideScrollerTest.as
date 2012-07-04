@@ -150,8 +150,8 @@ package tests {
 			treeSprites.addChild(new Sprite2D());
 
 			for(i = 0, node = treeSprites.childFirst; node; i++, node = node.next) {
-				node.x = NumberUtil.rndMinMax(0, 1024);
-				node.scaleX = node.scaleY = NumberUtil.rndMinMax(0.3, 1.5);
+				node.x = NumberUtil.random(0, 1024);
+				node.scale = NumberUtil.random(0.3, 1.5);
 				node.scaleX *= Math.random() > 0.5 ? 1 : -1;
 			}
 
@@ -291,9 +291,9 @@ package tests {
 
 				// left out
 				if(node.x < -node.width * 0.5 && scrollX < 0) {
-					node.x = camera.sceneWidth + NumberUtil.rndMinMax(300, 800);
+					node.x = camera.sceneWidth + NumberUtil.random(300, 800);
 				} else if(node.x - node.width * 0.5 > camera.sceneWidth && scrollX > 0) {
-					node.x = NumberUtil.rndMinMax(-300, -800);
+					node.x = NumberUtil.random(-300, -800);
 				}
 			}
 
@@ -304,9 +304,9 @@ package tests {
 
 				// left out
 				if(node.x < -node.width * 0.5 && scrollX < 0) {
-					node.x = camera.sceneWidth + NumberUtil.rndMinMax(300, 800);
+					node.x = camera.sceneWidth + NumberUtil.random(300, 800);
 				} else if(node.x - node.width * 0.5 > camera.sceneWidth && scrollX > 0) {
-					node.x = NumberUtil.rndMinMax(-300, -800);
+					node.x = NumberUtil.random(-300, -800);
 				}
 			}
 
@@ -334,5 +334,4 @@ package tests {
 		}
 	}
 }
-
 

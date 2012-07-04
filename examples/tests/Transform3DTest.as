@@ -77,11 +77,9 @@ package tests {
 			var i:uint = 0;
 
 			for(var node:Node2D = batchNode.childFirst; node; node = node.next, i++) {
-				node.rotationX = NumberUtil.sin0_1(timeSinceStartInSeconds * 0.8) * 180.0 * (Math.floor(i / 10) % 2 == 0 ? -1 : 1);
-				node.rotationY = NumberUtil.sin0_1(timeSinceStartInSeconds * 0.8) * 90.0 * (i % 2 == 0 ? 1 : -1);
+				node.rotationX = NumberUtil.sin(timeSinceStartInSeconds * 0.8, 0, 180) * (Math.floor(i / 10) % 2 ? 1 : -1);
+				node.rotationY = NumberUtil.sin(timeSinceStartInSeconds * 0.8, 0, 90) * (i % 2 ? -1 : 1);
 			}
 		}
 	}
 }
-
-

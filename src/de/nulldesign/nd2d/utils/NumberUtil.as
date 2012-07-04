@@ -33,48 +33,165 @@ package de.nulldesign.nd2d.utils {
 	public class NumberUtil {
 
 		/**
-		 * Mathematical modulo for negative numbers
+		 * Forces a number into a specified range.
+		 *
+		 * <pre>
+		 * // 1.5
+		 * trace( NumberUtil.clamp(1.5, 1.0, 2.0) );
+		 *
+		 * // 1
+		 * trace( NumberUtil.clamp(0.5, 1.0, 2.0) );
+		 *
+		 * // 2
+		 * trace( NumberUtil.clamp(2.5, 1.0, 2.0) );
+		 * </pre>
+		 *
+		 * @param value
+		 * @param min
+		 * @param max
+		 * @return
+		 */
+		public static function clamp(value:Number, min:Number, max:Number):Number {
+			return (value < min ? min : (value > max ? max : value));
+		}
+
+		/**
+		 * Mathematical modulo for negative numbers.
+		 *
+		 * <pre>
+		 * // -1
+		 * trace( -1 % 6 );
+		 *
+		 * // 5
+		 * trace( NumberUtil.mod(-1, 6) );
+		 * </pre>
+		 *
 		 * @param a
 		 * @param n
 		 * @return
-		 *
 		 */
 		public static function mod(a:Number, n:Number):Number {
 			return ((a % n + n) % n);
 		}
 
 		/**
-		 * Generates a random number between 0 and 1
-		 * @return
-		 */
-		public static function rnd0_1():Number {
-			return Math.random();
-		}
-
-		/**
-		 * Generates a random number between -1 and 1
-		 * @return
-		 */
-		public static function rndMinus1_1():Number {
-			return Math.random() - Math.random();
-		}
-
-		/**
-		 * Generates a random number between min and max
+		 * Generates a pseudo-random number between <em>min</em> and <em>max</em>.
+		 *
 		 * @param min
 		 * @param max
-		 * @return the random number
+		 * @return		Pseudo-random number.
 		 */
-		public static function rndMinMax(min:Number, max:Number):Number {
+		public static function random(min:Number = 0, max:Number = 1):Number {
 			return min + Math.random() * (max - min);
 		}
 
-		public static function rndMinMaxInt(min:int, max:int):int {
-			return Math.round(rndMinMax(min, max));
+		/**
+		 * Rounding to a specified precision.
+		 *
+		 * <pre>
+		 * // 1
+		 * trace( Math.round(1.23456) );
+		 *
+		 * // 1.235
+		 * trace( NumberUtil.round(1.23456, 3) );
+		 *
+		 * // 1.235
+		 * trace( NumberUtil.roundTo(1.23456, 0.001) );
+		 * </pre>
+		 *
+		 * @param number
+		 * @param precision
+		 * @return
+		 */
+		public static function round(number:Number, precision:uint = 0):Number {
+			if(!precision) {
+				return Math.round(number);
+			}
+
+			var decimals:Number = Math.pow(10, precision);
+
+			return Math.round(number * decimals) / decimals;
 		}
 
+		/**
+		 * Rounding to a specified increment.
+		 *
+		 * <pre>
+		 * // 1
+		 * trace( NumberUtil.roundTo(1.16, 0.5) );
+		 *
+		 * // 1.5
+		 * trace( NumberUtil.roundTo(1.47, 0.5) );
+		 *
+		 * // 2
+		 * trace( NumberUtil.roundTo(1.84, 0.5) );
+		 * </pre>
+		 *
+		 * @param number
+		 * @param increment
+		 * @return
+		 */
+		public static function roundTo(number:Number, increment:Number = 0):Number {
+			if(!increment) {
+				return number;
+			}
+
+			return Math.round(number / increment) * increment;
+		}
+
+		/**
+		 * Like Math.cos() but scales the result to specified <em>min</em> and
+		 * <em>max</em>.
+		 *
+		 * @param angleRadians
+		 * @param min
+		 * @param max
+		 * @return
+		 */
+		public static function cos(angleRadians:Number, min:Number = 0, max:Number = 1):Number {
+			var value:Number = 0.5 + 0.5 * Math.cos(angleRadians);
+
+			return min + value * (max - min);
+		}
+
+		/**
+		 * Like Math.sin() but scales the result to specified <em>min</em> and
+		 * <em>max</em>.
+		 *
+		 * @param angleRadians
+		 * @param min
+		 * @param max
+		 * @return
+		 */
+		public static function sin(angleRadians:Number, min:Number = 0, max:Number = 1):Number {
+			var value:Number = 0.5 + 0.5 * Math.sin(angleRadians);
+
+			return min + value * (max - min);
+		}
+
+		[Deprecated(replacement="NumberUtil.random()")]
+		public static function rnd0_1():Number {
+			return random();
+		}
+
+		[Deprecated(replacement="NumberUtil.random(-1, 1)")]
+		public static function rndMinus1_1():Number {
+			return random(-1, 1);
+		}
+
+		[Deprecated(replacement="NumberUtil.random(min, max)")]
+		public static function rndMinMax(min:Number, max:Number):Number {
+			return random(min, max);
+		}
+
+		[Deprecated(replacement="int(NumberUtil.random(min, max)) or Math.round(NumberUtil.random(min, max))")]
+		public static function rndMinMaxInt(min:int, max:int):int {
+			return Math.round(random(min, max));
+		}
+
+		[Deprecated(replacement="NumberUtil.sin(t)")]
 		public static function sin0_1(t:Number):Number {
-			return 0.5 + Math.sin(t) * 0.5;
+			return sin(t, 0, 1);
 		}
 	}
 }

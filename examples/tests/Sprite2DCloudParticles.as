@@ -43,8 +43,8 @@ package tests {
 				s.x = stage.mouseX;
 				s.y = stage.mouseY;
 				s.alpha = i / maxParticles;
-				s.vx = NumberUtil.rndMinMax(-5.0, 5.0);
-				s.vy = NumberUtil.rndMinMax(-5.0, 5.0);
+				s.vx = NumberUtil.random(-5.0, 5.0);
+				s.vy = NumberUtil.random(-5.0, 5.0);
 				s.scaleX = s.scaleY = 1.0;
 				spriteCloud.addChild(s);
 			}

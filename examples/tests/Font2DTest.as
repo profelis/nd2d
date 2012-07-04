@@ -92,7 +92,7 @@ package tests {
 				n.rotation = n.y;
 
 				if(i == 50) {
-					n.tint = ColorUtil.mixColors(0xff0000, 0x00ff00, NumberUtil.sin0_1(timeSinceStartInSeconds));
+					n.tint = ColorUtil.mixColors(0xff0000, 0x00ff00, NumberUtil.sin(timeSinceStartInSeconds));
 				}
 			}
 		}
