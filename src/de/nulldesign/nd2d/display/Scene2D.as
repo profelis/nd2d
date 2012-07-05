@@ -66,9 +66,10 @@ package de.nulldesign.nd2d.display {
 		 */
 		public function set backgroundColor(value:Number):void {
 			_backgroundColor = value;
-			br = (backgroundColor >> 16 & 255) / 255.0;
-			bg = (backgroundColor >> 8 & 255) / 255.0;
-			bb = (backgroundColor & 255) / 255.0;
+
+			br = (_backgroundColor >> 16 & 255) / 255.0;
+			bg = (_backgroundColor >> 8 & 255) / 255.0;
+			bb = (_backgroundColor & 255) / 255.0;
 		}
 
 		protected var sceneGUICamera:Camera2D = new Camera2D(1, 1);
@@ -98,7 +99,7 @@ package de.nulldesign.nd2d.display {
 				child.drawNode(context, camera);
 			}
 
-			// resize gui camera if needed
+			// resize GUI camera if needed
 			if(sceneGUICamera.sceneWidth != camera.sceneWidth) {
 				sceneGUICamera.resizeCameraStage(camera.sceneWidth, camera.sceneHeight);
 			}
@@ -108,10 +109,14 @@ package de.nulldesign.nd2d.display {
 		}
 
 		override internal function processMouseEvent(mousePosition:Vector3D, mouseEventType:String, cameraViewProjectionMatrix:Matrix3D, isTouchEvent:Boolean, touchPointID:int):Node2D {
-			var node:Node2D = super.processMouseEvent(mousePosition, mouseEventType, cameraViewProjectionMatrix, isTouchEvent, touchPointID);
-			var guiNode:Node2D = sceneGUILayer.processMouseEvent(mousePosition, mouseEventType, sceneGUICamera.getViewProjectionMatrix(), isTouchEvent, touchPointID);
+			var node:Node2D = sceneGUILayer.processMouseEvent(mousePosition, mouseEventType, sceneGUICamera.getViewProjectionMatrix(), isTouchEvent, touchPointID);
 
-			return guiNode ? guiNode : node;
+			// GUI has priority
+			if(!node) {
+				node = super.processMouseEvent(mousePosition, mouseEventType, cameraViewProjectionMatrix, isTouchEvent, touchPointID);
+			}
+
+			return node;
 		}
 
 		override internal function setStageAndCamRef(value:Stage, cameraValue:Camera2D):void {
