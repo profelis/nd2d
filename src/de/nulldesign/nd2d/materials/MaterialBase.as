@@ -54,7 +54,7 @@ package de.nulldesign.nd2d.materials {
 
 		public var clipSpaceMatrix:Matrix3D = new Matrix3D();
 
-		public var blendMode:NodeBlendMode = BlendModePresets.NORMAL_PREMULTIPLIED_ALPHA;
+		public var blendMode:NodeBlendMode = BlendModePresets.NORMAL;
 
 		public var needUploadVertexBuffer:Boolean = false;
 

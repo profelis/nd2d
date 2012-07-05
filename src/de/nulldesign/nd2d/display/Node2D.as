@@ -210,7 +210,7 @@ package de.nulldesign.nd2d.display {
 
 		public var tag:int = 0;
 
-		public var blendMode:NodeBlendMode = BlendModePresets.NORMAL_PREMULTIPLIED_ALPHA;
+		public var blendMode:NodeBlendMode = BlendModePresets.NORMAL;
 
 		public var mouseEnabled:Boolean = false;
 

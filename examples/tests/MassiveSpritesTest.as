@@ -79,7 +79,7 @@ package tests {
 			// CPU 122%, FPS 46
 			//spriteCloud = new Sprite2DBatch(tex);
 
-			spriteCloud.blendMode = BlendModePresets.ADD_PREMULTIPLIED_ALPHA;
+			spriteCloud.blendMode = BlendModePresets.ADD;
 
 			for(var i:int = 0; i < maxParticles; i++) {
 				s = new Sprite2D();

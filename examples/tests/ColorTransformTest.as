@@ -107,27 +107,27 @@ package tests {
 			s = addChild(new Sprite2D(tex)) as Sprite2D;
 			s.x = 200.0;
 			s.y = 240.0;
-			s.blendMode = BlendModePresets.BLEND;
+			s.blendMode = BlendModePresets.NORMAL_NO_PREMULTIPLIED_ALPHA;
 			s.animation.play("blah");
 
 			spriteCloud = addChild(new Sprite2DCloud(1, tex)) as Sprite2DCloud;
 			spriteCloud.x = 220.0;
 			spriteCloud.y = 240.0;
 			spriteCloud.addChild(new Sprite2D());
-			spriteCloud.blendMode = BlendModePresets.BLEND;
+			spriteCloud.blendMode = BlendModePresets.NORMAL_NO_PREMULTIPLIED_ALPHA;
 			Sprite2D(spriteCloud.childFirst).animation.play("blah");
 
 			spriteBatch = addChild(new Sprite2DBatch(tex)) as Sprite2DBatch;
 			spriteBatch.x = 240.0;
 			spriteBatch.y = 240.0;
 			spriteBatch.addChild(new Sprite2D());
-			spriteBatch.blendMode = BlendModePresets.BLEND;
+			spriteBatch.blendMode = BlendModePresets.NORMAL_NO_PREMULTIPLIED_ALPHA;
 			Sprite2D(spriteBatch.childFirst).animation.play("blah");
 
 			spriteWithMask = addChild(new Sprite2D(tex)) as Sprite2D;
 			spriteWithMask.x = 260.0;
 			spriteWithMask.y = 240.0;
-			spriteWithMask.blendMode = BlendModePresets.BLEND;
+			spriteWithMask.blendMode = BlendModePresets.NORMAL_NO_PREMULTIPLIED_ALPHA;
 			spriteWithMask.animation.play("blah");
 
 			maskSprite2 = new Sprite2D(maskTex);

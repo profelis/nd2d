@@ -84,7 +84,7 @@ package de.nulldesign.nd2d.display {
 				_height = texture.bitmapHeight;
 
 				hasPremultipliedAlphaTexture = texture.hasPremultipliedAlpha;
-				blendMode = texture.hasPremultipliedAlpha ? BlendModePresets.NORMAL_PREMULTIPLIED_ALPHA : BlendModePresets.NORMAL_NO_PREMULTIPLIED_ALPHA;
+				blendMode = texture.hasPremultipliedAlpha ? BlendModePresets.NORMAL : BlendModePresets.NORMAL_NO_PREMULTIPLIED_ALPHA;
 			}
 
 			animation.setTexture(value);
@@ -193,14 +193,12 @@ package de.nulldesign.nd2d.display {
 		}
 
 		public function updateAnimationDimensions():void {
-			if(texture && texture.sheet) {
-				if(_width != animation.frameRect.width || _height != animation.frameRect.height) {
-					invalidateClipSpace = true;
-				}
-
-				_width = animation.frameRect.width;
-				_height = animation.frameRect.height;
+			if(_width != animation.frameRect.width || _height != animation.frameRect.height) {
+				invalidateClipSpace = true;
 			}
+
+			_width = animation.frameRect.width;
+			_height = animation.frameRect.height;
 		}
 
 		override public function updateUV():void {

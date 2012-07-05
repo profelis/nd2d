@@ -116,7 +116,7 @@ package tests {
 			backgroundSprites2.addChild(new MorphGrid(16, 8, backgroundTex2, 0.04));
 
 			for(i = 0, node = backgroundSprites2.childFirst; node; i++, node = node.next) {
-				node.blendMode = BlendModePresets.ADD_PREMULTIPLIED_ALPHA;
+				node.blendMode = BlendModePresets.ADD;
 				node.x = (i + 0.5) * node.width;
 			}
 
@@ -137,7 +137,7 @@ package tests {
 			plasmaPreset.spawnDelay = 0.0;
 
 			wind = new ParticleSystem2D(Texture2D.textureFromBitmapData(new particleTexture2().bitmapData), 400, plasmaPreset);
-			wind.blendMode = BlendModePresets.ADD_PREMULTIPLIED_ALPHA;
+			wind.blendMode = BlendModePresets.ADD;
 			addChild(wind);
 
 			// trees
@@ -244,7 +244,7 @@ package tests {
 			plasma = new ParticleSystem2D(Texture2D.textureFromBitmapData(new particleTexture().bitmapData), 200, plasmaPreset);
 			plasma.x = 225;
 			plasma.y = -55;
-			plasma.blendMode = BlendModePresets.ADD_PREMULTIPLIED_ALPHA;
+			plasma.blendMode = BlendModePresets.ADD;
 
 			backgroundSprites2.childFirst.addChild(plasma);
 		}

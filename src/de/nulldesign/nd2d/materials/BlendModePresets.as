@@ -36,15 +36,13 @@ package de.nulldesign.nd2d.materials {
 
 	public class BlendModePresets {
 
-		public static const FILTER:NodeBlendMode = new NodeBlendMode(
-			Context3DBlendFactor.DESTINATION_COLOR,
+		// none
+		public static const NONE:NodeBlendMode = new NodeBlendMode(
+			Context3DBlendFactor.ONE,
 			Context3DBlendFactor.ZERO);
 
-		public static const MODULATE:NodeBlendMode = new NodeBlendMode(
-			Context3DBlendFactor.DESTINATION_COLOR,
-			Context3DBlendFactor.ZERO);
-
-		public static const NORMAL_PREMULTIPLIED_ALPHA:NodeBlendMode = new NodeBlendMode(
+		// normal
+		public static const NORMAL:NodeBlendMode = new NodeBlendMode(
 			Context3DBlendFactor.ONE,
 			Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA);
 
@@ -52,14 +50,31 @@ package de.nulldesign.nd2d.materials {
 			Context3DBlendFactor.SOURCE_ALPHA,
 			Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA);
 
-		public static const BLEND:NodeBlendMode = NORMAL_NO_PREMULTIPLIED_ALPHA;
+		// add
+		public static const ADD:NodeBlendMode = new NodeBlendMode(
+			Context3DBlendFactor.ONE,
+			Context3DBlendFactor.ONE);
 
 		public static const ADD_NO_PREMULTIPLIED_ALPHA:NodeBlendMode = new NodeBlendMode(
 			Context3DBlendFactor.SOURCE_ALPHA,
-			Context3DBlendFactor.ONE);
+			Context3DBlendFactor.DESTINATION_ALPHA);
 
-		public static const ADD_PREMULTIPLIED_ALPHA:NodeBlendMode = new NodeBlendMode(
+		// multiply
+		public static const MULTIPLY:NodeBlendMode = new NodeBlendMode(
+			Context3DBlendFactor.DESTINATION_COLOR,
+			Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA);
+
+		public static const MULTIPLY_NO_PREMULTIPLIED_ALPHA:NodeBlendMode = new NodeBlendMode(
+			Context3DBlendFactor.DESTINATION_COLOR,
+			Context3DBlendFactor.ZERO);
+
+		// screen
+		public static const SCREEN:NodeBlendMode = new NodeBlendMode(
 			Context3DBlendFactor.ONE,
+			Context3DBlendFactor.ONE_MINUS_SOURCE_COLOR);
+
+		public static const SCREEN_NO_PREMULTIPLIED_ALPHA:NodeBlendMode = new NodeBlendMode(
+			Context3DBlendFactor.SOURCE_ALPHA,
 			Context3DBlendFactor.ONE);
 	}
 }

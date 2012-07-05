@@ -88,8 +88,6 @@ package tests {
 			s3.scaleX = s3.scaleY = 4.0;
 			s2.addChild(s3);
 
-			s3.blendMode = BlendModePresets.NORMAL_PREMULTIPLIED_ALPHA;
-
 			s4 = new Sprite2D(tex);
 			//s4.rotationY = 70.0;
 			s5 = new Sprite2D(tex);
@@ -141,5 +139,3 @@ package tests {
 		}
 	}
 }
-
-
