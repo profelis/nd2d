@@ -83,7 +83,11 @@ package de.nulldesign.nd2d.materials {
 		}
 
 		public function set frame(value:uint):void {
-			if(_frame != value && texture && texture.sheet) {
+			if(!texture || !texture.sheet) {
+				return;
+			}
+
+			if(_frame != value) {
 				frameUpdated = true;
 				_frame = value % texture.sheet.frames.length;
 
@@ -96,9 +100,11 @@ package de.nulldesign.nd2d.materials {
 		}
 
 		public function setFrameByName(name:String):void {
-			if(texture && texture.sheet) {
-				frame = texture.sheet.getIndexForFrame(name);
+			if(!texture || !texture.sheet) {
+				return;
 			}
+
+			frame = texture.sheet.getIndexForFrame(name);
 		}
 
 		public function setFrameByAnimation(name:String, idx:uint = 0):void {

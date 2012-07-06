@@ -119,8 +119,8 @@ package de.nulldesign.nd2d.display {
 			return node;
 		}
 
-		override internal function setStageAndCamRef(value:Stage, cameraValue:Camera2D):void {
-			super.setStageAndCamRef(value, cameraValue);
+		override internal function setReferences(stage:Stage, camera:Camera2D, world:World2D, scene:Scene2D):void {
+			super.setReferences(stage, camera, world, scene);
 
 			if(camera) {
 				_width = camera.sceneWidth;
@@ -128,7 +128,7 @@ package de.nulldesign.nd2d.display {
 			}
 
 			if(sceneGUILayer) {
-				sceneGUILayer.setStageAndCamRef(value, sceneGUICamera);
+				sceneGUILayer.setReferences(stage, sceneGUICamera, world, scene);
 			}
 		}
 

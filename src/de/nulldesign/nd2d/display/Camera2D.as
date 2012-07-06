@@ -158,8 +158,8 @@ package de.nulldesign.nd2d.display {
 				invalidated = false;
 
 				viewMatrix.identity();
-				viewMatrix.appendTranslation(-sceneWidth / 2 - x, -sceneHeight / 2 - y, 0.0);
-				viewMatrix.appendScale(zoom, zoom, 1.0);
+				viewMatrix.appendTranslation(-sceneWidth * 0.5 - _x, -sceneHeight * 0.5 - _y, 0.0);
+				viewMatrix.appendScale(_zoom, _zoom, 1.0);
 				viewMatrix.appendRotation(_rotation, Vector3D.Z_AXIS);
 
 				renderMatrixOrtho.identity();

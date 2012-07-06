@@ -36,6 +36,7 @@ package de.nulldesign.nd2d.display {
 	import flash.display.Sprite;
 	import flash.display3D.Context3D;
 	import flash.display3D.Context3DCompareMode;
+	import flash.display3D.Context3DRenderMode;
 	import flash.display3D.Context3DTriangleFace;
 	import flash.events.ErrorEvent;
 	import flash.events.Event;
@@ -76,6 +77,9 @@ package de.nulldesign.nd2d.display {
 	 */
 	public class World2D extends Sprite {
 
+		public var antiAliasing:uint = 0;
+		public var enableErrorChecking:Boolean = false;
+
 		protected var camera:Camera2D = new Camera2D(1, 1);
 		protected var context3D:Context3D;
 		protected var stageID:uint;
@@ -84,26 +88,23 @@ package de.nulldesign.nd2d.display {
 		protected var isPaused:Boolean = false;
 		protected var bounds:Rectangle;
 		protected var lastFramesTime:Number = 0.0;
-		protected var enableErrorChecking:Boolean = false;
 
 		protected var renderMode:String;
 		protected var mousePosition:Vector3D = new Vector3D(0.0, 0.0, 0.0);
-		protected var antialiasing:uint = 2;
 		protected var deviceInitialized:Boolean = false;
 		protected var deviceWasLost:Boolean = false;
 
 		internal var topMostMouseNode:Node2D;
 
-		public static var isHardwareAccelerated:Boolean;
-
 		/**
 		 * Constructor of class world
+		 *
 		 * @param renderMode Context3DRenderMode (auto, software)
 		 * @param frameRate timer and the swf will be set to this framerate
 		 * @param bounds the worlds boundaries
 		 * @param stageID
 		 */
-		public function World2D(renderMode:String, frameRate:uint = 60, bounds:Rectangle = null, stageID:uint = 0) {
+		public function World2D(renderMode:String = Context3DRenderMode.AUTO, frameRate:uint = 60, bounds:Rectangle = null, stageID:uint = 0) {
 			this.renderMode = renderMode;
 			this.frameRate = frameRate;
 			this.bounds = bounds;
@@ -135,6 +136,8 @@ package de.nulldesign.nd2d.display {
 			stage.addEventListener(TouchEvent.TOUCH_BEGIN, touchEventHandler);
 			stage.addEventListener(TouchEvent.TOUCH_MOVE, touchEventHandler);
 			stage.addEventListener(TouchEvent.TOUCH_END, touchEventHandler);
+
+			Statistics.stage = stage;
 		}
 
 		protected function context3DError(e:ErrorEvent):void {
@@ -146,7 +149,15 @@ package de.nulldesign.nd2d.display {
 			context3D.enableErrorChecking = enableErrorChecking;
 			context3D.setCulling(Context3DTriangleFace.NONE);
 			context3D.setDepthTest(false, Context3DCompareMode.ALWAYS);
-			isHardwareAccelerated = context3D.driverInfo.toLowerCase().indexOf("software") == -1;
+
+			Statistics.driverInfo = context3D.driverInfo;
+			Statistics.isAccelerated = context3D.driverInfo.toLowerCase().indexOf("software") == -1;
+
+			// limit to 30fps in software mode
+			if(!Statistics.isAccelerated) {
+				frameRate = Math.min(30, frameRate);
+				stage.frameRate = frameRate;
+			}
 
 			resizeStage();
 
@@ -158,7 +169,7 @@ package de.nulldesign.nd2d.display {
 			deviceInitialized = true;
 
 			if(scene) {
-				scene.setStageAndCamRef(stage, camera);
+				scene.setReferences(stage, camera, this, scene);
 			}
 
 			dispatchEvent(new Event(Event.INIT));
@@ -229,7 +240,7 @@ package de.nulldesign.nd2d.display {
 			stage.stage3Ds[stageID].x = rect.x;
 			stage.stage3Ds[stageID].y = rect.y;
 
-			context3D.configureBackBuffer(rect.width, rect.height, antialiasing, false);
+			context3D.configureBackBuffer(rect.width, rect.height, antiAliasing, false);
 			camera.resizeCameraStage(rect.width, rect.height);
 		}
 
@@ -265,13 +276,13 @@ package de.nulldesign.nd2d.display {
 
 		public function setActiveScene(value:Scene2D):void {
 			if(scene) {
-				scene.setStageAndCamRef(null, null);
+				scene.setReferences(null, null, null, null);
 			}
 
-			this.scene = value;
+			scene = value;
 
 			if(scene) {
-				scene.setStageAndCamRef(stage, camera);
+				scene.setReferences(stage, camera, this, scene);
 			}
 		}
 

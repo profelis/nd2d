@@ -66,7 +66,7 @@ package de.nulldesign.nd2d.display {
 		}
 
 		override internal function drawNode(context:Context3D, camera:Camera2D):void {
-			context.setRenderToTexture(texture.getTexture(context), false, 2, 0);
+			context.setRenderToTexture(texture.getTexture(context), false, world.antiAliasing, 0);
 			context.clear(0.0, 0.0, 0.0, 0.0);
 
 			if(!isNaN(cameraOffsetX) && !isNaN(cameraOffsetY)) {

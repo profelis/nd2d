@@ -40,6 +40,7 @@ package tests {
 	import de.nulldesign.nd2d.display.Sprite2DCloud;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
 	import de.nulldesign.nd2d.materials.texture.TextureSheet;
+	import de.nulldesign.nd2d.utils.Statistics;
 
 	import flash.events.Event;
 	import flash.geom.ColorTransform;
@@ -57,10 +58,18 @@ package tests {
 		private var tex:Texture2D;
 		private var sheet:TextureSheet;
 
-		private var selectedTestIdx:int = -1;
 		private var maxCloudSize:uint = 16383;
 
 		private var spritesPerFrame:uint = 32;
+
+		private var isShared:Boolean;
+		private var isCloud:Boolean;
+		private var isBatch:Boolean;
+		private var isIndividual:Boolean;
+
+		private var isStatic:Boolean;
+		private var isAnimated:Boolean;
+		private var isMoving:Boolean;
 
 		public function SpeedTest() {
 			mouseEnabled = false;
@@ -96,6 +105,9 @@ package tests {
 			// remember to manually dispose it when no longer needed (see dispose function below)
 			tex = Texture2D.textureFromBitmapData(new spriteTexture().bitmapData, false);
 
+			// for maximum speed on low-end devices
+			//tex.textureOptions = TextureOption.QUALITY_LOW;
+
 			sheet = new TextureSheet(tex, 24, 32);
 			sheet.addAnimation("blah", [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], true, 5);
 		}
@@ -112,38 +124,61 @@ package tests {
 				spriteCloud = null;
 			}
 
-			while(childFirst) {
-				var sprite:Sprite2D = childFirst as Sprite2D;
+			while(childLast) {
+				var sprite:Sprite2D = childLast as Sprite2D;
 
 				// dispose individual textures
 				if(sprite && sprite.texture != tex) {
-					sprite.texture.bitmap.dispose();
-					sprite.texture.bitmap = null;
+					if(sprite.texture.bitmap) {
+						sprite.texture.bitmap.dispose();
+						sprite.texture.bitmap = null;
+					}
 
 					sprite.texture.sheet = null;
 				}
 
-				childFirst.dispose();
+				childLast.dispose();
 			}
 
-			selectedTestIdx = comboBox.selectedIndex;
+			var selectedIndex:int = comboBox.selectedIndex;
 
-			switch(selectedTestIdx) {
-				case 3:
-				case 4:
-				case 5:  {
-					spriteCloud = new Sprite2DCloud(maxCloudSize, tex);
-					addChild(spriteCloud);
-					break;
-				}
+			isShared = selectedIndex == 0
+				|| selectedIndex == 1
+				|| selectedIndex == 2;
 
-				case 6:
-				case 7:
-				case 8:  {
-					spriteBatch = new Sprite2DBatch(tex);
-					addChild(spriteBatch);
-					break;
-				}
+			isCloud = selectedIndex == 3
+				|| selectedIndex == 4
+				|| selectedIndex == 5;
+
+			isBatch = selectedIndex == 6
+				|| selectedIndex == 7
+				|| selectedIndex == 8;
+
+			isIndividual = selectedIndex == 9
+				|| selectedIndex == 10
+				|| selectedIndex == 11;
+
+			isStatic = selectedIndex == 0
+				|| selectedIndex == 3
+				|| selectedIndex == 6
+				|| selectedIndex == 9;
+
+			isAnimated = selectedIndex == 1
+				|| selectedIndex == 4
+				|| selectedIndex == 7
+				|| selectedIndex == 10;
+
+			isMoving = selectedIndex == 2
+				|| selectedIndex == 5
+				|| selectedIndex == 8
+				|| selectedIndex == 11;
+
+			if(isCloud) {
+				spriteCloud = new Sprite2DCloud(maxCloudSize, tex);
+				addChild(spriteCloud);
+			} else if(isBatch) {
+				spriteBatch = new Sprite2DBatch(tex);
+				addChild(spriteBatch);
 			}
 		}
 
@@ -154,91 +189,60 @@ package tests {
 			// faster to move the camera instead of hundreds of sprites
 			camera.x = Math.cos(timeSinceStartInSeconds) * 50;
 
-			if(Main.stats.measuredFPS >= stage.frameRate) {
-				var s:Sprite2D;
+			if(Statistics.fps >= stage.frameRate) {
+				var sprite:Sprite2D;
 
 				for(var i:uint = 0; i < spritesPerFrame; i++) {
-					switch(selectedTestIdx) {
-						case 0:
-						case 1:
-						case 2:  {
-							s = new Sprite2D(tex);
-							addChild(s);
-							break;
+					if(isShared) {
+						sprite = new Sprite2D(tex);
+						addChild(sprite);
+					} else if(isCloud) {
+						if(spriteCloud.numChildren >= maxCloudSize) {
+							spriteCloud = new Sprite2DCloud(maxCloudSize, tex);
+							addChild(spriteCloud);
 						}
 
-						case 3:
-						case 4:
-						case 5:  {
-							if(spriteCloud.numChildren >= maxCloudSize) {
-								spriteCloud = new Sprite2DCloud(maxCloudSize, tex);
-								addChild(spriteCloud);
-							}
+						sprite = new Sprite2D();
+						spriteCloud.addChild(sprite);
+					} else if(isBatch) {
+						sprite = new Sprite2D();
+						spriteBatch.addChild(sprite);
+					} else if(isIndividual) {
+						var rndTex:Texture2D = Texture2D.textureFromBitmapData(new spriteTexture().bitmapData, false);
+						rndTex.textureOptions = tex.textureOptions;
+						rndTex.setSheet(sheet);
 
-							s = new Sprite2D();
-							spriteCloud.addChild(s);
-							break;
-						}
+						// optional, just makes it more obvious
+						var color:ColorTransform = new ColorTransform();
+						color.redMultiplier = Math.random();
+						color.greenMultiplier = Math.random();
+						color.blueMultiplier = Math.random();
+						rndTex.bitmap.colorTransform(rndTex.bitmap.rect, color);
 
-						case 6:
-						case 7:
-						case 8:  {
-							s = new Sprite2D();
-							spriteBatch.addChild(s);
-							break;
-						}
-
-						case 9:
-						case 10:
-						case 11:  {
-							var rndTex:Texture2D = Texture2D.textureFromBitmapData(new spriteTexture().bitmapData, false);
-							rndTex.setSheet(sheet);
-
-							// optional, just makes it more obvious
-							var c:ColorTransform = new ColorTransform();
-							c.redMultiplier = Math.random();
-							c.greenMultiplier = Math.random();
-							c.blueMultiplier = Math.random();
-							rndTex.bitmap.colorTransform(rndTex.bitmap.rect, c);
-
-							s = new Sprite2D(rndTex);
-							addChild(s);
-							break;
-						}
+						sprite = new Sprite2D(rndTex);
+						addChild(sprite);
 					}
 
-					if(s) {
-						s.x = Math.round(camera.sceneWidth * Math.random());
-						s.y = Math.round(camera.sceneHeight * Math.random());
+					if(sprite) {
+						sprite.x = camera.sceneWidth * Math.random();
+						sprite.y = camera.sceneHeight * Math.random();
 
-						switch(selectedTestIdx) {
-							case 1:
-							case 4:
-							case 7:
-							case 10:  {
-								s.animation.play("blah", 1000 * Math.random(), 1 + 4 * Math.random());
-								break;
-							}
+						if(isAnimated) {
+							sprite.animation.play("blah", 1000 * Math.random(), 1 + 4 * Math.random());
 						}
 					}
 				}
 			}
 
-			switch(selectedTestIdx) {
-				case 2:
-				case 5:
-				case 8:
-				case 11:  {
-					for(var p:Node2D = childFirst; p; p = p.next) {
-						if(p is Sprite2DBatch || p is Sprite2DCloud) {
-							for(var n:Node2D = p.childFirst; n; n = n.next) {
-								n.rotation += 100 * elapsed;
-							}
-						} else {
-							p.rotation += 100 * elapsed;
+			if(isMoving) {
+				for(var node:Node2D = childFirst; node; node = node.next) {
+					if(node is Sprite2DBatch || node is Sprite2DCloud) {
+						for(var child:Node2D = node.childFirst; child; child = child.next) {
+							child.rotation += 100 * elapsed;
 						}
+					} else {
+						node.rotation += 100 * elapsed;
 					}
-					break;
 				}
 			}
 		}

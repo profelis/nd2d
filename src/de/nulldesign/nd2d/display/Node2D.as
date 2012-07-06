@@ -224,7 +224,7 @@ package de.nulldesign.nd2d.display {
 		private var localMouseMatrix:Matrix3D = new Matrix3D();
 
 		internal var mouseInNode:Boolean = false;
-		internal var mouseEvents:Vector.<Event>;
+		internal var mouseEvents:Vector.<Event> = new Vector.<Event>();
 
 		protected var _stage:Stage;
 
@@ -236,6 +236,10 @@ package de.nulldesign.nd2d.display {
 		 * [read-only] Use addChild() instead
 		 */
 		public var parent:Node2D;
+
+		public var world:World2D;
+
+		public var scene:Scene2D;
 
 		protected var _width:Number;
 
@@ -709,8 +713,9 @@ package de.nulldesign.nd2d.display {
 		 * @private
 		 */
 		internal function processMouseEvent(mousePosition:Vector3D, mouseEventType:String, cameraViewProjectionMatrix:Matrix3D, isTouchEvent:Boolean, touchPointID:int):Node2D {
-			mouseEvents = new Vector.<Event>();
 			var result:Node2D = null;
+
+			mouseEvents.length = 0;
 
 			if(mouseEnabled && mouseEventType) {
 				// transform mousepos to local coordinate system
@@ -720,10 +725,6 @@ package de.nulldesign.nd2d.display {
 				localMouseMatrix.invert();
 
 				localMouse = localMouseMatrix.transformVector(mousePosition);
-				localMouse.w = 1.0 / localMouse.w;
-				localMouse.x /= localMouse.w;
-				localMouse.y /= localMouse.w;
-				localMouse.z /= localMouse.w;
 
 				_mouseX = localMouse.x;
 				_mouseY = localMouse.y;
@@ -792,20 +793,39 @@ package de.nulldesign.nd2d.display {
 			return (_mouseX >= -halfWidth && _mouseX <= halfWidth && _mouseY >= -halfHeight && _mouseY <= halfHeight);
 		}
 
-		internal function setStageAndCamRef(value:Stage, cameraValue:Camera2D):void {
-			if(_stage != value) {
-				camera = cameraValue;
+		internal function setReferences(stage:Stage, camera:Camera2D, world:World2D, scene:Scene2D):void {
+			var propagate:Boolean = false;
 
-				if(value) {
-					_stage = value;
+			if(_stage != stage) {
+				propagate = true;
+
+				if(stage) {
+					_stage = stage;
 					dispatchEvent(new Event(Event.ADDED_TO_STAGE));
 				} else {
 					dispatchEvent(new Event(Event.REMOVED_FROM_STAGE));
-					_stage = value;
+					_stage = stage;
 				}
+			}
 
+			if(this.camera != camera) {
+				propagate = true;
+				this.camera = camera;
+			}
+
+			if(this.world != world) {
+				propagate = true;
+				this.world = world;
+			}
+
+			if(this.scene != scene) {
+				propagate = true;
+				this.scene = scene;
+			}
+
+			if(propagate) {
 				for(var child:Node2D = childFirst; child; child = child.next) {
-					child.setStageAndCamRef(value, cameraValue);
+					child.setReferences(stage, camera, world, scene);
 				}
 			}
 		}
@@ -861,11 +881,11 @@ package de.nulldesign.nd2d.display {
 		}
 
 		public function draw(context:Context3D, camera:Camera2D):void {
-			// overwrite in extended classes
+			// override in extended classes
 		}
 
 		protected function step(elapsed:Number):void {
-			// overwrite in extended classes
+			// override in extended classes
 		}
 
 		protected function unlinkChild(child:Node2D):void {
@@ -895,7 +915,7 @@ package de.nulldesign.nd2d.display {
 			}
 
 			child.parent = this;
-			child.setStageAndCamRef(_stage, camera);
+			child.setReferences(_stage, camera, world, scene);
 
 			if(childLast) {
 				child.prev = childLast;
@@ -927,7 +947,7 @@ package de.nulldesign.nd2d.display {
 			child.invalidateMatrix = true;
 			child.invalidateColors = true;
 			child.invalidateVisibility = true;
-			child.setStageAndCamRef(null, null);
+			child.setReferences(null, null, null, null);
 
 			childCount--;
 		}

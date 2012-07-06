@@ -35,11 +35,11 @@ package {
 	import de.nulldesign.nd2d.display.Scene2D;
 	import de.nulldesign.nd2d.display.World2D;
 	import de.nulldesign.nd2d.utils.NumberUtil;
+	import de.nulldesign.nd2d.utils.Statistics;
 
 	import flash.display.StageAlign;
 	import flash.display.StageDisplayState;
 	import flash.display.StageScaleMode;
-	import flash.display3D.Context3DRenderMode;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
 	import flash.filters.GlowFilter;
@@ -47,8 +47,6 @@ package {
 	import flash.text.TextFieldAutoSize;
 	import flash.text.TextFormat;
 	import flash.ui.Keyboard;
-
-	import net.hires.debug.Stats;
 
 	import tests.BatchTest;
 	import tests.BlurTest;
@@ -84,12 +82,11 @@ package {
 
 		private var scenes:Vector.<Class> = new Vector.<Class>();
 		private var activeSceneIdx:uint = 0;
-		public static var stats:Stats = new Stats();
 
 		private var sceneText:TextField;
 
 		public function Main() {
-			super(Context3DRenderMode.AUTO, 60);
+			super();
 		}
 
 		override protected function addedToStage(event:Event):void {
@@ -137,7 +134,7 @@ package {
 
 			addChild(sceneText);
 
-			addChild(stats);
+			Statistics.enabled = true;
 
 			stage.addEventListener(Event.RESIZE, stageResize);
 
@@ -186,7 +183,7 @@ package {
 
 			activeSceneIdx = NumberUtil.mod(activeSceneIdx + step, scenes.length);
 
-			sceneText.htmlText = "(<font color='#ff0000'>" + (activeSceneIdx + 1) + "</font>/" + scenes.length + ") " + getQualifiedClassName(scenes[activeSceneIdx]) + " // hit <font color='#ffff00'>[SPACE]</font> or use the <font color='#ffff00'>[ARROW]</font> keys to change demo. <font color='#ffff00'>[F]</font> for fullscreen and <font color='#ffff00'>[D]</font> to simulate a device loss.";
+			sceneText.htmlText = "[<font color='#ff0000'>" + (activeSceneIdx + 1) + "</font>/" + scenes.length + "] " + getQualifiedClassName(scenes[activeSceneIdx]) + " // Use <font color='#ffff00'>[SPACE]</font> or the <font color='#ffff00'>[ARROW]</font> keys to switch demos. <font color='#ffff00'>[F]</font> for fullscreen and <font color='#ffff00'>[D]</font> to simulate a device loss.";
 
 			var sceneClass:Class = scenes[activeSceneIdx] as Class;
 			var currentScene:Scene2D = new sceneClass();
@@ -197,19 +194,6 @@ package {
 		private function stageResize(e:Event):void {
 			sceneText.x = 5;
 			sceneText.y = stage.stageHeight - 5 - sceneText.textHeight;
-		}
-
-		override protected function mainLoop(e:Event):void {
-			super.mainLoop(e);
-			stats.update();
-		}
-
-		override protected function context3DCreated(e:Event):void {
-			super.context3DCreated(e);
-
-			if(context3D) {
-				stats.driverInfo = context3D.driverInfo;
-			}
 		}
 	}
 }
