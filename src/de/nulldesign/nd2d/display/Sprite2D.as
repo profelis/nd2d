@@ -135,6 +135,12 @@ package de.nulldesign.nd2d.display {
 				return;
 			}
 
+			if(culled) {
+				Statistics.spritesCulled++;
+
+				return;
+			}
+
 			material.blendMode = blendMode;
 			material.scrollRect = worldScrollRect;
 			material.modelMatrix = worldModelMatrix;
@@ -222,10 +228,10 @@ package de.nulldesign.nd2d.display {
 			clipSpaceMatrix.identity();
 
 			if(texture.sheet) {
-				clipSpaceMatrix.appendScale(animation.frameRect.width >> 1, animation.frameRect.height >> 1, 1.0);
+				clipSpaceMatrix.appendScale(animation.frameRect.width * 0.5, animation.frameRect.height * 0.5, 1.0);
 				clipSpaceMatrix.appendTranslation(animation.frameOffset.x, animation.frameOffset.y, 0.0);
 			} else {
-				clipSpaceMatrix.appendScale(texture.bitmapWidth >> 1, texture.bitmapHeight >> 1, 1.0);
+				clipSpaceMatrix.appendScale(texture.bitmapWidth * 0.5, texture.bitmapHeight * 0.5, 1.0);
 			}
 
 			clipSpaceMatrix.append(worldModelMatrix);

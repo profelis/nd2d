@@ -53,7 +53,12 @@ package de.nulldesign.nd2d.display {
 		protected var _sceneWidth:Number;
 		protected var _sceneHeight:Number;
 
-		protected var invalidated:Boolean = true;
+		protected var invalidate:Boolean = true;
+
+		/**
+		 * @private
+		 */
+		public var invalidateCount:uint;
 
 		public function Camera2D(w:Number, h:Number) {
 			resizeCameraStage(w, h);
@@ -64,9 +69,10 @@ package de.nulldesign.nd2d.display {
 				return;
 			}
 
+			invalidate = true;
+
 			_sceneWidth = width;
 			_sceneHeight = height;
-			invalidated = true;
 
 			orthoProjectionMatrix = makeOrtographicMatrix(0, width, 0, height);
 
@@ -154,8 +160,9 @@ package de.nulldesign.nd2d.display {
 		}
 
 		public function getViewProjectionMatrix(useOrthoMatrix:Boolean = true):Matrix3D {
-			if(invalidated) {
-				invalidated = false;
+			if(invalidate) {
+				invalidate = false;
+				invalidateCount++;
 
 				viewMatrix.identity();
 				viewMatrix.appendTranslation(-sceneWidth * 0.5 - _x, -sceneHeight * 0.5 - _y, 0.0);
@@ -187,7 +194,7 @@ package de.nulldesign.nd2d.display {
 		}
 
 		public function set x(value:Number):void {
-			invalidated = true;
+			invalidate = true;
 			_x = value;
 		}
 
@@ -198,7 +205,7 @@ package de.nulldesign.nd2d.display {
 		}
 
 		public function set y(value:Number):void {
-			invalidated = true;
+			invalidate = true;
 			_y = value;
 		}
 
@@ -209,7 +216,7 @@ package de.nulldesign.nd2d.display {
 		}
 
 		public function set zoom(value:Number):void {
-			invalidated = true;
+			invalidate = true;
 			_zoom = value;
 		}
 
@@ -220,7 +227,7 @@ package de.nulldesign.nd2d.display {
 		}
 
 		public function set rotation(value:Number):void {
-			invalidated = true;
+			invalidate = true;
 			_rotation = value;
 		}
 

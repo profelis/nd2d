@@ -618,6 +618,10 @@ package de.nulldesign.nd2d.display {
 
 			updateScrollRect();
 			updateClipSpace();
+
+			if(useFrustumCulling) {
+				updateCulling();
+			}
 		}
 
 		/**
@@ -707,6 +711,51 @@ package de.nulldesign.nd2d.display {
 				|| _uvOffsetY != 0.0
 				|| _uvScaleX != 1.0
 				|| _uvScaleY != 1.0;
+		}
+
+		/**
+		 * @private
+		 */
+		public var culled:Boolean = false;
+
+		/**
+		 * @private
+		 */
+		public var invalidateCullingCount:uint;
+
+		/**
+		 * If <code>true</code>, wont send it to the GPU at all if it's position
+		 * is off screen and not visible anyway.
+		 *
+		 * <p>Typically makes sense if GPU is slower than CPU or when not using
+		 * own culling system.</p>
+		 */
+		public var useFrustumCulling:Boolean = false;
+
+		/**
+		 * @private
+		 */
+		public function updateCulling():void {
+			var radius:int = Math.max(Math.abs(_width * _scaleX), Math.abs(_height * _scaleY)) >> 1;
+
+			invalidateCullingCount = camera.invalidateCount;
+
+			// matrix operations are heavy, fall back to a simple version
+			if(!camera.rotation) {
+				var pos:Vector3D = worldModelMatrix.position;
+
+				culled = pos.x + radius < camera.x
+					|| pos.y + radius < camera.y
+					|| pos.x - radius > camera.x + camera.sceneWidth
+					|| pos.y - radius > camera.y + camera.sceneHeight;
+			} else {
+				var point:Point = localToGlobal(new Point());
+
+				culled = point.x + radius < 0
+					|| point.y + radius < 0
+					|| point.x - radius > camera.sceneWidth
+					|| point.y - radius > camera.sceneHeight;
+			}
 		}
 
 		/**
@@ -869,6 +918,10 @@ package de.nulldesign.nd2d.display {
 				invalidateMatrix = true;
 			} else if(invalidateClipSpace) {
 				updateClipSpace();
+			}
+
+			if(useFrustumCulling && invalidateCullingCount != camera.invalidateCount) {
+				updateCulling();
 			}
 
 			draw(context, camera);

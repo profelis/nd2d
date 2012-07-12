@@ -215,44 +215,52 @@ package de.nulldesign.nd2d.materials {
 					childNode.updateClipSpace();
 				}
 
+				if(childNode.useFrustumCulling && childNode.invalidateCullingCount != camera.invalidateCount) {
+					childNode.updateCulling();
+				}
+
 				child = childNode as Sprite2D;
 
 				if(child) {
-					usesUV = child.usesUV;
-					usesColor = child.usesColor;
-					usesColorOffset = child.usesColorOffset;
+					if(!child.culled) {
+						usesUV = child.usesUV;
+						usesColor = child.usesColor;
+						usesColorOffset = child.usesColorOffset;
 
-					updateProgram(context);
+						updateProgram(context);
 
-					context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX,
-						constantsGlobal + batchLen * constantsPerMatrix, child.clipSpaceMatrix, true);
+						context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX,
+							constantsGlobal + batchLen * constantsPerMatrix, child.clipSpaceMatrix, true);
 
-					programConstants[idx++] = child.combinedColorTransform.redMultiplier;
-					programConstants[idx++] = child.combinedColorTransform.greenMultiplier;
-					programConstants[idx++] = child.combinedColorTransform.blueMultiplier;
-					programConstants[idx++] = child.combinedColorTransform.alphaMultiplier;
+						programConstants[idx++] = child.combinedColorTransform.redMultiplier;
+						programConstants[idx++] = child.combinedColorTransform.greenMultiplier;
+						programConstants[idx++] = child.combinedColorTransform.blueMultiplier;
+						programConstants[idx++] = child.combinedColorTransform.alphaMultiplier;
 
-					programConstants[idx++] = child.combinedColorTransform.redOffset;
-					programConstants[idx++] = child.combinedColorTransform.greenOffset;
-					programConstants[idx++] = child.combinedColorTransform.blueOffset;
-					programConstants[idx++] = child.combinedColorTransform.alphaOffset;
+						programConstants[idx++] = child.combinedColorTransform.redOffset;
+						programConstants[idx++] = child.combinedColorTransform.greenOffset;
+						programConstants[idx++] = child.combinedColorTransform.blueOffset;
+						programConstants[idx++] = child.combinedColorTransform.alphaOffset;
 
-					programConstants[idx++] = child.animation.frameUV.x;
-					programConstants[idx++] = child.animation.frameUV.y;
-					programConstants[idx++] = child.animation.frameUV.width;
-					programConstants[idx++] = child.animation.frameUV.height;
+						programConstants[idx++] = child.animation.frameUV.x;
+						programConstants[idx++] = child.animation.frameUV.y;
+						programConstants[idx++] = child.animation.frameUV.width;
+						programConstants[idx++] = child.animation.frameUV.height;
 
-					programConstants[idx++] = child.uvOffsetX;
-					programConstants[idx++] = child.uvOffsetY;
-					programConstants[idx++] = child.uvScaleX;
-					programConstants[idx++] = child.uvScaleY;
+						programConstants[idx++] = child.uvOffsetX;
+						programConstants[idx++] = child.uvOffsetY;
+						programConstants[idx++] = child.uvScaleX;
+						programConstants[idx++] = child.uvScaleY;
 
-					batchLen++;
+						batchLen++;
 
-					Statistics.sprites++;
+						Statistics.sprites++;
 
-					if(batchLen == BATCH_SIZE) {
-						drawCurrentBatch(context);
+						if(batchLen == BATCH_SIZE) {
+							drawCurrentBatch(context);
+						}
+					} else {
+						Statistics.spritesCulled++;
 					}
 				}
 
