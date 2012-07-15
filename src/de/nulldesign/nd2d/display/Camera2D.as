@@ -187,48 +187,56 @@ package de.nulldesign.nd2d.display {
 			zoom = 1;
 		}
 
-		private var _x:Number = 0.0;
+		protected var _x:Number = 0.0;
 
 		public function get x():Number {
 			return _x;
 		}
 
 		public function set x(value:Number):void {
-			invalidate = true;
-			_x = value;
+			if(_x != value) {
+				_x = value;
+				invalidate = true;
+			}
 		}
 
-		private var _y:Number = 0.0;
+		protected var _y:Number = 0.0;
 
 		public function get y():Number {
 			return _y;
 		}
 
 		public function set y(value:Number):void {
-			invalidate = true;
-			_y = value;
+			if(_y != value) {
+				_y = value;
+				invalidate = true;
+			}
 		}
 
-		private var _zoom:Number = 1.0;
+		protected var _zoom:Number = 1.0;
 
 		public function get zoom():Number {
 			return _zoom;
 		}
 
 		public function set zoom(value:Number):void {
-			invalidate = true;
-			_zoom = value;
+			if(_zoom != value) {
+				_zoom = value;
+				invalidate = true;
+			}
 		}
 
-		private var _rotation:Number = 0.0;
+		protected var _rotation:Number = 0.0;
 
 		public function get rotation():Number {
 			return _rotation;
 		}
 
 		public function set rotation(value:Number):void {
-			invalidate = true;
-			_rotation = value;
+			if(_rotation != value) {
+				_rotation = value;
+				invalidate = true;
+			}
 		}
 
 		public function get sceneWidth():Number {
