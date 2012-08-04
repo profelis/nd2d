@@ -39,12 +39,14 @@ package de.nulldesign.nd2d.display {
 	import de.nulldesign.nd2d.utils.ParticleSystemPreset;
 	import de.nulldesign.nd2d.utils.Statistics;
 	import de.nulldesign.nd2d.utils.VectorUtil;
+import de.nulldesign.nd2d.utils.nd2d;
 
-	import flash.display3D.Context3D;
+import flash.display3D.Context3D;
 	import flash.events.Event;
 	import flash.geom.Point;
 	import flash.utils.getTimer;
 
+    use namespace nd2d;
 	/**
 	 * Dispatched when the system's burst is finished
 	 * @eventType flash.events.Event.COMPLETE

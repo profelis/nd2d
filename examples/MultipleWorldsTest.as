@@ -78,12 +78,12 @@ package {
 
 			var s1:Sprite2D = new Sprite2D(tex1);
 			s1.position = new Vector3D(100.0, 100.0);
-			s1.animation.play("blah");
+			s1._animation.play("blah");
 			scene1.addChild(s1);
 
 			var s2:Sprite2D = new Sprite2D(tex2);
 			s2.position = new Vector3D(100.0, 100.0);
-			s2.animation.play("blah");
+			s2._animation.play("blah");
 			scene2.addChild(s2);
 
 			world1.start();

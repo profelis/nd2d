@@ -33,7 +33,9 @@ package tests.objects {
 	import de.nulldesign.nd2d.display.Grid2D;
 	import de.nulldesign.nd2d.geom.Vertex;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
+    import de.nulldesign.nd2d.utils.nd2d;
 
+    use namespace nd2d;
 	public class MorphGrid extends Grid2D {
 
 		private var strength:Number;
@@ -64,7 +66,7 @@ package tests.objects {
 					newX = v.x + v.x * Math.sin(v.length * 10.0 + timeSinceStartInSeconds * 2.0) * strength;
 					newY = v.y + v.y * Math.cos(v.length * 10.0 + timeSinceStartInSeconds * 2.0) * strength;
 
-					geometry.modifyVertexInBuffer(v.bufferIdx, newX, newY);
+					_geometry.modifyVertexInBuffer(v.bufferIdx, newX, newY);
 				}
 			}
 		}

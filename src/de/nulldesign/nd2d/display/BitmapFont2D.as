@@ -32,9 +32,11 @@ package de.nulldesign.nd2d.display {
 
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
 	import de.nulldesign.nd2d.materials.texture.TextureSheet;
+    import de.nulldesign.nd2d.utils.nd2d;
 
-	import flashx.textLayout.formats.TextAlign;
+    import flashx.textLayout.formats.TextAlign;
 
+    use namespace nd2d;
 	/**
 	 * BitmapFont2D
 	 * <p>Displays monospaced fonts from a bitmap source.</p>
@@ -127,7 +129,7 @@ package de.nulldesign.nd2d.display {
 					frame = Math.max(0, charString.indexOf(curChar));
 
 					s = Sprite2D(node);
-					s.animation.frame = frame;
+					s._animation.frame = frame;
 
 					s.x = startX + charSpacing * i;
 					s.y = 0.0;

@@ -31,10 +31,12 @@
 package de.nulldesign.nd2d.display {
 
 	import de.nulldesign.nd2d.utils.VectorUtil;
+    import de.nulldesign.nd2d.utils.nd2d;
 
-	import flash.geom.Matrix3D;
+    import flash.geom.Matrix3D;
 	import flash.geom.Vector3D;
 
+    use namespace nd2d;
 	/**
 	 * Camera2D
 	 * <p>The World2D object contains an instance of a Camera2D. Use the cameras
@@ -59,7 +61,7 @@ package de.nulldesign.nd2d.display {
 			resizeCameraStage(w, h);
 		}
 
-		public function resizeCameraStage(width:Number, height:Number):void {
+		nd2d function resizeCameraStage(width:Number, height:Number):void {
 			if(width == _sceneWidth && height == _sceneHeight) {
 				return;
 			}

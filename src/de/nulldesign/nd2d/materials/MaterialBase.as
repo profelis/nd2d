@@ -36,34 +36,35 @@ package de.nulldesign.nd2d.materials {
     import de.nulldesign.nd2d.materials.shader.Shader2D;
     import de.nulldesign.nd2d.utils.NodeBlendMode;
     import de.nulldesign.nd2d.utils.Statistics;
+    import de.nulldesign.nd2d.utils.nd2d;
 
     import flash.display3D.Context3D;
     import flash.geom.Matrix3D;
     import flash.geom.Rectangle;
 
+    use namespace nd2d;
+
     public class MaterialBase {
 
-		public var viewProjectionMatrix:Matrix3D;
+		nd2d var viewProjectionMatrix:Matrix3D;
 
-		public var scrollRect:Rectangle;
+        nd2d var scrollRect:Rectangle;
 
-		public var modelMatrix:Matrix3D;
+        nd2d var modelMatrix:Matrix3D;
 
-		public var clipSpaceMatrix:Matrix3D = new Matrix3D();
+        nd2d var clipSpaceMatrix:Matrix3D = new Matrix3D();
 
-		public var blendMode:NodeBlendMode = BlendModePresets.NORMAL;
-
-		public var needUploadVertexBuffer:Boolean = false;
+        nd2d var blendMode:NodeBlendMode = BlendModePresets.NORMAL;
 
 		protected var shaderData:Shader2D;
 
-		public var usesUV:Boolean = false;
+        nd2d var usesUV:Boolean = false;
 		protected var lastUsesUV:Boolean = false;
 
-		public var usesColor:Boolean = false;
+        nd2d var usesColor:Boolean = false;
 		protected var lastUsesColor:Boolean = false;
 
-		public var usesColorOffset:Boolean = false;
+        nd2d var usesColorOffset:Boolean = false;
 		protected var lastUsesColorOffset:Boolean = false;
 
         public static const VERTEX_POSITION:String = "PB3D_POSITION";
@@ -165,8 +166,6 @@ package de.nulldesign.nd2d.materials {
 
 		public function handleDeviceLoss():void {
 			shaderData = null;
-
-			needUploadVertexBuffer = true;
 		}
 
 		public function dispose():void {

@@ -36,11 +36,14 @@ package de.nulldesign.nd2d.materials {
     import de.nulldesign.nd2d.geom.Vertex;
     import de.nulldesign.nd2d.materials.shader.ShaderCache;
     import de.nulldesign.nd2d.materials.texture.Texture2D;
+    import de.nulldesign.nd2d.utils.nd2d;
 
     import flash.display3D.Context3D;
     import flash.display3D.Context3DProgramType;
     import flash.display3D.Context3DVertexBufferFormat;
     import flash.geom.Point;
+
+    use namespace nd2d;
 
     public class ParticleSystemMaterial extends MaterialBase {
 
@@ -126,8 +129,8 @@ package de.nulldesign.nd2d.materials {
 			"temp0 = sample(texCoord, texture0);" +
 			"output = temp0 * colorMultiplier;";
 
-		public var gravity:Point;
-		public var currentTime:Number;
+        nd2d var gravity:Point;
+		nd2d var currentTime:Number;
 
 		protected var burst:Boolean;
 		protected var texture:Texture2D;

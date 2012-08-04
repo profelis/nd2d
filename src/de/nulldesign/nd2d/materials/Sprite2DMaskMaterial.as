@@ -35,12 +35,15 @@ package de.nulldesign.nd2d.materials {
     import de.nulldesign.nd2d.geom.Vertex;
     import de.nulldesign.nd2d.materials.shader.ShaderCache;
     import de.nulldesign.nd2d.materials.texture.Texture2D;
+    import de.nulldesign.nd2d.utils.nd2d;
 
     import flash.display3D.Context3D;
     import flash.display3D.Context3DProgramType;
     import flash.display3D.Context3DVertexBufferFormat;
     import flash.geom.Matrix3D;
     import flash.geom.Rectangle;
+
+    use namespace nd2d;
 
     public class Sprite2DMaskMaterial extends Sprite2DMaterial {
 
@@ -92,9 +95,9 @@ package de.nulldesign.nd2d.materials {
 			// texture * mask
 			"output = temp0 * temp3;";
 
-		public var maskAlpha:Number;
-		public var maskTexture:Texture2D;
-		public var maskModelMatrix:Matrix3D;
+		nd2d var maskAlpha:Number;
+        nd2d var maskTexture:Texture2D;
+        nd2d var maskModelMatrix:Matrix3D;
 
 		protected var maskClipSpaceMatrix:Matrix3D = new Matrix3D();
 

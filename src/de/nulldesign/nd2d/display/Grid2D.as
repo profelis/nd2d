@@ -34,7 +34,9 @@ package de.nulldesign.nd2d.display {
 	import de.nulldesign.nd2d.geom.UV;
 	import de.nulldesign.nd2d.geom.Vertex;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
+import de.nulldesign.nd2d.utils.nd2d;
 
+    use namespace nd2d;
 	/**
 	 * <p>Works the same as the Sprite2D, except that it has more triangles.</p>
 	 * You can modify the individual vertices to achieve distortion or wave
@@ -57,7 +59,7 @@ package de.nulldesign.nd2d.display {
 		}
 
 		protected function generateGrid():void {
-			geometry.faceList = new Vector.<Face>();
+			_geometry.faceList = new Vector.<Face>();
 
             vertexList = new Vector.<Vertex>();
 
@@ -92,12 +94,12 @@ package de.nulldesign.nd2d.display {
 
 			for(i = 1, m = ar.length; i < m; i++) {
 				for(var j:int = 1, n:int = ar[i].length; j < n; j++) {
-					geometry.faceList.push(new Face(ar[i - 1][j - 1], ar[i - 1][j], ar[i][j], uv[i - 1][j - 1], uv[i - 1][j], uv[i][j]));
-					geometry.faceList.push(new Face(ar[i - 1][j - 1], ar[i][j], ar[i][j - 1], uv[i - 1][j - 1], uv[i][j], uv[i][j - 1]));
+					_geometry.faceList.push(new Face(ar[i - 1][j - 1], ar[i - 1][j], ar[i][j], uv[i - 1][j - 1], uv[i - 1][j], uv[i][j]));
+					_geometry.faceList.push(new Face(ar[i - 1][j - 1], ar[i][j], ar[i][j - 1], uv[i - 1][j - 1], uv[i][j], uv[i][j - 1]));
 				}
 			}
 
-            geometry.needUpdateVertexBuffer = true;
+            _geometry.needUpdateVertexBuffer = true;
 
 		}
 

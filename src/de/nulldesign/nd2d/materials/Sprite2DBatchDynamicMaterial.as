@@ -35,9 +35,12 @@ package de.nulldesign.nd2d.materials {
     import de.nulldesign.nd2d.materials.texture.Texture2D;
     import de.nulldesign.nd2d.utils.NodeBlendMode;
     import de.nulldesign.nd2d.utils.Statistics;
+    import de.nulldesign.nd2d.utils.nd2d;
 
     import flash.display3D.Context3D;
     import flash.display3D.Context3DProgramType;
+
+    use namespace nd2d;
 
     public class Sprite2DBatchDynamicMaterial extends Sprite2DBatchMaterial {
 
@@ -89,7 +92,6 @@ package de.nulldesign.nd2d.materials {
 			currentTexture = lastTexture = texture;
 			currentBlendMode = lastBlendMode = blendMode;
 
-            geometry.generateBatch(BATCH_SIZE);
 			prepareForRender(context, geometry);
 
 			processAndRenderNodes(context, geometry, childList);
@@ -155,12 +157,12 @@ package de.nulldesign.nd2d.materials {
 
 				if(child) {
 					// we can only batch Sprite2DMaterial as we don't know about the changes of derivates
-					if(!child.material || Object(child.material).constructor == Sprite2DMaterial) {
+					if(!child._material || Object(child._material).constructor == Sprite2DMaterial) {
 						usesUV = child.usesUV;
 						usesColor = child.usesColor;
 						usesColorOffset = child.usesColorOffset;
 
-						currentTexture = child.texture;
+						currentTexture = child._texture;
 						currentBlendMode = child.blendMode;
 
 						if(needInit) {
@@ -182,10 +184,10 @@ package de.nulldesign.nd2d.materials {
 						programConstants[idx++] = child.combinedColorTransform.blueOffset;
 						programConstants[idx++] = child.combinedColorTransform.alphaOffset;
 
-						programConstants[idx++] = child.animation.frameUV.x;
-						programConstants[idx++] = child.animation.frameUV.y;
-						programConstants[idx++] = child.animation.frameUV.width;
-						programConstants[idx++] = child.animation.frameUV.height;
+						programConstants[idx++] = child._animation.frameUV.x;
+						programConstants[idx++] = child._animation.frameUV.y;
+						programConstants[idx++] = child._animation.frameUV.width;
+						programConstants[idx++] = child._animation.frameUV.height;
 
 						programConstants[idx++] = child.uvOffsetX;
 						programConstants[idx++] = child.uvOffsetY;

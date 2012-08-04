@@ -37,9 +37,11 @@ package de.nulldesign.nd2d.display {
 	import de.nulldesign.nd2d.materials.SpriteAnimation;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
 	import de.nulldesign.nd2d.utils.Statistics;
+    import de.nulldesign.nd2d.utils.nd2d;
 
-	import flash.display3D.Context3D;
+    import flash.display3D.Context3D;
 
+    use namespace nd2d;
 	/**
 	 * <p>2D sprite class</p>
 	 * One draw call is used per sprite.
@@ -49,11 +51,11 @@ package de.nulldesign.nd2d.display {
 	public class Sprite2D extends Node2D {
 
 		protected var mask:Sprite2D;
-        public var geometry:Geometry;
+        nd2d var _geometry:Geometry;
 
-		public var texture:Texture2D;
-		public var animation:SpriteAnimation;
-		public var material:Sprite2DMaterial;
+		nd2d var _texture:Texture2D;
+		nd2d var _animation:SpriteAnimation;
+		nd2d var _material:Sprite2DMaterial;
 
 		public var usePixelPerfectHitTest:Boolean = false;
 
@@ -62,8 +64,8 @@ package de.nulldesign.nd2d.display {
 		 * @param textureObject Texture2D
 		 */
 		public function Sprite2D(textureObject:Texture2D = null) {
-			geometry = Geometry.createQuad();
-			animation = new SpriteAnimation(this);
+			_geometry = Geometry.createQuad();
+			_animation = new SpriteAnimation(this);
 
 			if(textureObject) {
 				setMaterial(new Sprite2DMaterial());
@@ -76,17 +78,17 @@ package de.nulldesign.nd2d.display {
 		 * @param Texture2D
 		 */
 		public function setTexture(value:Texture2D):void {
-			texture = value;
+			_texture = value;
 
-			if(texture) {
-				_width = texture.bitmapWidth;
-				_height = texture.bitmapHeight;
+			if(_texture) {
+				_width = _texture.bitmapWidth;
+				_height = _texture.bitmapHeight;
 
-				hasPremultipliedAlphaTexture = texture.hasPremultipliedAlpha;
-				blendMode = texture.hasPremultipliedAlpha ? BlendModePresets.NORMAL : BlendModePresets.NORMAL_NO_PREMULTIPLIED_ALPHA;
+				hasPremultipliedAlphaTexture = _texture.hasPremultipliedAlpha;
+				blendMode = _texture.hasPremultipliedAlpha ? BlendModePresets.NORMAL : BlendModePresets.NORMAL_NO_PREMULTIPLIED_ALPHA;
 			}
 
-			animation.setTexture(value);
+			_animation.setTexture(value);
 		}
 
 		/**
@@ -95,12 +97,12 @@ package de.nulldesign.nd2d.display {
 		 * @param Sprite2DMaterial
 		 */
 		public function setMaterial(value:Sprite2DMaterial):void {
-			if(material) {
-				material.dispose();
+			if(_material) {
+				_material.dispose();
 			}
 
-			this.material = value;
-            geometry.setMaterial(value);
+			this._material = value;
+            _geometry.setMaterial(value);
 		}
 
 		/**
@@ -125,47 +127,45 @@ package de.nulldesign.nd2d.display {
 		override internal function stepNode(elapsed:Number, timeSinceStartInSeconds:Number):void {
 			super.stepNode(elapsed, timeSinceStartInSeconds);
 
-			if(texture && texture.sheet) {
-				animation.update(elapsed);
+			if(_texture && _texture.sheet) {
+				_animation.update(elapsed);
 			}
 		}
 
 		override public function draw(context:Context3D, camera:Camera2D):void {
-			if(!material) {
+			if(!_material) {
 				return;
 			}
 
-            geometry.update(context);
+            _geometry.update(context);
 
-			material.blendMode = blendMode;
-			material.scrollRect = worldScrollRect;
-			material.modelMatrix = worldModelMatrix;
-			material.clipSpaceMatrix = clipSpaceMatrix;
-			material.viewProjectionMatrix = camera.getViewProjectionMatrix(false);
-			material.colorTransform = combinedColorTransform;
-			material.animation = animation;
-			material.texture = texture;
-			material.uvOffsetX = uvOffsetX;
-			material.uvOffsetY = uvOffsetY;
-			material.uvScaleX = uvScaleX;
-			material.uvScaleY = uvScaleY;
-			material.usesUV = usesUV;
-			material.usesColor = usesColor;
-			material.usesColorOffset = usesColorOffset;
+			_material.blendMode = blendMode;
+			_material.scrollRect = worldScrollRect;
+			_material.modelMatrix = worldModelMatrix;
+			_material.clipSpaceMatrix = clipSpaceMatrix;
+			_material.viewProjectionMatrix = camera.getViewProjectionMatrix(false);
+			_material.colorTransform = combinedColorTransform;
+			_material.animation = _animation;
+			_material.texture = _texture;
+			_material.uvOffsetX = uvOffsetX;
+			_material.uvOffsetY = uvOffsetY;
+			_material.uvScaleX = uvScaleX;
+			_material.uvScaleY = uvScaleY;
+			_material.usesUV = usesUV;
+			_material.usesColor = usesColor;
+			_material.usesColorOffset = usesColorOffset;
 
 			if(mask) {
 				if(mask.invalidateMatrix) {
 					mask.updateLocalMatrix();
 				}
-
-				with(material as Sprite2DMaskMaterial) {
-					maskAlpha = mask.alpha;
-					maskTexture = mask.texture;
-					maskModelMatrix = mask.localModelMatrix;
-				}
+                var ms:Sprite2DMaskMaterial = _material as Sprite2DMaskMaterial;
+                ms.maskAlpha = mask.alpha;
+                ms.maskTexture = mask._texture;
+                ms.maskModelMatrix = mask.localModelMatrix;
 			}
 
-			material.render(context, geometry);
+			_material.render(context, _geometry);
 
 			Statistics.sprites++;
 		}
@@ -179,55 +179,55 @@ package de.nulldesign.nd2d.display {
 		 * @return if the sprite was hit or not
 		 */
 		override protected function hitTest():Boolean {
-			if(usePixelPerfectHitTest && texture.bitmap) {
+			if(usePixelPerfectHitTest && _texture.bitmap) {
 				var xCoord:Number = _mouseX + (_width >> 1);
 				var yCoord:Number = _mouseY + (_height >> 1);
 
-				if(texture.sheet) {
-					xCoord += animation.frameRect.x;
-					yCoord += animation.frameRect.y;
+				if(_texture.sheet) {
+					xCoord += _animation.frameRect.x;
+					yCoord += _animation.frameRect.y;
 				}
 
-				return super.hitTest() && (texture.bitmap.getPixel32(xCoord, yCoord) >> 24 & 0xFF) > 0;
+				return super.hitTest() && (_texture.bitmap.getPixel32(xCoord, yCoord) >> 24 & 0xFF) > 0;
 			}
 
 			return super.hitTest();
 		}
 
 		public function updateAnimationDimensions():void {
-			if(_width != animation.frameRect.width || _height != animation.frameRect.height) {
+			if(_width != _animation.frameRect.width || _height != _animation.frameRect.height) {
 				invalidateClipSpace = true;
 			}
 
-			_width = animation.frameRect.width;
-			_height = animation.frameRect.height;
+			_width = _animation.frameRect.width;
+			_height = _animation.frameRect.height;
 		}
 
 		override public function updateUV():void {
 			super.updateUV();
 
 			// fall back to cheap uv scroll
-			if(usesUV && texture && !texture.sheet) {
-				usesUV = (texture.bitmapWidth != texture.textureWidth && texture.bitmapHeight != texture.textureHeight)
-					|| (texture.bitmapWidth != texture.textureWidth && _uvOffsetX != 0.0 && _uvScaleX != 1.0)
-					|| (texture.bitmapHeight != texture.textureHeight && _uvOffsetY != 0.0 && _uvScaleY != 1.0);
+			if(usesUV && _texture && !_texture.sheet) {
+				usesUV = (_texture.bitmapWidth != _texture.textureWidth && _texture.bitmapHeight != _texture.textureHeight)
+					|| (_texture.bitmapWidth != _texture.textureWidth && _uvOffsetX != 0.0 && _uvScaleX != 1.0)
+					|| (_texture.bitmapHeight != _texture.textureHeight && _uvOffsetY != 0.0 && _uvScaleY != 1.0);
 			}
 		}
 
 		override public function updateClipSpace():void {
 			invalidateClipSpace = false;
 
-			if(!texture) {
+			if(!_texture) {
 				return;
 			}
 
 			clipSpaceMatrix.identity();
 
-			if(texture.sheet) {
-				clipSpaceMatrix.appendScale(animation.frameRect.width >> 1, animation.frameRect.height >> 1, 1.0);
-				clipSpaceMatrix.appendTranslation(animation.frameOffset.x, animation.frameOffset.y, 0.0);
+			if(_texture.sheet) {
+				clipSpaceMatrix.appendScale(_animation.frameRect.width >> 1, _animation.frameRect.height >> 1, 1.0);
+				clipSpaceMatrix.appendTranslation(_animation.frameOffset.x, _animation.frameOffset.y, 0.0);
 			} else {
-				clipSpaceMatrix.appendScale(texture.bitmapWidth >> 1, texture.bitmapHeight >> 1, 1.0);
+				clipSpaceMatrix.appendScale(_texture.bitmapWidth >> 1, _texture.bitmapHeight >> 1, 1.0);
 			}
 
 			clipSpaceMatrix.append(worldModelMatrix);
@@ -236,21 +236,21 @@ package de.nulldesign.nd2d.display {
 		override public function handleDeviceLoss():void {
 			super.handleDeviceLoss();
 
-            geometry.handleDeviceLoss();
+            _geometry.handleDeviceLoss();
 
-			if(material) {
-				material.handleDeviceLoss();
+			if(_material) {
+				_material.handleDeviceLoss();
 			}
 
-			if(texture) {
-				texture.texture = null;
+			if(_texture) {
+				_texture.texture = null;
 			}
 		}
 
 		override public function dispose():void {
-			if(material) {
-				material.dispose();
-				material = null;
+			if(_material) {
+				_material.dispose();
+				_material = null;
 			}
 
 			if(mask) {
@@ -258,19 +258,39 @@ package de.nulldesign.nd2d.display {
 				mask = null;
 			}
 
-			if(texture) {
-				texture.dispose();
-				texture = null;
+			if(_texture) {
+				_texture.dispose();
+				_texture = null;
 			}
 
-            if (geometry)
+            if (_geometry)
             {
-                geometry.dispose();
-                geometry = null;
+                _geometry.dispose();
+                _geometry = null;
             }
-			animation = null;
+			_animation = null;
 
 			super.dispose();
 		}
-	}
+
+        public function get geometry():Geometry
+        {
+            return _geometry;
+        }
+
+        public function get texture():Texture2D
+        {
+            return _texture;
+        }
+
+        public function get animation():SpriteAnimation
+        {
+            return _animation;
+        }
+
+        public function get material():Sprite2DMaterial
+        {
+            return _material;
+        }
+    }
 }

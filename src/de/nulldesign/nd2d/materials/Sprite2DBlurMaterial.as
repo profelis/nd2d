@@ -36,12 +36,14 @@ package de.nulldesign.nd2d.materials {
     import de.nulldesign.nd2d.materials.texture.Texture2D;
     import de.nulldesign.nd2d.materials.texture.TextureSheetBase;
     import de.nulldesign.nd2d.utils.Statistics;
+    import de.nulldesign.nd2d.utils.nd2d;
 
     import flash.display3D.Context3D;
     import flash.display3D.Context3DProgramType;
     import flash.display3D.textures.Texture;
     import flash.geom.Matrix3D;
 
+    use namespace nd2d;
 /**
 	 * http://www.gamerendering.com/2008/10/11/gaussian-blur-filter-shader/
 	 */

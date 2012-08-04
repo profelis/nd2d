@@ -35,12 +35,15 @@ package de.nulldesign.nd2d.materials {
     import de.nulldesign.nd2d.geom.Vertex;
     import de.nulldesign.nd2d.materials.shader.ShaderCache;
     import de.nulldesign.nd2d.materials.texture.Texture2D;
+    import de.nulldesign.nd2d.utils.nd2d;
 
     import flash.display3D.Context3D;
     import flash.display3D.Context3DProgramType;
     import flash.display3D.Context3DVertexBufferFormat;
     import flash.geom.ColorTransform;
     import flash.geom.Rectangle;
+
+    use namespace nd2d;
 
     public class Sprite2DMaterial extends MaterialBase {
 
@@ -75,14 +78,14 @@ package de.nulldesign.nd2d.materials {
 
 			"output = colorize(temp0, colorMultiplier, colorOffset);";
 
-		public var texture:Texture2D;
-		public var animation:SpriteAnimation;
-		public var colorTransform:ColorTransform;
+        nd2d var texture:Texture2D;
+        nd2d var animation:SpriteAnimation;
+        nd2d var colorTransform:ColorTransform;
 
-		public var uvOffsetX:Number = 0.0;
-		public var uvOffsetY:Number = 0.0;
-		public var uvScaleX:Number = 1.0;
-		public var uvScaleY:Number = 1.0;
+        nd2d var uvOffsetX:Number = 0.0;
+        nd2d var uvOffsetY:Number = 0.0;
+        nd2d var uvScaleX:Number = 1.0;
+        nd2d var uvScaleY:Number = 1.0;
 
 		private var programConstants:Vector.<Number> = new Vector.<Number>(16, true);
 

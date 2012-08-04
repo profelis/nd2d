@@ -31,9 +31,11 @@
 package de.nulldesign.nd2d.display {
 
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
+    import de.nulldesign.nd2d.utils.nd2d;
 
-	import flash.display3D.Context3D;
+    import flash.display3D.Context3D;
 
+    use namespace nd2d;
 	/**
 	 * Renders a Node2D to a texture every frame. Can be used to post process a
 	 * whole scene for example.

@@ -29,6 +29,9 @@
  */
 
 package de.nulldesign.nd2d.materials {
+
+    import de.nulldesign.nd2d.utils.nd2d;
+
     import de.nulldesign.nd2d.display.Camera2D;
     import de.nulldesign.nd2d.display.Node2D;
     import de.nulldesign.nd2d.display.Sprite2D;
@@ -42,6 +45,8 @@ package de.nulldesign.nd2d.materials {
     import flash.display3D.Context3D;
     import flash.display3D.Context3DProgramType;
     import flash.display3D.Context3DVertexBufferFormat;
+
+    use namespace nd2d;
 
     public class Sprite2DBatchMaterial extends Sprite2DMaterial {
 
@@ -87,12 +92,12 @@ package de.nulldesign.nd2d.materials {
 
 		private var programConstants:Vector.<Number> = new Vector.<Number>(4 * constantsPerSprite * BATCH_SIZE, true);
 
-		public var camera:Camera2D;
+		nd2d var camera:Camera2D;
 
 		public static const VERTEX_IDX:String = "PB3D_IDX";
 		public static const VERTEX_IDX2:String = "PB3D_IDX2";
 
-        public var batchSize:uint = BATCH_SIZE;
+        nd2d var batchSize:uint = BATCH_SIZE;
 
 		public function Sprite2DBatchMaterial() {
 			super();
@@ -220,10 +225,10 @@ package de.nulldesign.nd2d.materials {
 					programConstants[idx++] = child.combinedColorTransform.blueOffset;
 					programConstants[idx++] = child.combinedColorTransform.alphaOffset;
 
-					programConstants[idx++] = child.animation.frameUV.x;
-					programConstants[idx++] = child.animation.frameUV.y;
-					programConstants[idx++] = child.animation.frameUV.width;
-					programConstants[idx++] = child.animation.frameUV.height;
+					programConstants[idx++] = child._animation.frameUV.x;
+					programConstants[idx++] = child._animation.frameUV.y;
+					programConstants[idx++] = child._animation.frameUV.width;
+					programConstants[idx++] = child._animation.frameUV.height;
 
 					programConstants[idx++] = child.uvOffsetX;
 					programConstants[idx++] = child.uvOffsetY;

@@ -30,11 +30,14 @@
 
 package de.nulldesign.nd2d.display {
 
-	import flash.display.Stage;
+    import de.nulldesign.nd2d.utils.nd2d;
+
+    import flash.display.Stage;
 	import flash.display3D.Context3D;
 	import flash.geom.Matrix3D;
 	import flash.geom.Vector3D;
 
+    use namespace nd2d;
 	/**
 	 * <p>A scene that can contain 2D nodes. Such as Sprite2D.</p>
 	 * <p>The scene is meant to display a state of your game, such as the game

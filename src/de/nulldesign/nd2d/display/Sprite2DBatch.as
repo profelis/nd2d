@@ -34,9 +34,11 @@ package de.nulldesign.nd2d.display {
     import de.nulldesign.nd2d.materials.Sprite2DBatchDynamicMaterial;
 	import de.nulldesign.nd2d.materials.Sprite2DBatchMaterial;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
+import de.nulldesign.nd2d.utils.nd2d;
 
-	import flash.display3D.Context3D;
+import flash.display3D.Context3D;
 
+    use namespace nd2d;
 	/**
 	 * Sprite2DBatch
 	 *
@@ -57,10 +59,10 @@ package de.nulldesign.nd2d.display {
 	 */
 	public class Sprite2DBatch extends Node2D {
 
-		public var texture:Texture2D;
+		nd2d var _texture:Texture2D;
 
 		private var dynamic:Boolean;
-		public var geometry:Geometry;
+		nd2d var _geometry:Geometry;
 		private var material:Sprite2DBatchMaterial;
 
 		/**
@@ -71,18 +73,18 @@ package de.nulldesign.nd2d.display {
 		 * even materials (blur, mask, etc.)
 		 */
 		public function Sprite2DBatch(texture:Texture2D, dynamic:Boolean = false) {
-			this.texture = texture;
+			this._texture = texture;
 			this.dynamic = dynamic;
 
-			geometry = Geometry.createQuad();
+
 
 			if(dynamic) {
 				material = new Sprite2DBatchDynamicMaterial();
 			} else {
 				material = new Sprite2DBatchMaterial();
 			}
-            geometry.setMaterial(material);
-            geometry.generateBatch(material.batchSize);
+            _geometry = Geometry.createBatch(material.batchSize);
+            _geometry.setMaterial(material);
 		}
 
 		public function addBatchParent(child:Node2D):void {
@@ -91,8 +93,8 @@ package de.nulldesign.nd2d.display {
 			var sprite:Sprite2D = child as Sprite2D;
 
 			// distribute texture/sheet to sprites
-			if(sprite && texture && !sprite.texture) {
-				sprite.setTexture(texture);
+			if(sprite && _texture && !sprite._texture) {
+				sprite.setTexture(_texture);
 			}
 
 			for(var node:Node2D = child.childFirst; node; node = node.next) {
@@ -147,22 +149,22 @@ package de.nulldesign.nd2d.display {
 		}
 
 		override public function draw(context:Context3D, camera:Camera2D):void {
-            geometry.update(context);
+            _geometry.update(context);
 
             material.camera = camera;
 			material.blendMode = blendMode;
 			material.scrollRect = worldScrollRect;
 			material.modelMatrix = worldModelMatrix;
 			material.viewProjectionMatrix = camera.getViewProjectionMatrix(false);
-			material.texture = texture;
+			material.texture = _texture;
 			material.usesColor = usesColor;
 			material.usesColorOffset = usesColorOffset;
-			material.renderBatch(context, geometry, childFirst);
+			material.renderBatch(context, _geometry, childFirst);
 		}
 
 		override public function handleDeviceLoss():void {
 			super.handleDeviceLoss();
-            geometry.handleDeviceLoss();
+            _geometry.handleDeviceLoss();
 			material.handleDeviceLoss();
 		}
 
@@ -172,17 +174,27 @@ package de.nulldesign.nd2d.display {
 				material = null;
 			}
 
-			if(texture) {
-				texture.dispose();
-				texture = null;
+			if(_texture) {
+				_texture.dispose();
+				_texture = null;
 			}
 
-            if (geometry) {
-                geometry.dispose();
-                geometry = null;
+            if (_geometry) {
+                _geometry.dispose();
+                _geometry = null;
             }
 
 			super.dispose();
 		}
-	}
+
+        public function get geometry():Geometry
+        {
+            return _geometry;
+        }
+
+        public function get texture():Texture2D
+        {
+            return _texture;
+        }
+    }
 }

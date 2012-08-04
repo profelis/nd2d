@@ -39,8 +39,9 @@ package de.nulldesign.nd2d.display {
 	import de.nulldesign.nd2d.utils.Statistics;
 	import de.nulldesign.nd2d.utils.TextureHelper;
 	import de.nulldesign.nd2d.utils.VectorUtil;
+import de.nulldesign.nd2d.utils.nd2d;
 
-	import flash.display3D.Context3D;
+import flash.display3D.Context3D;
 	import flash.display3D.Context3DProgramType;
 	import flash.display3D.Context3DVertexBufferFormat;
 	import flash.display3D.IndexBuffer3D;
@@ -48,6 +49,7 @@ package de.nulldesign.nd2d.display {
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 
+    use namespace nd2d;
 	/**
 	 * Sprite2DCloud
 	 * <p>Use a sprite cloud to batch sprites with the same Texture, SpriteSheet
@@ -178,7 +180,7 @@ package de.nulldesign.nd2d.display {
 				var sprite:Sprite2D = child as Sprite2D;
 
 				// distribute texture/sheet to sprites
-				if(sprite && texture && !sprite.texture) {
+				if(sprite && texture && !sprite._texture) {
 					sprite.setTexture(texture);
 				}
 
@@ -281,13 +283,13 @@ package de.nulldesign.nd2d.display {
 			for(node = childFirst; node; node = node.next) {
 				child = node as Sprite2D;
 
-				if(child.invalidateUV || child.animation.frameUpdated) {
+				if(child.invalidateUV || child._animation.frameUpdated) {
 					if(child.invalidateUV) {
 						child.updateUV();
 					}
 
-					uvSheet = (texture.sheet ? child.animation.frameUV : texture.uvRect);
-					child.animation.frameUpdated = false;
+					uvSheet = (texture.sheet ? child._animation.frameUV : texture.uvRect);
+					child._animation.frameUpdated = false;
 
 					// v1
 					mVertexBuffer[vIdx + 2] = uv1.u * child.uvScaleX + child.uvOffsetX;
@@ -326,9 +328,9 @@ package de.nulldesign.nd2d.display {
 
 				if(child.invalidateMatrix || child.invalidateClipSpace) {
 					if(texture.sheet) {
-						atlasOffset = child.animation.frameOffset;
-						sx = child.scaleX * (child.animation.frameRect.width >> 1);
-						sy = child.scaleY * (child.animation.frameRect.height >> 1);
+						atlasOffset = child._animation.frameOffset;
+						sx = child.scaleX * (child._animation.frameRect.width >> 1);
+						sy = child.scaleY * (child._animation.frameRect.height >> 1);
 					} else {
 						sx = child.scaleX * halfTextureWidth;
 						sy = child.scaleY * halfTextureHeight;

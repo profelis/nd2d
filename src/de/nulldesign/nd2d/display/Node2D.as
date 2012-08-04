@@ -32,8 +32,9 @@ package de.nulldesign.nd2d.display {
 
 	import de.nulldesign.nd2d.materials.BlendModePresets;
 	import de.nulldesign.nd2d.utils.NodeBlendMode;
+import de.nulldesign.nd2d.utils.nd2d;
 
-	import flash.display.Stage;
+import flash.display.Stage;
 	import flash.display3D.Context3D;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -44,6 +45,8 @@ package de.nulldesign.nd2d.display {
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	import flash.geom.Vector3D;
+
+use namespace nd2d;
 
 	/**
 	 * Dispatched when the scene is active and added to the stage.
@@ -150,47 +153,47 @@ package de.nulldesign.nd2d.display {
 		/**
 		 * @private
 		 */
-		public var localModelMatrix:Matrix3D = new Matrix3D();
+		nd2d var localModelMatrix:Matrix3D = new Matrix3D();
 
 		/**
 		 * @private
 		 */
-		public var worldModelMatrix:Matrix3D = new Matrix3D();
+        nd2d var worldModelMatrix:Matrix3D = new Matrix3D();
 
 		/**
 		 * @private
 		 */
-		public var invalidateMatrix:Boolean = true;
+        nd2d var invalidateMatrix:Boolean = true;
 
 		/**
 		 * @private
 		 */
-		public var clipSpaceMatrix:Matrix3D = new Matrix3D();
+        nd2d var clipSpaceMatrix:Matrix3D = new Matrix3D();
 
 		/**
 		 * @private
 		 */
-		public var invalidateClipSpace:Boolean = true;
+        nd2d var invalidateClipSpace:Boolean = true;
 
 		/**
 		 * Currently only used by Sprite2DCloud
 		 * @private
 		 */
-		public var invalidateUV:Boolean = true;
+        nd2d var invalidateUV:Boolean = true;
 
 		/**
 		 * Currently only used by Sprite2DCloud
 		 * We use it as the lite version of invalidateColors
 		 * @private
 		 */
-		public var invalidateVisibility:Boolean = true;
+        nd2d var invalidateVisibility:Boolean = true;
 
 		/**
 		 * @private
 		 */
-		public var invalidateColors:Boolean = true;
+        nd2d var invalidateColors:Boolean = true;
 
-		public var hasPremultipliedAlphaTexture:Boolean = true;
+        nd2d var hasPremultipliedAlphaTexture:Boolean = true;
 
 		public var childCount:uint = 0;
 		public var childFirst:Node2D = null;

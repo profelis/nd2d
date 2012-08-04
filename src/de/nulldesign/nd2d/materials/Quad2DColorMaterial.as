@@ -34,10 +34,13 @@ package de.nulldesign.nd2d.materials {
     import de.nulldesign.nd2d.geom.UV;
     import de.nulldesign.nd2d.geom.Vertex;
     import de.nulldesign.nd2d.materials.shader.ShaderCache;
+    import de.nulldesign.nd2d.utils.nd2d;
 
     import flash.display3D.Context3D;
     import flash.display3D.Context3DProgramType;
     import flash.display3D.Context3DVertexBufferFormat;
+
+    use namespace nd2d
 
     public class Quad2DColorMaterial extends MaterialBase {
 

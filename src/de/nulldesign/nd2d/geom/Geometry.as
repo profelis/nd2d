@@ -2,35 +2,38 @@ package de.nulldesign.nd2d.geom
 {
 import de.nulldesign.nd2d.materials.MaterialBase;
 import de.nulldesign.nd2d.utils.TextureHelper;
+import de.nulldesign.nd2d.utils.nd2d;
 
 import flash.display3D.Context3D;
 import flash.display3D.IndexBuffer3D;
 import flash.display3D.VertexBuffer3D;
 import flash.utils.Dictionary;
 
+use namespace nd2d;
+
 /**
  * @author Dima Granetchi <system.grand@gmail.com>, <deep@e-citrus.ru>
  */
 public class Geometry
 {
-    public var faceList:Vector.<Face>;
+    nd2d var faceList:Vector.<Face>;
 
-    public var needUploadVertexBuffer:Boolean = false;
+    protected var needUploadVertexBuffer:Boolean = false;
 
-    public var indexBuffer:IndexBuffer3D;
-    public var vertexBuffer:VertexBuffer3D;
+    nd2d var indexBuffer:IndexBuffer3D;
+    nd2d var vertexBuffer:VertexBuffer3D;
 
     protected var mIndexBuffer:Vector.<uint>;
     protected var mVertexBuffer:Vector.<Number>;
 
-    public var needUpdateVertexBuffer:Boolean = false;
+    nd2d var needUpdateVertexBuffer:Boolean = false;
 
-    public var startTri:uint = 0;
-    public var numTris:uint;
+    nd2d var startTri:uint = 0;
+    nd2d var numTris:uint;
 
-    public var material:MaterialBase;
+    protected var material:MaterialBase;
 
-    public var numFloatsPerVertex:uint;
+    protected var numFloatsPerVertex:uint;
 
     public function Geometry()
     {
@@ -65,6 +68,8 @@ public class Geometry
             vertexBuffer.dispose();
             vertexBuffer = null;
         }
+
+        material = null;
 
         mIndexBuffer = null;
         mVertexBuffer = null;
@@ -179,7 +184,7 @@ public class Geometry
         needUploadVertexBuffer = false;
     }
 
-    public function update(context:Context3D):void
+    nd2d function update(context:Context3D):void
     {
         if (needUpdateVertexBuffer)
         {
@@ -192,7 +197,7 @@ public class Geometry
         }
     }
 
-    public function setMaterial(value:MaterialBase):void
+    nd2d function setMaterial(value:MaterialBase):void
     {
         material = value;
 
@@ -203,12 +208,12 @@ public class Geometry
         }
     }
 
-    public function generateBatch(size:uint):void
+    public static function createBatch(size:uint):Geometry
     {
-        if (faceList.length == size * 2) return;
+        var g:Geometry = createQuad();
 
-        var f0:Face = faceList[0];
-        var f1:Face = faceList[1];
+        var f0:Face = g.faceList[0];
+        var f1:Face = g.faceList[1];
         var newF0:Face;
         var newF1:Face;
 
@@ -224,9 +229,11 @@ public class Geometry
             newFaceList[i * 2] = newF0;
             newFaceList[i * 2 + 1] = newF1;
         }
-        faceList = newFaceList;
+        g.faceList = newFaceList;
 
-        needUpdateVertexBuffer = true;
+        g.needUpdateVertexBuffer = true;
+
+        return g;
     }
 }
 }

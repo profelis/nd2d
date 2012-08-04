@@ -32,10 +32,13 @@ package materials {
     import de.nulldesign.nd2d.geom.Geometry;
     import de.nulldesign.nd2d.materials.Sprite2DMaterial;
     import de.nulldesign.nd2d.materials.shader.ShaderCache;
+    import de.nulldesign.nd2d.utils.nd2d;
 
     import flash.display3D.Context3D;
     import flash.display3D.Context3DProgramType;
     import flash.utils.getTimer;
+
+    use namespace nd2d;
 
     public class Sprite2DDizzyMaterial extends Sprite2DMaterial {
 
