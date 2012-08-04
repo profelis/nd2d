@@ -92,7 +92,7 @@ package tests {
 
 			var blurX:Number = (stage.mouseX / stage.stageWidth) * 20.0;
 			var blurY:Number = (stage.mouseY / stage.stageHeight) * 20.0;
-			blurMaterial2.setBlur(blurX, blurY);
+			blurMaterial2.setBlur(Math.abs(blurX), Math.abs(blurY));
 		}
 	}
 }
