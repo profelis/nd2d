@@ -179,19 +179,21 @@ package de.nulldesign.nd2d.display {
 		 * @return if the sprite was hit or not
 		 */
 		override protected function hitTest():Boolean {
-			if(usePixelPerfectHitTest && _texture.bitmap) {
-				var xCoord:Number = _mouseX + (_width >> 1);
-				var yCoord:Number = _mouseY + (_height >> 1);
+			var res:Boolean = _geometry.hitTest(_mouseX, _mouseY, _width, _height);
+
+            if(res && usePixelPerfectHitTest && _texture.bitmap) {
+                var xCoord:Number = _mouseX + _geometry.mouseDX;
+				var yCoord:Number = _mouseY + _geometry.mouseDY;
 
 				if(_texture.sheet) {
 					xCoord += _animation.frameRect.x;
 					yCoord += _animation.frameRect.y;
 				}
 
-				return super.hitTest() && (_texture.bitmap.getPixel32(xCoord, yCoord) >> 24 & 0xFF) > 0;
+				return (_texture.bitmap.getPixel32(xCoord, yCoord) >> 24 & 0xFF) > 0;
 			}
 
-			return super.hitTest();
+            return res;
 		}
 
 		public function updateAnimationDimensions():void {

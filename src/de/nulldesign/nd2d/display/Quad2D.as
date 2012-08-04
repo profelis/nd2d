@@ -124,7 +124,12 @@ import flash.display3D.Context3D;
 			}
 		}
 
-		override public function draw(context:Context3D, camera:Camera2D):void {
+        override protected function hitTest():Boolean
+        {
+            return _geometry.hitTest(_mouseX, _mouseY, _width, _height);
+        }
+
+        override public function draw(context:Context3D, camera:Camera2D):void {
             _geometry.update(context);
 
             material.blendMode = blendMode;

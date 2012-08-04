@@ -48,6 +48,21 @@ public class Geometry
         return g;
     }
 
+    nd2d var mouseDX:int;
+    nd2d var mouseDY:int;
+
+    public function hitTest(mx:Number, my:Number, w:Number, h:Number):Boolean
+    {
+        if(isNaN(w) || isNaN(h)) {
+            return false;
+        }
+
+        mouseDX = w >> 1;
+        mouseDY = h >> 1;
+
+        return (mx >= -mouseDX && mx <= mouseDX && my >= -mouseDY && my <= mouseDY);
+    }
+
     public function handleDeviceLoss():void {
         indexBuffer = null;
         vertexBuffer = null;
