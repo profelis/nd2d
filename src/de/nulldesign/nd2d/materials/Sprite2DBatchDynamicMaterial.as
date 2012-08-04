@@ -61,6 +61,7 @@ package de.nulldesign.nd2d.materials {
 
 		public function Sprite2DBatchDynamicMaterial() {
 			super();
+            batchSize = BATCH_SIZE;
 		}
 
 		override protected function prepareForRender(context:Context3D,

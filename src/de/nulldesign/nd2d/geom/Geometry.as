@@ -174,6 +174,9 @@ public class Geometry
 
         indexBuffer = context.createIndexBuffer(mIndexBuffer_length);
         indexBuffer.uploadFromVector(mIndexBuffer, 0, mIndexBuffer_length);
+
+        needUpdateVertexBuffer = false;
+        needUploadVertexBuffer = false;
     }
 
     public function update(context:Context3D):void
@@ -181,9 +184,8 @@ public class Geometry
         if (needUpdateVertexBuffer)
         {
             generateBufferData(context);
-            needUpdateVertexBuffer = false;
         }
-        else if(needUploadVertexBuffer)
+        if(needUploadVertexBuffer)
         {
             needUploadVertexBuffer = false;
             vertexBuffer.uploadFromVector(mVertexBuffer, 0, mVertexBuffer.length / numFloatsPerVertex);
