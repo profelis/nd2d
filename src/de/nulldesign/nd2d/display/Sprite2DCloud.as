@@ -30,26 +30,26 @@
 
 package de.nulldesign.nd2d.display {
 
-	import de.nulldesign.nd2d.geom.Face;
-	import de.nulldesign.nd2d.geom.UV;
-	import de.nulldesign.nd2d.geom.Vertex;
-	import de.nulldesign.nd2d.materials.shader.Shader2D;
-	import de.nulldesign.nd2d.materials.shader.ShaderCache;
-	import de.nulldesign.nd2d.materials.texture.Texture2D;
-	import de.nulldesign.nd2d.utils.Statistics;
-	import de.nulldesign.nd2d.utils.TextureHelper;
-	import de.nulldesign.nd2d.utils.VectorUtil;
+import de.nulldesign.nd2d.geom.Face;
+import de.nulldesign.nd2d.geom.Geometry;
+import de.nulldesign.nd2d.geom.UV;
+import de.nulldesign.nd2d.geom.Vertex;
+import de.nulldesign.nd2d.materials.shader.Shader2D;
+import de.nulldesign.nd2d.materials.shader.ShaderCache;
+import de.nulldesign.nd2d.materials.texture.Texture2D;
+import de.nulldesign.nd2d.utils.Statistics;
+import de.nulldesign.nd2d.utils.VectorUtil;
 import de.nulldesign.nd2d.utils.nd2d;
 
 import flash.display3D.Context3D;
-	import flash.display3D.Context3DProgramType;
-	import flash.display3D.Context3DVertexBufferFormat;
-	import flash.display3D.IndexBuffer3D;
-	import flash.display3D.VertexBuffer3D;
-	import flash.geom.Point;
-	import flash.geom.Rectangle;
+import flash.display3D.Context3DProgramType;
+import flash.display3D.Context3DVertexBufferFormat;
+import flash.display3D.IndexBuffer3D;
+import flash.display3D.VertexBuffer3D;
+import flash.geom.Point;
+import flash.geom.Rectangle;
 
-    use namespace nd2d;
+use namespace nd2d;
 	/**
 	 * Sprite2DCloud
 	 * <p>Use a sprite cloud to batch sprites with the same Texture, SpriteSheet
@@ -143,7 +143,7 @@ import flash.display3D.Context3D;
 
 		public function Sprite2DCloud(maxCapacity:uint, textureObject:Texture2D) {
 			texture = textureObject;
-			faceList = TextureHelper.generateQuadFromDimensions(2, 2);
+			faceList = Geometry.generateQuadFromDimensions(2, 2);
 
 			v1 = faceList[0].v1;
 			v2 = faceList[0].v2;

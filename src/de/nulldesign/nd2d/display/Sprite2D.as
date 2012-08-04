@@ -63,8 +63,8 @@ package de.nulldesign.nd2d.display {
 		 * Constructor of class Sprite2D
 		 * @param textureObject Texture2D
 		 */
-		public function Sprite2D(textureObject:Texture2D = null) {
-			_geometry = Geometry.createQuad();
+		public function Sprite2D(textureObject:Texture2D = null, geometry:Geometry = null) {
+			_geometry = geometry || Geometry.createQuad();
 			_animation = new SpriteAnimation(this);
 
 			if(textureObject) {

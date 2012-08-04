@@ -100,11 +100,11 @@ import flash.display3D.Context3D;
             bottomRightColor = value;
         }
 
-		public function Quad2D(pWidth:Number, pHeight:Number) {
+		public function Quad2D(pWidth:Number, pHeight:Number, geometry:Geometry = null) {
 			_width = pWidth;
 			_height = pHeight;
 
-            _geometry = Geometry.createQuad(pWidth, pHeight);
+            _geometry = geometry || Geometry.createQuad(pWidth, pHeight);
 			_geometry.setMaterial(material = new Quad2DColorMaterial());
 
 			topLeftColor = 0xFFFF0000;
