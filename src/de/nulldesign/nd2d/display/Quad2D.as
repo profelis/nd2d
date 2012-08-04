@@ -92,6 +92,14 @@ import flash.display3D.Context3D;
             _geometry.modifyColorInBuffer(3, v.r, v.g, v.b, v.a);
 		}
 
+        public function set color(value:uint):void
+        {
+            topLeftColor = value;
+            topRightColor = value;
+            bottomLeftColor = value;
+            bottomRightColor = value;
+        }
+
 		public function Quad2D(pWidth:Number, pHeight:Number) {
 			_width = pWidth;
 			_height = pHeight;
