@@ -29,22 +29,21 @@
  */
 
 package de.nulldesign.nd2d.materials {
+    import de.nulldesign.nd2d.display.Camera2D;
+    import de.nulldesign.nd2d.display.Node2D;
+    import de.nulldesign.nd2d.display.Sprite2D;
+    import de.nulldesign.nd2d.geom.Face;
+    import de.nulldesign.nd2d.geom.Geometry;
+    import de.nulldesign.nd2d.geom.UV;
+    import de.nulldesign.nd2d.geom.Vertex;
+    import de.nulldesign.nd2d.materials.shader.ShaderCache;
+    import de.nulldesign.nd2d.utils.Statistics;
 
-	import de.nulldesign.nd2d.display.Camera2D;
-	import de.nulldesign.nd2d.display.Node2D;
-	import de.nulldesign.nd2d.display.Sprite2D;
-	import de.nulldesign.nd2d.geom.Face;
-	import de.nulldesign.nd2d.geom.UV;
-	import de.nulldesign.nd2d.geom.Vertex;
-	import de.nulldesign.nd2d.materials.shader.ShaderCache;
-	import de.nulldesign.nd2d.utils.Statistics;
+    import flash.display3D.Context3D;
+    import flash.display3D.Context3DProgramType;
+    import flash.display3D.Context3DVertexBufferFormat;
 
-	import flash.display3D.Context3D;
-	import flash.display3D.Context3DProgramType;
-	import flash.display3D.Context3DVertexBufferFormat;
-	import flash.geom.Rectangle;
-
-	public class Sprite2DBatchMaterial extends Sprite2DMaterial {
+    public class Sprite2DBatchMaterial extends Sprite2DMaterial {
 
 		private const VERTEX_SHADER:String =
 			"alias va0, position;" +
@@ -93,52 +92,30 @@ package de.nulldesign.nd2d.materials {
 		public static const VERTEX_IDX:String = "PB3D_IDX";
 		public static const VERTEX_IDX2:String = "PB3D_IDX2";
 
+        public var batchSize:uint = BATCH_SIZE;
+
 		public function Sprite2DBatchMaterial() {
 			super();
+            numFloatsPerVertex = 9;
 		}
 
-		override protected function generateBufferData(context:Context3D, faceList:Vector.<Face>):void {
-			if(vertexBuffer) {
-				return;
-			}
-
-			// use first two faces and extend facelist to max. batch size
-			var f0:Face = faceList[0];
-			var f1:Face = faceList[1];
-			var newF0:Face;
-			var newF1:Face;
-
-			var newFaceList:Vector.<Face> = new Vector.<Face>(BATCH_SIZE * 2, true);
-
-			for(var i:int = 0; i < BATCH_SIZE; i++) {
-				newF0 = f0.clone();
-				newF1 = f1.clone();
-
-				newF0.idx = i;
-				newF1.idx = i;
-
-				newFaceList[i * 2] = newF0;
-				newFaceList[i * 2 + 1] = newF1;
-			}
-
-			super.generateBufferData(context, newFaceList);
-		}
-
-		override public function render(context:Context3D, faceList:Vector.<Face>, startTri:uint, numTris:uint):void {
+		override public function render(context:Context3D, geometry:Geometry):void {
 			throw new Error("please call renderBatch for this material");
 		}
 
-		override protected function prepareForRender(context:Context3D):void {
-			updateProgram(context);
+		override protected function prepareForRender(context:Context3D,
+                                                     geometry:Geometry):void
+        {
+			updateProgram(context, geometry);
 
 			context.setProgram(shaderData.shader);
 			context.setTextureAt(0, texture.getTexture(context));
 			context.setBlendFactors(blendMode.src, blendMode.dst);
 
-			context.setVertexBufferAt(0, vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_2); // vertex
-			context.setVertexBufferAt(1, vertexBuffer, 2, Context3DVertexBufferFormat.FLOAT_2); // uv
-			context.setVertexBufferAt(2, vertexBuffer, 4, Context3DVertexBufferFormat.FLOAT_4); // idx
-			context.setVertexBufferAt(3, vertexBuffer, 8, Context3DVertexBufferFormat.FLOAT_1); // idx2
+			context.setVertexBufferAt(0, geometry.vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_2); // vertex
+			context.setVertexBufferAt(1, geometry.vertexBuffer, 2, Context3DVertexBufferFormat.FLOAT_2); // uv
+			context.setVertexBufferAt(2, geometry.vertexBuffer, 4, Context3DVertexBufferFormat.FLOAT_4); // idx
+			context.setVertexBufferAt(3, geometry.vertexBuffer, 8, Context3DVertexBufferFormat.FLOAT_1); // idx2
 
 			if(scrollRect) {
 				context.setScissorRectangle(scrollRect);
@@ -147,7 +124,9 @@ package de.nulldesign.nd2d.materials {
 			context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, viewProjectionMatrix, true);
 		}
 
-		public function renderBatch(context:Context3D, faceList:Vector.<Face>, childList:Node2D):void {
+		public function renderBatch(context:Context3D, geometry:Geometry,
+                                    childList:Node2D):void
+        {
 			if(!childList) {
 				return;
 			}
@@ -158,22 +137,23 @@ package de.nulldesign.nd2d.materials {
 			usesColor = usesColor || childList.usesColor;
 			usesColorOffset = usesColorOffset || childList.usesColorOffset;
 
-			generateBufferData(context, faceList);
-			prepareForRender(context);
+			prepareForRender(context, geometry);
 
-			processAndRenderNodes(context, childList);
+			processAndRenderNodes(context, geometry, childList);
 
-			drawCurrentBatch(context);
+			drawCurrentBatch(context, geometry);
 
 			clearAfterRender(context);
 		}
 
-		protected function drawCurrentBatch(context:Context3D):void {
+		protected function drawCurrentBatch(context:Context3D,
+                                            geometry:Geometry):void
+        {
 			if(batchLen) {
 				context.setProgramConstantsFromVector(Context3DProgramType.VERTEX,
 					constantsGlobal + BATCH_SIZE * constantsPerMatrix, programConstants, batchLen * constantsPerSprite);
 
-				context.drawTriangles(indexBuffer, 0, batchLen << 1);
+				context.drawTriangles(geometry.indexBuffer, 0, batchLen << 1);
 
 				Statistics.drawCalls++;
 				Statistics.triangles += (batchLen << 1);
@@ -183,7 +163,10 @@ package de.nulldesign.nd2d.materials {
 			batchLen = 0;
 		}
 
-		protected function processAndRenderNodes(context:Context3D, childList:Node2D):void {
+		protected function processAndRenderNodes(context:Context3D,
+                                                 geometry:Geometry,
+                                                 childList:Node2D):void
+        {
 			if(!childList) {
 				return;
 			}
@@ -222,7 +205,7 @@ package de.nulldesign.nd2d.materials {
 					usesColor = child.usesColor;
 					usesColorOffset = child.usesColorOffset;
 
-					updateProgram(context);
+					updateProgram(context, geometry);
 
 					context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX,
 						constantsGlobal + batchLen * constantsPerMatrix, child.clipSpaceMatrix, true);
@@ -252,11 +235,11 @@ package de.nulldesign.nd2d.materials {
 					Statistics.sprites++;
 
 					if(batchLen == BATCH_SIZE) {
-						drawCurrentBatch(context);
+						drawCurrentBatch(context, geometry);
 					}
 				}
 
-				processAndRenderNodes(context, childNode.childFirst);
+				processAndRenderNodes(context, geometry, childNode.childFirst);
 
 				childNode.invalidateMatrix = false;
 			}
@@ -271,9 +254,11 @@ package de.nulldesign.nd2d.materials {
 			context.setScissorRectangle(null);
 		}
 
-		override protected function updateProgram(context:Context3D):void {
-			if(usesUV != lastUsesUV || usesColor != lastUsesColor || usesColorOffset != lastUsesColorOffset) {
-				drawCurrentBatch(context);
+		override protected function updateProgram(context:Context3D,
+                                                  geometry:Geometry):void
+        {
+			if(shaderData == null || usesUV != lastUsesUV || usesColor != lastUsesColor || usesColorOffset != lastUsesColorOffset) {
+				drawCurrentBatch(context, geometry);
 
 				shaderData = null;
 				initProgram(context);
@@ -296,14 +281,20 @@ package de.nulldesign.nd2d.materials {
 			}
 		}
 
-		override protected function addVertex(context:Context3D, buffer:Vector.<Number>, v:Vertex, uv:UV, face:Face):void {
+		override public function addVertex(context:Context3D, buffer:Vector.<Number>,
+                                           v:Vertex, uv:UV,
+                                           face:Face):void
+        {
 			fillBuffer(buffer, v, uv, face, VERTEX_POSITION, 2);
 			fillBuffer(buffer, v, uv, face, VERTEX_UV, 2);
 			fillBuffer(buffer, v, uv, face, VERTEX_IDX, 4);
 			fillBuffer(buffer, v, uv, face, VERTEX_IDX2, 1);
 		}
 
-		override protected function fillBuffer(buffer:Vector.<Number>, v:Vertex, uv:UV, face:Face, semanticsID:String, floatFormat:int):void {
+		override public function fillBuffer(buffer:Vector.<Number>, v:Vertex,
+                                            uv:UV, face:Face,
+                                            semanticsID:String, floatFormat:int):void
+        {
 			if(semanticsID == VERTEX_IDX) {
 				// va2.x	clipSpace index
 				buffer.push(constantsGlobal + face.idx * constantsPerMatrix);

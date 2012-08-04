@@ -30,11 +30,10 @@
 
 package de.nulldesign.nd2d.display {
 
-	import de.nulldesign.nd2d.geom.Face;
-	import de.nulldesign.nd2d.geom.Vertex;
+    import de.nulldesign.nd2d.geom.Geometry;
+    import de.nulldesign.nd2d.geom.Vertex;
 	import de.nulldesign.nd2d.materials.BlendModePresets;
 	import de.nulldesign.nd2d.materials.Quad2DColorMaterial;
-	import de.nulldesign.nd2d.utils.TextureHelper;
 
 	import flash.display3D.Context3D;
 
@@ -44,59 +43,59 @@ package de.nulldesign.nd2d.display {
 	 */
 	public class Quad2D extends Node2D {
 
-		protected var faceList:Vector.<Face>;
+		public var geometry:Geometry;
 		protected var material:Quad2DColorMaterial;
 
 		public function get topLeftColor():uint {
-			return faceList[0].v1.color;
+			return geometry.faceList[0].v1.color;
 		}
 
 		public function set topLeftColor(value:uint):void {
-			var v:Vertex = faceList[0].v1;
+			var v:Vertex = geometry.faceList[0].v1;
 			v.color = value;
 
-			material.modifyColorInBuffer(0, v.r, v.g, v.b, v.a);
+			geometry.modifyColorInBuffer(0, v.r, v.g, v.b, v.a);
 		}
 
 		public function get topRightColor():uint {
-			return faceList[0].v2.color;
+			return geometry.faceList[0].v2.color;
 		}
 
 		public function set topRightColor(value:uint):void {
-			var v:Vertex = faceList[0].v2;
+			var v:Vertex = geometry.faceList[0].v2;
 			v.color = value;
 
-			material.modifyColorInBuffer(1, v.r, v.g, v.b, v.a);
+            geometry.modifyColorInBuffer(1, v.r, v.g, v.b, v.a);
 		}
 
 		public function get bottomRightColor():uint {
-			return faceList[0].v3.color;
+			return geometry.faceList[0].v3.color;
 		}
 
 		public function set bottomRightColor(value:uint):void {
-			var v:Vertex = faceList[0].v3;
+			var v:Vertex = geometry.faceList[0].v3;
 			v.color = value;
 
-			material.modifyColorInBuffer(2, v.r, v.g, v.b, v.a);
+            geometry.modifyColorInBuffer(2, v.r, v.g, v.b, v.a);
 		}
 
 		public function get bottomLeftColor():uint {
-			return faceList[1].v3.color;
+			return geometry.faceList[1].v3.color;
 		}
 
 		public function set bottomLeftColor(value:uint):void {
-			var v:Vertex = faceList[1].v3;
+			var v:Vertex = geometry.faceList[1].v3;
 			v.color = value;
 
-			material.modifyColorInBuffer(3, v.r, v.g, v.b, v.a);
+            geometry.modifyColorInBuffer(3, v.r, v.g, v.b, v.a);
 		}
 
 		public function Quad2D(pWidth:Number, pHeight:Number) {
 			_width = pWidth;
 			_height = pHeight;
 
-			faceList = TextureHelper.generateQuadFromDimensions(pWidth, pHeight);
-			material = new Quad2DColorMaterial();
+            geometry = Geometry.createQuad(pWidth, pHeight);
+			geometry.setMaterial(material = new Quad2DColorMaterial());
 
 			topLeftColor = 0xFFFF0000;
 			topRightColor = 0xFF00FF00;
@@ -108,6 +107,7 @@ package de.nulldesign.nd2d.display {
 
 		override public function handleDeviceLoss():void {
 			super.handleDeviceLoss();
+            geometry.handleDeviceLoss();
 
 			if(material) {
 				material.handleDeviceLoss();
@@ -115,12 +115,13 @@ package de.nulldesign.nd2d.display {
 		}
 
 		override public function draw(context:Context3D, camera:Camera2D):void {
-			material.blendMode = blendMode;
+            geometry.update(context);
+
+            material.blendMode = blendMode;
 			material.modelMatrix = worldModelMatrix;
 			material.clipSpaceMatrix = clipSpaceMatrix;
 			material.viewProjectionMatrix = camera.getViewProjectionMatrix(false);
-
-			material.render(context, faceList, 0, 2);
+			material.render(context, geometry);
 		}
 
 		override public function dispose():void {
@@ -129,7 +130,10 @@ package de.nulldesign.nd2d.display {
 				material = null;
 			}
 
-			faceList = null;
+            if (geometry) {
+                geometry.dispose();
+                geometry = null;
+            }
 
 			super.dispose();
 		}

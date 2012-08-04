@@ -29,21 +29,20 @@
  */
 
 package de.nulldesign.nd2d.materials {
+    import de.nulldesign.nd2d.display.Camera2D;
+    import de.nulldesign.nd2d.geom.Geometry;
+    import de.nulldesign.nd2d.materials.shader.Shader2D;
+    import de.nulldesign.nd2d.materials.shader.ShaderCache;
+    import de.nulldesign.nd2d.materials.texture.Texture2D;
+    import de.nulldesign.nd2d.materials.texture.TextureSheetBase;
+    import de.nulldesign.nd2d.utils.Statistics;
 
-	import de.nulldesign.nd2d.display.Camera2D;
-	import de.nulldesign.nd2d.geom.Face;
-	import de.nulldesign.nd2d.materials.shader.Shader2D;
-	import de.nulldesign.nd2d.materials.shader.ShaderCache;
-	import de.nulldesign.nd2d.materials.texture.Texture2D;
-	import de.nulldesign.nd2d.materials.texture.TextureSheetBase;
-	import de.nulldesign.nd2d.utils.Statistics;
+    import flash.display3D.Context3D;
+    import flash.display3D.Context3DProgramType;
+    import flash.display3D.textures.Texture;
+    import flash.geom.Matrix3D;
 
-	import flash.display3D.Context3D;
-	import flash.display3D.Context3DProgramType;
-	import flash.display3D.textures.Texture;
-	import flash.geom.Matrix3D;
-
-	/**
+/**
 	 * http://www.gamerendering.com/2008/10/11/gaussian-blur-filter-shader/
 	 */
 	public class Sprite2DBlurMaterial extends Sprite2DMaterial {
@@ -228,8 +227,10 @@ package de.nulldesign.nd2d.materials {
 			}
 		}
 
-		override protected function prepareForRender(context:Context3D):void {
-			super.prepareForRender(context);
+		override protected function prepareForRender(context:Context3D,
+                                                     geometry:Geometry):void
+        {
+			super.prepareForRender(context, geometry);
 
 			context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 2, programConstants, 2);
 
@@ -242,22 +243,21 @@ package de.nulldesign.nd2d.materials {
 			}
 		}
 
-		protected function renderBlur(context:Context3D, startTri:uint, numTris:uint):void {
+		protected function renderBlur(context:Context3D, geometry:Geometry):void {
 			activeRenderToTexture = (activeRenderToTexture == blurredTexture.getTexture(context) ? blurredTexture2.getTexture(context) : blurredTexture.getTexture(context));
 			context.setRenderToTexture(activeRenderToTexture, false, 2, 0);
 			context.clear(0.0, 0.0, 0.0, 0.0);
 
-			context.drawTriangles(indexBuffer, startTri * 3, numTris);
+			context.drawTriangles(geometry.indexBuffer, geometry.startTri * 3, geometry.numTris);
 
 			Statistics.drawCalls++;
-			Statistics.triangles += numTris - startTri;
+			Statistics.triangles += geometry.numTris - geometry.startTri;
 
 			context.setTextureAt(0, activeRenderToTexture);
 		}
 
-		override public function render(context:Context3D, faceList:Vector.<Face>, startTri:uint, numTris:uint):void {
-			generateBufferData(context, faceList);
-
+		override public function render(context:Context3D, geometry:Geometry):void
+        {
 			if(invalidate) {
 				invalidate = false;
 
@@ -286,7 +286,7 @@ package de.nulldesign.nd2d.materials {
 				uvScaleY = 1.0;
 
 				updateBlurKernel(MAX_BLUR, BLUR_DIRECTION_HORIZONTAL);
-				prepareForRender(context);
+				prepareForRender(context, geometry);
 
 				activeRenderToTexture = null;
 				var totalSteps:int;
@@ -296,14 +296,14 @@ package de.nulldesign.nd2d.materials {
 				totalSteps = Math.floor(blurX / MAX_BLUR);
 
 				for(i = 0; i < totalSteps; i++) {
-					renderBlur(context, startTri, numTris);
+					renderBlur(context, geometry);
 				}
 
 				if(blurX % MAX_BLUR != 0) {
 					updateBlurKernel(blurX % MAX_BLUR, BLUR_DIRECTION_HORIZONTAL);
 					context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 2, programConstants, 2);
 
-					renderBlur(context, startTri, numTris);
+					renderBlur(context, geometry);
 				}
 
 				// BLUR Y
@@ -314,14 +314,14 @@ package de.nulldesign.nd2d.materials {
 				totalSteps = Math.floor(blurY / MAX_BLUR);
 
 				for(i = 0; i < totalSteps; i++) {
-					renderBlur(context, startTri, numTris);
+					renderBlur(context, geometry);
 				}
 
 				if(blurY % MAX_BLUR != 0) {
 					updateBlurKernel(blurY % MAX_BLUR, BLUR_DIRECTION_VERTICAL);
 					context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 2, programConstants, 2);
 
-					renderBlur(context, startTri, numTris);
+					renderBlur(context, geometry);
 				}
 
 				context.setRenderToBackBuffer();
@@ -338,7 +338,7 @@ package de.nulldesign.nd2d.materials {
 				updateBlurKernel(0, BLUR_DIRECTION_HORIZONTAL);
 			}
 
-			prepareForRender(context);
+			prepareForRender(context, geometry);
 
 			if(!blurX && !blurY) {
 				activeRenderToTexture = texture.getTexture(context);
@@ -346,10 +346,10 @@ package de.nulldesign.nd2d.materials {
 
 			context.setTextureAt(0, activeRenderToTexture);
 
-			context.drawTriangles(indexBuffer, startTri * 3, numTris);
+			context.drawTriangles(geometry.indexBuffer, geometry.startTri * 3, geometry.numTris);
 
 			Statistics.drawCalls++;
-			Statistics.triangles += numTris - startTri;
+			Statistics.triangles += geometry.numTris - geometry.startTri;
 
 			clearAfterRender(context);
 		}

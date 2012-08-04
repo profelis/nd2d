@@ -64,7 +64,7 @@ package tests.objects {
 					newX = v.x + v.x * Math.sin(v.length * 10.0 + timeSinceStartInSeconds * 2.0) * strength;
 					newY = v.y + v.y * Math.cos(v.length * 10.0 + timeSinceStartInSeconds * 2.0) * strength;
 
-					material.modifyVertexInBuffer(v.bufferIdx, newX, newY);
+					geometry.modifyVertexInBuffer(v.bufferIdx, newX, newY);
 				}
 			}
 		}

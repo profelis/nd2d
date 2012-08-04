@@ -29,15 +29,15 @@
  */
 
 package materials {
+    import de.nulldesign.nd2d.geom.Geometry;
+    import de.nulldesign.nd2d.materials.Sprite2DMaterial;
+    import de.nulldesign.nd2d.materials.shader.ShaderCache;
 
-	import de.nulldesign.nd2d.materials.Sprite2DMaterial;
-	import de.nulldesign.nd2d.materials.shader.ShaderCache;
+    import flash.display3D.Context3D;
+    import flash.display3D.Context3DProgramType;
+    import flash.utils.getTimer;
 
-	import flash.display3D.Context3D;
-	import flash.display3D.Context3DProgramType;
-	import flash.utils.getTimer;
-
-	public class Sprite2DDizzyMaterial extends Sprite2DMaterial {
+    public class Sprite2DDizzyMaterial extends Sprite2DMaterial {
 
 		private const DIZZY_VERTEX_SHADER:String =
 			"alias va0, position;" +
@@ -83,8 +83,10 @@ package materials {
 			super();
 		}
 
-		override protected function prepareForRender(context:Context3D):void {
-			super.prepareForRender(context);
+		override protected function prepareForRender(context:Context3D,
+                                                     geometry:Geometry):void
+        {
+			super.prepareForRender(context, geometry);
 
 			context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 0, Vector.<Number>([
 				getTimer() * 0.002,

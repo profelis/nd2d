@@ -29,19 +29,17 @@
  */
 
 package de.nulldesign.nd2d.materials {
+    import de.nulldesign.nd2d.display.Node2D;
+    import de.nulldesign.nd2d.display.Sprite2D;
+    import de.nulldesign.nd2d.geom.Geometry;
+    import de.nulldesign.nd2d.materials.texture.Texture2D;
+    import de.nulldesign.nd2d.utils.NodeBlendMode;
+    import de.nulldesign.nd2d.utils.Statistics;
 
-	import de.nulldesign.nd2d.display.Node2D;
-	import de.nulldesign.nd2d.display.Sprite2D;
-	import de.nulldesign.nd2d.geom.Face;
-	import de.nulldesign.nd2d.materials.texture.Texture2D;
-	import de.nulldesign.nd2d.utils.NodeBlendMode;
-	import de.nulldesign.nd2d.utils.Statistics;
+    import flash.display3D.Context3D;
+    import flash.display3D.Context3DProgramType;
 
-	import flash.display3D.Context3D;
-	import flash.display3D.Context3DProgramType;
-	import flash.display3D.Context3DVertexBufferFormat;
-
-	public class Sprite2DBatchDynamicMaterial extends Sprite2DBatchMaterial {
+    public class Sprite2DBatchDynamicMaterial extends Sprite2DBatchMaterial {
 
 		private var idx:uint = 0;
 		private const constantsGlobal:uint = 4;
@@ -65,13 +63,18 @@ package de.nulldesign.nd2d.materials {
 			super();
 		}
 
-		override protected function prepareForRender(context:Context3D):void {
-			super.prepareForRender(context);
+		override protected function prepareForRender(context:Context3D,
+                                                     geometry:Geometry):void
+        {
+			super.prepareForRender(context, geometry);
 
 			needInit = false;
 		}
 
-		override public function renderBatch(context:Context3D, faceList:Vector.<Face>, childList:Node2D):void {
+		override public function renderBatch(context:Context3D,
+                                             geometry:Geometry,
+                                             childList:Node2D):void
+        {
 			if(!childList) {
 				return;
 			}
@@ -85,22 +88,24 @@ package de.nulldesign.nd2d.materials {
 			currentTexture = lastTexture = texture;
 			currentBlendMode = lastBlendMode = blendMode;
 
-			generateBufferData(context, faceList);
-			prepareForRender(context);
+            geometry.generateBatch(BATCH_SIZE);
+			prepareForRender(context, geometry);
 
-			processAndRenderNodes(context, childList);
+			processAndRenderNodes(context, geometry, childList);
 
-			drawCurrentBatch(context);
+			drawCurrentBatch(context, geometry);
 
 			clearAfterRender(context);
 		}
 
-		override protected function drawCurrentBatch(context:Context3D):void {
+		override protected function drawCurrentBatch(context:Context3D,
+                                                     geometry:Geometry):void
+        {
 			if(batchLen) {
 				context.setProgramConstantsFromVector(Context3DProgramType.VERTEX,
 					constantsGlobal + BATCH_SIZE * constantsPerMatrix, programConstants, batchLen * constantsPerSprite);
 
-				context.drawTriangles(indexBuffer, 0, batchLen << 1);
+				context.drawTriangles(geometry.indexBuffer, 0, batchLen << 1);
 
 				Statistics.drawCalls++;
 				Statistics.triangles += (batchLen << 1);
@@ -110,7 +115,10 @@ package de.nulldesign.nd2d.materials {
 			batchLen = 0;
 		}
 
-		override protected function processAndRenderNodes(context:Context3D, childList:Node2D):void {
+		override protected function processAndRenderNodes(context:Context3D,
+                                                          geometry:Geometry,
+                                                          childList:Node2D):void
+        {
 			if(!childList) {
 				return;
 			}
@@ -155,9 +163,9 @@ package de.nulldesign.nd2d.materials {
 						currentBlendMode = child.blendMode;
 
 						if(needInit) {
-							prepareForRender(context);
+							prepareForRender(context, geometry);
 						} else {
-							updateProgram(context);
+							updateProgram(context, geometry);
 						}
 
 						context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX,
@@ -188,12 +196,12 @@ package de.nulldesign.nd2d.materials {
 						Statistics.sprites++;
 
 						if(batchLen == BATCH_SIZE) {
-							drawCurrentBatch(context);
+							drawCurrentBatch(context, geometry);
 						}
 					}
 					// custom material, mask, blur, etc.
 					else {
-						drawCurrentBatch(context);
+						drawCurrentBatch(context, geometry);
 
 						if(!needInit) {
 							clearAfterRender(context);
@@ -205,18 +213,20 @@ package de.nulldesign.nd2d.materials {
 					}
 				}
 
-				processAndRenderNodes(context, childNode.childFirst);
+				processAndRenderNodes(context, geometry, childNode.childFirst);
 
 				childNode.invalidateMatrix = false;
 			}
 		}
 
-		override protected function updateProgram(context:Context3D):void {
-			if(currentTexture != lastTexture || currentBlendMode != lastBlendMode || usesUV != lastUsesUV || usesColor != lastUsesColor || usesColorOffset != lastUsesColorOffset) {
-				drawCurrentBatch(context);
+		override protected function updateProgram(context:Context3D,
+                                                  geometry:Geometry):void
+        {
+			if(shaderData == null || currentTexture != lastTexture || currentBlendMode != lastBlendMode || usesUV != lastUsesUV || usesColor != lastUsesColor || usesColorOffset != lastUsesColorOffset) {
+				drawCurrentBatch(context, geometry);
 
 				if(usesUV != lastUsesUV || usesColor != lastUsesColor || usesColorOffset != lastUsesColorOffset) {
-					shaderData = null;
+                    shaderData = null;
 					initProgram(context);
 
 					if(!needInit) {

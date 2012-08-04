@@ -30,11 +30,10 @@
 
 package de.nulldesign.nd2d.display {
 
-	import de.nulldesign.nd2d.geom.Face;
-	import de.nulldesign.nd2d.materials.Sprite2DBatchDynamicMaterial;
+    import de.nulldesign.nd2d.geom.Geometry;
+    import de.nulldesign.nd2d.materials.Sprite2DBatchDynamicMaterial;
 	import de.nulldesign.nd2d.materials.Sprite2DBatchMaterial;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
-	import de.nulldesign.nd2d.utils.TextureHelper;
 
 	import flash.display3D.Context3D;
 
@@ -61,7 +60,7 @@ package de.nulldesign.nd2d.display {
 		public var texture:Texture2D;
 
 		private var dynamic:Boolean;
-		private var faceList:Vector.<Face>;
+		public var geometry:Geometry;
 		private var material:Sprite2DBatchMaterial;
 
 		/**
@@ -75,13 +74,15 @@ package de.nulldesign.nd2d.display {
 			this.texture = texture;
 			this.dynamic = dynamic;
 
-			faceList = TextureHelper.generateQuadFromDimensions(2, 2);
+			geometry = Geometry.createQuad();
 
 			if(dynamic) {
 				material = new Sprite2DBatchDynamicMaterial();
 			} else {
 				material = new Sprite2DBatchMaterial();
 			}
+            geometry.setMaterial(material);
+            geometry.generateBatch(material.batchSize);
 		}
 
 		public function addBatchParent(child:Node2D):void {
@@ -146,7 +147,9 @@ package de.nulldesign.nd2d.display {
 		}
 
 		override public function draw(context:Context3D, camera:Camera2D):void {
-			material.camera = camera;
+            geometry.update(context);
+
+            material.camera = camera;
 			material.blendMode = blendMode;
 			material.scrollRect = worldScrollRect;
 			material.modelMatrix = worldModelMatrix;
@@ -154,11 +157,12 @@ package de.nulldesign.nd2d.display {
 			material.texture = texture;
 			material.usesColor = usesColor;
 			material.usesColorOffset = usesColorOffset;
-			material.renderBatch(context, faceList, childFirst);
+			material.renderBatch(context, geometry, childFirst);
 		}
 
 		override public function handleDeviceLoss():void {
 			super.handleDeviceLoss();
+            geometry.handleDeviceLoss();
 			material.handleDeviceLoss();
 		}
 
@@ -173,7 +177,10 @@ package de.nulldesign.nd2d.display {
 				texture = null;
 			}
 
-			faceList = null;
+            if (geometry) {
+                geometry.dispose();
+                geometry = null;
+            }
 
 			super.dispose();
 		}

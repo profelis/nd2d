@@ -30,14 +30,13 @@
 
 package de.nulldesign.nd2d.display {
 
-	import de.nulldesign.nd2d.geom.Face;
-	import de.nulldesign.nd2d.materials.BlendModePresets;
+    import de.nulldesign.nd2d.geom.Geometry;
+    import de.nulldesign.nd2d.materials.BlendModePresets;
 	import de.nulldesign.nd2d.materials.Sprite2DMaskMaterial;
 	import de.nulldesign.nd2d.materials.Sprite2DMaterial;
 	import de.nulldesign.nd2d.materials.SpriteAnimation;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
 	import de.nulldesign.nd2d.utils.Statistics;
-	import de.nulldesign.nd2d.utils.TextureHelper;
 
 	import flash.display3D.Context3D;
 
@@ -50,7 +49,7 @@ package de.nulldesign.nd2d.display {
 	public class Sprite2D extends Node2D {
 
 		protected var mask:Sprite2D;
-		protected var faceList:Vector.<Face>;
+        public var geometry:Geometry;
 
 		public var texture:Texture2D;
 		public var animation:SpriteAnimation;
@@ -63,7 +62,7 @@ package de.nulldesign.nd2d.display {
 		 * @param textureObject Texture2D
 		 */
 		public function Sprite2D(textureObject:Texture2D = null) {
-			faceList = TextureHelper.generateQuadFromDimensions(2, 2);
+			geometry = Geometry.createQuad();
 			animation = new SpriteAnimation(this);
 
 			if(textureObject) {
@@ -101,6 +100,7 @@ package de.nulldesign.nd2d.display {
 			}
 
 			this.material = value;
+            geometry.setMaterial(value);
 		}
 
 		/**
@@ -135,6 +135,8 @@ package de.nulldesign.nd2d.display {
 				return;
 			}
 
+            geometry.update(context);
+
 			material.blendMode = blendMode;
 			material.scrollRect = worldScrollRect;
 			material.modelMatrix = worldModelMatrix;
@@ -163,7 +165,7 @@ package de.nulldesign.nd2d.display {
 				}
 			}
 
-			material.render(context, faceList, 0, faceList.length);
+			material.render(context, geometry);
 
 			Statistics.sprites++;
 		}
@@ -234,6 +236,8 @@ package de.nulldesign.nd2d.display {
 		override public function handleDeviceLoss():void {
 			super.handleDeviceLoss();
 
+            geometry.handleDeviceLoss();
+
 			if(material) {
 				material.handleDeviceLoss();
 			}
@@ -259,7 +263,11 @@ package de.nulldesign.nd2d.display {
 				texture = null;
 			}
 
-			faceList = null;
+            if (geometry)
+            {
+                geometry.dispose();
+                geometry = null;
+            }
 			animation = null;
 
 			super.dispose();

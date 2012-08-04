@@ -44,7 +44,8 @@ package de.nulldesign.nd2d.display {
 
 		protected var stepsX:uint;
 		protected var stepsY:uint;
-		protected var vertexList:Vector.<Vertex>;
+
+        protected var vertexList:Vector.<Vertex>;
 
 		public function Grid2D(stepsX:uint, stepsY:uint, textureObject:Texture2D = null) {
 			this.stepsX = stepsX;
@@ -56,8 +57,9 @@ package de.nulldesign.nd2d.display {
 		}
 
 		protected function generateGrid():void {
-			faceList = new Vector.<Face>();
-			vertexList = new Vector.<Vertex>();
+			geometry.faceList = new Vector.<Face>();
+
+            vertexList = new Vector.<Vertex>();
 
 			var i:int;
 			var m:int;
@@ -90,17 +92,13 @@ package de.nulldesign.nd2d.display {
 
 			for(i = 1, m = ar.length; i < m; i++) {
 				for(var j:int = 1, n:int = ar[i].length; j < n; j++) {
-					faceList.push(new Face(ar[i - 1][j - 1], ar[i - 1][j], ar[i][j], uv[i - 1][j - 1], uv[i - 1][j], uv[i][j]));
-					faceList.push(new Face(ar[i - 1][j - 1], ar[i][j], ar[i][j - 1], uv[i - 1][j - 1], uv[i][j], uv[i][j - 1]));
+					geometry.faceList.push(new Face(ar[i - 1][j - 1], ar[i - 1][j], ar[i][j], uv[i - 1][j - 1], uv[i - 1][j], uv[i][j]));
+					geometry.faceList.push(new Face(ar[i - 1][j - 1], ar[i][j], ar[i][j - 1], uv[i - 1][j - 1], uv[i][j], uv[i][j - 1]));
 				}
 			}
 
-		}
+            geometry.needUpdateVertexBuffer = true;
 
-		override public function dispose():void {
-			super.dispose();
-
-			vertexList = null;
 		}
 
 	}

@@ -29,20 +29,20 @@
  */
 
 package de.nulldesign.nd2d.materials {
+    import de.nulldesign.nd2d.geom.Face;
+    import de.nulldesign.nd2d.geom.Geometry;
+    import de.nulldesign.nd2d.geom.UV;
+    import de.nulldesign.nd2d.geom.Vertex;
+    import de.nulldesign.nd2d.materials.shader.ShaderCache;
+    import de.nulldesign.nd2d.materials.texture.Texture2D;
 
-	import de.nulldesign.nd2d.geom.Face;
-	import de.nulldesign.nd2d.geom.UV;
-	import de.nulldesign.nd2d.geom.Vertex;
-	import de.nulldesign.nd2d.materials.shader.ShaderCache;
-	import de.nulldesign.nd2d.materials.texture.Texture2D;
+    import flash.display3D.Context3D;
+    import flash.display3D.Context3DProgramType;
+    import flash.display3D.Context3DVertexBufferFormat;
+    import flash.geom.ColorTransform;
+    import flash.geom.Rectangle;
 
-	import flash.display3D.Context3D;
-	import flash.display3D.Context3DProgramType;
-	import flash.display3D.Context3DVertexBufferFormat;
-	import flash.geom.ColorTransform;
-	import flash.geom.Rectangle;
-
-	public class Sprite2DMaterial extends MaterialBase {
+    public class Sprite2DMaterial extends MaterialBase {
 
 		private const VERTEX_SHADER:String =
 			"alias va0, position;" +
@@ -89,14 +89,16 @@ package de.nulldesign.nd2d.materials {
 		public function Sprite2DMaterial() {
 		}
 
-		override protected function prepareForRender(context:Context3D):void {
-			super.prepareForRender(context);
+		override protected function prepareForRender(context:Context3D,
+                                                     geometry:Geometry):void
+        {
+			super.prepareForRender(context, geometry);
 
 			var uvSheet:Rectangle = (texture.sheet ? animation.frameUV : texture.uvRect);
 
 			context.setTextureAt(0, texture.getTexture(context));
-			context.setVertexBufferAt(0, vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_2); // vertex
-			context.setVertexBufferAt(1, vertexBuffer, 2, Context3DVertexBufferFormat.FLOAT_2); // uv
+			context.setVertexBufferAt(0, geometry.vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_2); // vertex
+			context.setVertexBufferAt(1, geometry.vertexBuffer, 2, Context3DVertexBufferFormat.FLOAT_2); // uv
 
 			if(scrollRect) {
 				context.setScissorRectangle(scrollRect);
@@ -135,11 +137,6 @@ package de.nulldesign.nd2d.materials {
 			context.setScissorRectangle(null);
 		}
 
-		override protected function addVertex(context:Context3D, buffer:Vector.<Number>, v:Vertex, uv:UV, face:Face):void {
-			fillBuffer(buffer, v, uv, face, VERTEX_POSITION, 2);
-			fillBuffer(buffer, v, uv, face, VERTEX_UV, 2);
-		}
-
 		override protected function initProgram(context:Context3D):void {
 			if(!shaderData) {
 				var defines:Array = ["Sprite2D",
@@ -151,20 +148,13 @@ package de.nulldesign.nd2d.materials {
 			}
 		}
 
-		public function modifyVertexInBuffer(bufferIdx:uint, x:Number, y:Number):void {
-			if(!mVertexBuffer || mVertexBuffer.length == 0) {
-				return;
-			}
+        override public function addVertex(context:Context3D, buffer:Vector.<Number>, v:Vertex, uv:UV, face:Face):void {
+            fillBuffer(buffer, v, uv, face, VERTEX_POSITION, 2);
+            fillBuffer(buffer, v, uv, face, VERTEX_UV, 2);
+        }
 
-			const idx:uint = bufferIdx * shaderData.numFloatsPerVertex;
 
-			mVertexBuffer[idx] = x;
-			mVertexBuffer[idx + 1] = y;
-
-			needUploadVertexBuffer = true;
-		}
-
-		override public function dispose():void {
+    override public function dispose():void {
 			super.dispose();
 
 			texture = null;

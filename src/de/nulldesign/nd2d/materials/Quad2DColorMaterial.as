@@ -29,17 +29,17 @@
  */
 
 package de.nulldesign.nd2d.materials {
+    import de.nulldesign.nd2d.geom.Face;
+    import de.nulldesign.nd2d.geom.Geometry;
+    import de.nulldesign.nd2d.geom.UV;
+    import de.nulldesign.nd2d.geom.Vertex;
+    import de.nulldesign.nd2d.materials.shader.ShaderCache;
 
-	import de.nulldesign.nd2d.geom.Face;
-	import de.nulldesign.nd2d.geom.UV;
-	import de.nulldesign.nd2d.geom.Vertex;
-	import de.nulldesign.nd2d.materials.shader.ShaderCache;
+    import flash.display3D.Context3D;
+    import flash.display3D.Context3DProgramType;
+    import flash.display3D.Context3DVertexBufferFormat;
 
-	import flash.display3D.Context3D;
-	import flash.display3D.Context3DProgramType;
-	import flash.display3D.Context3DVertexBufferFormat;
-
-	public class Quad2DColorMaterial extends MaterialBase {
+    public class Quad2DColorMaterial extends MaterialBase {
 
 		private const VERTEX_SHADER:String =
 			"alias va0, position;" +
@@ -59,13 +59,17 @@ package de.nulldesign.nd2d.materials {
 			"output = colorOffset;";
 
 		public function Quad2DColorMaterial() {
+            super();
+            numFloatsPerVertex = 6;
 		}
 
-		override protected function prepareForRender(context:Context3D):void {
-			super.prepareForRender(context);
+		override protected function prepareForRender(context:Context3D,
+                                                     geometry:Geometry):void
+        {
+			super.prepareForRender(context, geometry);
 
-			context.setVertexBufferAt(0, vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_2); // vertex
-			context.setVertexBufferAt(1, vertexBuffer, 2, Context3DVertexBufferFormat.FLOAT_4); // color
+			context.setVertexBufferAt(0, geometry.vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_2); // vertex
+			context.setVertexBufferAt(1, geometry.vertexBuffer, 2, Context3DVertexBufferFormat.FLOAT_4); // color
 
 			context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, viewProjectionMatrix, true);
 			context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 4, clipSpaceMatrix, true);
@@ -76,7 +80,10 @@ package de.nulldesign.nd2d.materials {
 			context.setVertexBufferAt(1, null);
 		}
 
-		override protected function addVertex(context:Context3D, buffer:Vector.<Number>, v:Vertex, uv:UV, face:Face):void {
+		override public function addVertex(context:Context3D, buffer:Vector.<Number>,
+                                           v:Vertex, uv:UV,
+                                           face:Face):void
+        {
 			fillBuffer(buffer, v, uv, face, VERTEX_POSITION, 2);
 			fillBuffer(buffer, v, uv, face, VERTEX_COLOR, 4);
 		}
@@ -85,21 +92,6 @@ package de.nulldesign.nd2d.materials {
 			if(!shaderData) {
 				shaderData = ShaderCache.getShader(context, ["Quad2D"], VERTEX_SHADER, FRAGMENT_SHADER, 6, null);
 			}
-		}
-
-		public function modifyColorInBuffer(bufferIdx:uint, r:Number, g:Number, b:Number, a:Number):void {
-			if(!mVertexBuffer || mVertexBuffer.length == 0) {
-				return;
-			}
-
-			const idx:uint = bufferIdx * shaderData.numFloatsPerVertex;
-
-			mVertexBuffer[idx + 2] = r;
-			mVertexBuffer[idx + 3] = g;
-			mVertexBuffer[idx + 4] = b;
-			mVertexBuffer[idx + 5] = a;
-
-			needUploadVertexBuffer = true;
 		}
 	}
 }

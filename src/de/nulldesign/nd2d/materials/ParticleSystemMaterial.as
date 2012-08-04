@@ -29,20 +29,20 @@
  */
 
 package de.nulldesign.nd2d.materials {
+    import de.nulldesign.nd2d.geom.Face;
+    import de.nulldesign.nd2d.geom.Geometry;
+    import de.nulldesign.nd2d.geom.ParticleVertex;
+    import de.nulldesign.nd2d.geom.UV;
+    import de.nulldesign.nd2d.geom.Vertex;
+    import de.nulldesign.nd2d.materials.shader.ShaderCache;
+    import de.nulldesign.nd2d.materials.texture.Texture2D;
 
-	import de.nulldesign.nd2d.geom.Face;
-	import de.nulldesign.nd2d.geom.ParticleVertex;
-	import de.nulldesign.nd2d.geom.UV;
-	import de.nulldesign.nd2d.geom.Vertex;
-	import de.nulldesign.nd2d.materials.shader.ShaderCache;
-	import de.nulldesign.nd2d.materials.texture.Texture2D;
+    import flash.display3D.Context3D;
+    import flash.display3D.Context3DProgramType;
+    import flash.display3D.Context3DVertexBufferFormat;
+    import flash.geom.Point;
 
-	import flash.display3D.Context3D;
-	import flash.display3D.Context3DProgramType;
-	import flash.display3D.Context3DVertexBufferFormat;
-	import flash.geom.Point;
-
-	public class ParticleSystemMaterial extends MaterialBase {
+    public class ParticleSystemMaterial extends MaterialBase {
 
 		private const VERTEX_SHADER:String =
 			"alias va0, position;" +
@@ -134,20 +134,26 @@ package de.nulldesign.nd2d.materials {
 		protected var programConstants:Vector.<Number> = new Vector.<Number>(4, true);
 
 		public function ParticleSystemMaterial(texture:Texture2D, burst:Boolean) {
+            super();
+
 			this.burst = burst;
 			this.texture = texture;
+
+            numFloatsPerVertex = 20;
 		}
 
-		override protected function prepareForRender(context:Context3D):void {
-			super.prepareForRender(context);
+		override protected function prepareForRender(context:Context3D,
+                                                     geometry:Geometry):void
+        {
+			super.prepareForRender(context, geometry);
 
 			context.setTextureAt(0, texture.getTexture(context));
-			context.setVertexBufferAt(0, vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_2); // vertex
-			context.setVertexBufferAt(1, vertexBuffer, 2, Context3DVertexBufferFormat.FLOAT_2); // uv
-			context.setVertexBufferAt(2, vertexBuffer, 4, Context3DVertexBufferFormat.FLOAT_4); // misc (starttime, life, startsize, endsize
-			context.setVertexBufferAt(3, vertexBuffer, 8, Context3DVertexBufferFormat.FLOAT_4); // velocity / startpos
-			context.setVertexBufferAt(4, vertexBuffer, 12, Context3DVertexBufferFormat.FLOAT_4); // startcolor
-			context.setVertexBufferAt(5, vertexBuffer, 16, Context3DVertexBufferFormat.FLOAT_4); // endcolor
+			context.setVertexBufferAt(0, geometry.vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_2); // vertex
+			context.setVertexBufferAt(1, geometry.vertexBuffer, 2, Context3DVertexBufferFormat.FLOAT_2); // uv
+			context.setVertexBufferAt(2, geometry.vertexBuffer, 4, Context3DVertexBufferFormat.FLOAT_4); // misc (starttime, life, startsize, endsize
+			context.setVertexBufferAt(3, geometry.vertexBuffer, 8, Context3DVertexBufferFormat.FLOAT_4); // velocity / startpos
+			context.setVertexBufferAt(4, geometry.vertexBuffer, 12, Context3DVertexBufferFormat.FLOAT_4); // startcolor
+			context.setVertexBufferAt(5, geometry.vertexBuffer, 16, Context3DVertexBufferFormat.FLOAT_4); // endcolor
 
 			context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, viewProjectionMatrix, true);
 			context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 4, clipSpaceMatrix, true);
@@ -171,7 +177,10 @@ package de.nulldesign.nd2d.materials {
 			context.setScissorRectangle(null);
 		}
 
-		override protected function addVertex(context:Context3D, buffer:Vector.<Number>, v:Vertex, uv:UV, face:Face):void {
+		override public function addVertex(context:Context3D, buffer:Vector.<Number>,
+                                           v:Vertex, uv:UV,
+                                           face:Face):void
+        {
 			fillBuffer(buffer, v, uv, face, VERTEX_POSITION, 2);
 			fillBuffer(buffer, v, uv, face, VERTEX_UV, 2);
 			fillBuffer(buffer, v, uv, face, "PB3D_MISC", 4);
@@ -180,7 +189,10 @@ package de.nulldesign.nd2d.materials {
 			fillBuffer(buffer, v, uv, face, "PB3D_ENDCOLOR", 4);
 		}
 
-		override protected function fillBuffer(buffer:Vector.<Number>, v:Vertex, uv:UV, face:Face, semanticsID:String, floatFormat:int):void {
+		override public function fillBuffer(buffer:Vector.<Number>, v:Vertex,
+                                            uv:UV, face:Face,
+                                            semanticsID:String, floatFormat:int):void
+        {
 			super.fillBuffer(buffer, v, uv, face, semanticsID, floatFormat);
 
 			var pv:ParticleVertex = ParticleVertex(v);

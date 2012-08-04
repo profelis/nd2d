@@ -31,7 +31,8 @@
 package de.nulldesign.nd2d.display {
 
 	import de.nulldesign.nd2d.geom.Face;
-	import de.nulldesign.nd2d.materials.ParticleSystemMaterial;
+    import de.nulldesign.nd2d.geom.Geometry;
+    import de.nulldesign.nd2d.materials.ParticleSystemMaterial;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
 	import de.nulldesign.nd2d.utils.ColorUtil;
 	import de.nulldesign.nd2d.utils.NumberUtil;
@@ -62,7 +63,7 @@ package de.nulldesign.nd2d.display {
 
 		protected var particles:Vector.<Particle>;
 		protected var activeParticles:uint;
-		protected var faceList:Vector.<Face>;
+		protected var geometry:Geometry;
 		protected var material:ParticleSystemMaterial;
 		protected var texW:Number;
 		protected var texH:Number;
@@ -79,6 +80,8 @@ package de.nulldesign.nd2d.display {
 
 		public function ParticleSystem2D(textureObject:Texture2D, maxCapacity:uint, preset:ParticleSystemPreset, burst:Boolean = false) {
 			super();
+
+            geometry = new Geometry();
 
 			this.preset = preset;
 			this.burst = burst;
@@ -99,13 +102,13 @@ package de.nulldesign.nd2d.display {
 			var tex:Texture2D;
 			tex = textureObject;
 
-			material = new ParticleSystemMaterial(tex, burst);
+			geometry.setMaterial(material = new ParticleSystemMaterial(tex, burst));
 
 			texW = tex.textureWidth / 2.0;
 			texH = tex.textureHeight / 2.0;
 
 			particles = new Vector.<Particle>(maxCapacity, true);
-			faceList = new Vector.<Face>(maxCapacity * 2, true);
+			geometry.faceList = new Vector.<Face>(maxCapacity * 2, true);
 
 			var f:int = 0;
 			startTime = getTimer();
@@ -114,10 +117,10 @@ package de.nulldesign.nd2d.display {
 			for(var i:int = 0; i < maxCapacity; i++) {
 				particles[i] = new Particle();
 
-				faceList[f++] = new Face(particles[i].v1, particles[i].v2, particles[i].v3, particles[i].uv1,
+                geometry.faceList[f++] = new Face(particles[i].v1, particles[i].v2, particles[i].v3, particles[i].uv1,
 					particles[i].uv2, particles[i].uv3);
 
-				faceList[f++] = new Face(particles[i].v1, particles[i].v3, particles[i].v4, particles[i].uv1,
+                geometry.faceList[f++] = new Face(particles[i].v1, particles[i].v3, particles[i].v4, particles[i].uv1,
 					particles[i].uv3, particles[i].uv4);
 
 				var angle:Number = NumberUtil.random(VectorUtil.deg2rad(preset.minEmitAngle),
@@ -138,6 +141,8 @@ package de.nulldesign.nd2d.display {
 					NumberUtil.random(preset.minEndSize, preset.maxEndSize),
 					NumberUtil.random(preset.minLife, preset.maxLife), preset.spawnDelay * i);
 			}
+
+            geometry.needUpdateVertexBuffer = true;
 
 			activeParticles = 1;
 
@@ -197,6 +202,8 @@ package de.nulldesign.nd2d.display {
 			if(burstDone) {
 				return;
 			}
+            geometry.update(context);
+            geometry.numTris = activeParticles * 2;
 
 			material.blendMode = blendMode;
 			material.modelMatrix = worldModelMatrix;
@@ -204,7 +211,7 @@ package de.nulldesign.nd2d.display {
 			material.viewProjectionMatrix = camera.getViewProjectionMatrix(false);
 			material.currentTime = currentTime;
 			material.gravity = gravity;
-			material.render(context, faceList, 0, activeParticles * 2);
+			material.render(context, geometry);
 
 			Statistics.sprites += activeParticles;
 		}
@@ -221,7 +228,11 @@ package de.nulldesign.nd2d.display {
 			}
 
 			preset = null;
-			faceList = null;
+
+            if (geometry) {
+                geometry.dispose();
+                geometry = null;
+            }
 			particles = null;
 
 			super.dispose();
