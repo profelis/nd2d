@@ -109,9 +109,13 @@ package de.nulldesign.nd2d.utils {
 		 */
 		public static function generateTextureFromBitmap(context:Context3D, bmp:BitmapData, useMipMaps:Boolean, stats:Texture2D = null):Texture {
 			var textureDimensions:Point = getTextureDimensionsFromBitmap(bmp);
-			var newBmp:BitmapData = new BitmapData(textureDimensions.x, textureDimensions.y, true, 0x00000000);
+			var newBmp:BitmapData = bmp;
 
-			newBmp.copyPixels(bmp, new Rectangle(0, 0, bmp.width, bmp.height), new Point(0, 0));
+            if (bmp.width != textureDimensions.x || bmp.height != textureDimensions.y)
+            {
+                newBmp =  new BitmapData(textureDimensions.x, textureDimensions.y, true, 0x00000000);
+                newBmp.copyPixels(bmp, new Rectangle(0, 0, bmp.width, bmp.height), new Point(0, 0));
+            }
 
 			var texture:Texture = context.createTexture(textureDimensions.x, textureDimensions.y, Context3DTextureFormat.BGRA, false);
 
