@@ -168,30 +168,5 @@ package de.nulldesign.nd2d.utils {
 
 			return min + value * (max - min);
 		}
-
-		[Deprecated(replacement="NumberUtil.random()")]
-		public static function rnd0_1():Number {
-			return random();
-		}
-
-		[Deprecated(replacement="NumberUtil.random(-1, 1)")]
-		public static function rndMinus1_1():Number {
-			return random(-1, 1);
-		}
-
-		[Deprecated(replacement="NumberUtil.random(min, max)")]
-		public static function rndMinMax(min:Number, max:Number):Number {
-			return random(min, max);
-		}
-
-		[Deprecated(replacement="int(NumberUtil.random(min, max)) or Math.round(NumberUtil.random(min, max))")]
-		public static function rndMinMaxInt(min:int, max:int):int {
-			return Math.round(random(min, max));
-		}
-
-		[Deprecated(replacement="NumberUtil.sin(t)")]
-		public static function sin0_1(t:Number):Number {
-			return sin(t, 0, 1);
-		}
 	}
 }
