@@ -32,9 +32,12 @@ package de.nulldesign.nd2d.materials.shader {
 
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
 	import de.nulldesign.nd2d.materials.texture.TextureOption;
+    import de.nulldesign.nd2d.utils.nd2d;
 
-	import flash.display3D.Context3D;
+    import flash.display3D.Context3D;
 	import flash.utils.Dictionary;
+
+    use namespace nd2d;
 
 	public class ShaderCache {
 

@@ -142,7 +142,7 @@ package de.nulldesign.nd2d.materials {
 				uvSheet = texture.uvRect;
 
 				clipSpaceMatrix.identity();
-				clipSpaceMatrix.appendScale(texture.textureWidth >> 1, texture.textureHeight >> 1, 1.0);
+				clipSpaceMatrix.appendScale(texture._textureWidth >> 1, texture._textureHeight >> 1, 1.0);
 				clipSpaceMatrix.append(modelMatrix);
 				clipSpaceMatrix.append(viewProjectionMatrix);
 			}
@@ -155,10 +155,10 @@ package de.nulldesign.nd2d.materials {
 			context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, clipSpaceMatrix, true);
 			context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 4, maskClipSpaceMatrix, true);
 
-			programConstants[0] = maskTexture.textureWidth >> 1;
-			programConstants[1] = maskTexture.textureHeight >> 1;
-			programConstants[2] = maskTexture.textureWidth;
-			programConstants[3] = maskTexture.textureHeight;
+			programConstants[0] = maskTexture._textureWidth >> 1;
+			programConstants[1] = maskTexture._textureHeight >> 1;
+			programConstants[2] = maskTexture._textureWidth;
+			programConstants[3] = maskTexture._textureHeight;
 
 			context.setProgramConstantsFromVector(Context3DProgramType.VERTEX, 8, programConstants);
 

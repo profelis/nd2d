@@ -41,6 +41,8 @@ package de.nulldesign.nd2d.utils {
     import flash.geom.Rectangle;
     import flash.utils.ByteArray;
 
+    use namespace nd2d;
+
     public class TextureHelper {
 		public function TextureHelper() {
 		}

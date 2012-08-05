@@ -46,8 +46,8 @@ package de.nulldesign.nd2d.materials.texture {
 		public function TextureSheet(texture:Texture2D, spriteWidth:Number, spriteHeight:Number, distribute:Boolean = true) {
 			var rowIdx:uint;
 			var colIdx:uint;
-			var numCols:uint = texture.bitmapWidth / spriteWidth;
-			var numRows:uint = texture.bitmapHeight / spriteHeight;
+			var numCols:uint = texture._bitmapWidth / spriteWidth;
+			var numRows:uint = texture._bitmapHeight / spriteHeight;
 			var numSheets:uint = numCols * numRows;
 
 			frames = new Vector.<Rectangle>(numSheets, true);
@@ -67,10 +67,10 @@ package de.nulldesign.nd2d.materials.texture {
 				offsets[i] = new Point(0.0, 0.0);
 
 				uvRects[i] = new Rectangle(
-					(spriteWidth * rowIdx) / texture.textureWidth,
-					(spriteHeight * colIdx) / texture.textureHeight,
-					(spriteWidth) / texture.textureWidth,
-					(spriteHeight) / texture.textureHeight);
+					(spriteWidth * rowIdx) / texture._textureWidth,
+					(spriteHeight * colIdx) / texture._textureHeight,
+					(spriteWidth) / texture._textureWidth,
+					(spriteHeight) / texture._textureHeight);
 			}
 
 			// distribute to texture

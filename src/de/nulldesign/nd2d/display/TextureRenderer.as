@@ -53,8 +53,8 @@ package de.nulldesign.nd2d.display {
 		public function TextureRenderer(renderNode:Node2D, texture:Texture2D, cameraOffsetX:Number = NaN, cameraOffsetY:Number = NaN) {
 			this.texture = texture;
 			this.renderNode = renderNode;
-			_width = texture.bitmapWidth;
-			_height = texture.bitmapHeight;
+			_width = texture._bitmapWidth;
+			_height = texture._bitmapHeight;
 			this.cameraOffsetX = cameraOffsetX;
 			this.cameraOffsetY = cameraOffsetY;
 

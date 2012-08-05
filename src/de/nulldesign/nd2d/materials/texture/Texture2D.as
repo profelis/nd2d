@@ -31,14 +31,17 @@ package de.nulldesign.nd2d.materials.texture {
 
 	import de.nulldesign.nd2d.utils.Statistics;
 	import de.nulldesign.nd2d.utils.TextureHelper;
+    import de.nulldesign.nd2d.utils.nd2d;
 
-	import flash.display.BitmapData;
+    import flash.display.BitmapData;
 	import flash.display3D.Context3D;
 	import flash.display3D.Context3DTextureFormat;
 	import flash.display3D.textures.Texture;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	import flash.utils.ByteArray;
+
+    use namespace nd2d;
 
 	public class Texture2D {
 
@@ -55,11 +58,11 @@ package de.nulldesign.nd2d.materials.texture {
 			}
 		}
 
-		public var texture:Texture;
-		public var bitmap:BitmapData;
-		public var compressedBitmap:ByteArray;
+		nd2d var texture:Texture;
+        nd2d var _bitmap:BitmapData;
+        nd2d var _compressedBitmap:ByteArray;
 
-		public var sheet:TextureSheetBase;
+		nd2d var sheet:TextureSheetBase;
 
 		/*
 		 * These sizes are needed to calculate the UV offset in a texture.
@@ -67,18 +70,18 @@ package de.nulldesign.nd2d.materials.texture {
 		 * 2^n size)
 		 * This is the BitmapData's or the ATF textures original size
 		 */
-		public var bitmapWidth:Number;
-		public var bitmapHeight:Number;
+        nd2d var _bitmapWidth:Number;
+        nd2d var _bitmapHeight:Number;
 
-		public var textureWidth:Number;
-		public var textureHeight:Number;
+        nd2d var _textureWidth:Number;
+        nd2d var _textureHeight:Number;
 
-		public var uvRect:Rectangle = new Rectangle(0, 0, 1, 1);
+		nd2d var uvRect:Rectangle = new Rectangle(0, 0, 1, 1);
 
-		public var hasPremultipliedAlpha:Boolean = true;
-		public var textureFilteringOptionChanged:Boolean = true;
+        nd2d var hasPremultipliedAlpha:Boolean = true;
+        nd2d var textureFilteringOptionChanged:Boolean = true;
 
-		public var memoryUsed:uint = 0;
+        nd2d var memoryUsed:uint = 0;
 
 		protected var autoCleanUpResources:Boolean;
 
@@ -98,13 +101,13 @@ package de.nulldesign.nd2d.materials.texture {
 			var tex:Texture2D = new Texture2D(autoCleanUpResources);
 
 			if(bitmap) {
-				tex.bitmap = bitmap;
-				tex.bitmapWidth = bitmap.width;
-				tex.bitmapHeight = bitmap.height;
+				tex._bitmap = bitmap;
+				tex._bitmapWidth = bitmap.width;
+				tex._bitmapHeight = bitmap.height;
 
 				var dimensions:Point = TextureHelper.getTextureDimensionsFromBitmap(bitmap);
-				tex.textureWidth = dimensions.x;
-				tex.textureHeight = dimensions.y;
+				tex._textureWidth = dimensions.x;
+				tex._textureHeight = dimensions.y;
 				tex.hasPremultipliedAlpha = true;
 
 				tex.updateUvRect();
@@ -120,9 +123,9 @@ package de.nulldesign.nd2d.materials.texture {
 				var w:int = Math.pow(2, atf[7]);
 				var h:int = Math.pow(2, atf[8]);
 
-				tex.compressedBitmap = atf;
-				tex.textureWidth = tex.bitmapWidth = w;
-				tex.textureHeight = tex.bitmapHeight = h;
+				tex._compressedBitmap = atf;
+				tex._textureWidth = tex._bitmapWidth = w;
+				tex._textureHeight = tex._bitmapHeight = h;
 				tex.hasPremultipliedAlpha = false;
 
 				tex.updateUvRect();
@@ -135,10 +138,10 @@ package de.nulldesign.nd2d.materials.texture {
 			var tex:Texture2D = new Texture2D();
 			var size:Point = TextureHelper.getTextureDimensionsFromSize(textureWidth, textureHeight);
 
-			tex.textureWidth = size.x;
-			tex.textureHeight = size.y;
-			tex.bitmapWidth = size.x;
-			tex.bitmapHeight = size.y;
+			tex._textureWidth = size.x;
+			tex._textureHeight = size.y;
+			tex._bitmapWidth = size.x;
+			tex._bitmapHeight = size.y;
 
 			tex.updateUvRect();
 
@@ -146,8 +149,8 @@ package de.nulldesign.nd2d.materials.texture {
 		}
 
 		protected function updateUvRect():void {
-			uvRect.width = bitmapWidth / textureWidth;
-			uvRect.height = bitmapHeight / textureHeight;
+			uvRect.width = _bitmapWidth / _textureWidth;
+			uvRect.height = _bitmapHeight / _textureHeight;
 		}
 
 		/**
@@ -162,15 +165,15 @@ package de.nulldesign.nd2d.materials.texture {
 			if(!texture) {
 				memoryUsed = 0;
 
-				if(bitmap) {
+				if(_bitmap) {
 					var useMipMapping:Boolean = (_textureOptions & TextureOption.MIPMAP_LINEAR) + (_textureOptions & TextureOption.MIPMAP_NEAREST) > 0;
 
-					texture = TextureHelper.generateTextureFromBitmap(context, bitmap, useMipMapping, this);
-				} else if(compressedBitmap) {
-					texture = TextureHelper.generateTextureFromByteArray(context, compressedBitmap);
+					texture = TextureHelper.generateTextureFromBitmap(context, _bitmap, useMipMapping, this);
+				} else if(_compressedBitmap) {
+					texture = TextureHelper.generateTextureFromByteArray(context, _compressedBitmap);
 				} else {
-					texture = context.createTexture(textureWidth, textureHeight, Context3DTextureFormat.BGRA, true);
-					memoryUsed = textureWidth * textureHeight * 4;
+					texture = context.createTexture(_textureWidth, _textureHeight, Context3DTextureFormat.BGRA, true);
+					memoryUsed = _textureWidth * _textureHeight * 4;
 				}
 
 				Statistics.textures++;
@@ -190,9 +193,9 @@ package de.nulldesign.nd2d.materials.texture {
 			}
 
 			if(forceCleanUpResources || autoCleanUpResources) {
-				if(bitmap) {
-					bitmap.dispose();
-					bitmap = null;
+				if(_bitmap) {
+					_bitmap.dispose();
+					_bitmap = null;
 				}
 
 				if(sheet) {
@@ -200,8 +203,38 @@ package de.nulldesign.nd2d.materials.texture {
 					sheet = null;
 				}
 
-				compressedBitmap = null;
+				_compressedBitmap = null;
 			}
 		}
-	}
+
+        public function get bitmap():BitmapData
+        {
+            return _bitmap;
+        }
+
+        public function get compressedBitmap():ByteArray
+        {
+            return _compressedBitmap;
+        }
+
+        public function get bitmapWidth():Number
+        {
+            return _bitmapWidth;
+        }
+
+        public function get bitmapHeight():Number
+        {
+            return _bitmapHeight;
+        }
+
+        public function get textureWidth():Number
+        {
+            return _textureWidth;
+        }
+
+        public function get textureHeight():Number
+        {
+            return _textureHeight;
+        }
+    }
 }

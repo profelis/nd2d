@@ -101,10 +101,10 @@ package de.nulldesign.nd2d.materials.texture.parser {
 											frames.push(new Rectangle(array[1], array[2], array[3], array[4]));
 
 											uvRects.push(new Rectangle(
-												array[1] / texture.textureWidth,
-												array[2] / texture.textureHeight,
-												array[3] / texture.textureWidth,
-												array[4] / texture.textureHeight));
+												array[1] / texture._textureWidth,
+												array[2] / texture._textureHeight,
+												array[3] / texture._textureWidth,
+												array[4] / texture._textureHeight));
 										} else {
 											throw new Error("Error parsing descriptor format");
 										}

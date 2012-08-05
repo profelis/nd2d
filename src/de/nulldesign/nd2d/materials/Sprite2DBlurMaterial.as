@@ -193,8 +193,8 @@ package de.nulldesign.nd2d.materials {
 			programConstants[3] = 0.0; //0.15; // fc2.w
 			programConstants[4] = 1.0; //0.16; // fc3.x
 			// movement: minus 4 and plus 1 several times...
-			programConstants[5] = 4.0 * (1.0 / (direction == BLUR_DIRECTION_HORIZONTAL ? texture.textureWidth : texture.textureHeight)); // fc3.y
-			programConstants[6] = 1.0 * (1.0 / (direction == BLUR_DIRECTION_HORIZONTAL ? texture.textureWidth : texture.textureHeight)); // fc3.z
+			programConstants[5] = 4.0 * (1.0 / (direction == BLUR_DIRECTION_HORIZONTAL ? texture._textureWidth : texture._textureHeight)); // fc3.y
+			programConstants[6] = 1.0 * (1.0 / (direction == BLUR_DIRECTION_HORIZONTAL ? texture._textureWidth : texture._textureHeight)); // fc3.z
 			programConstants[7] = 0.0;  // fc3.w
 
 			// http://stackoverflow.com/questions/1696113/how-do-i-gaussian-blur-an-image-without-using-any-in-built-gaussian-functions
@@ -237,11 +237,11 @@ package de.nulldesign.nd2d.materials {
 			context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 2, programConstants, 2);
 
 			if(!blurredTexture) {
-				blurredTexture = Texture2D.textureFromSize(texture.textureWidth, texture.textureHeight);
+				blurredTexture = Texture2D.textureFromSize(texture._textureWidth, texture._textureHeight);
 			}
 
 			if(!blurredTexture2) {
-				blurredTexture2 = Texture2D.textureFromSize(texture.textureWidth, texture.textureHeight);
+				blurredTexture2 = Texture2D.textureFromSize(texture._textureWidth, texture._textureHeight);
 			}
 		}
 
@@ -264,12 +264,12 @@ package de.nulldesign.nd2d.materials {
 				invalidate = false;
 
 				// set up camera for blurry texture
-				blurredTextureCam.resizeCameraStage(texture.textureWidth, texture.textureHeight);
-				blurredTextureCam.x = -texture.bitmapWidth * 0.5;
-				blurredTextureCam.y = -texture.bitmapHeight * 0.5;
+				blurredTextureCam.resizeCameraStage(texture._textureWidth, texture._textureHeight);
+				blurredTextureCam.x = -texture._bitmapWidth * 0.5;
+				blurredTextureCam.y = -texture._bitmapHeight * 0.5;
 
 				blurredMatrix.identity();
-				blurredMatrix.appendScale(texture.bitmapWidth >> 1, texture.bitmapHeight >> 1, 1.0);
+				blurredMatrix.appendScale(texture._bitmapWidth >> 1, texture._bitmapHeight >> 1, 1.0);
 
 				// save camera matrix
 				var savedCamMatrix:Matrix3D = viewProjectionMatrix;

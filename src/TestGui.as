@@ -1,6 +1,9 @@
 package
 {
 import de.nulldesign.nd2d.display.World2D;
+import de.nulldesign.nd2d.utils.Statistics;
+
+import flash.events.Event;
 
 /**
  * @author Dima Granetchi <system.grand@gmail.com>, <deep@e-citrus.ru>
@@ -14,7 +17,16 @@ public class TestGui extends World2D
 
         setActiveScene(new TestScene());
         scene.backgroundColor = 0xFFFFFF;
+
         start();
+    }
+
+    override protected function addedToStage(event:Event):void
+    {
+        super.addedToStage(event);
+
+        Statistics.enabled = true;
+        Statistics.alignRight = true;
     }
 }
 }

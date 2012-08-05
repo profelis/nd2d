@@ -106,8 +106,8 @@ import flash.display3D.Context3D;
 
 			geometry.setMaterial(material = new ParticleSystemMaterial(tex, burst));
 
-			texW = tex.textureWidth / 2.0;
-			texH = tex.textureHeight / 2.0;
+			texW = tex._textureWidth / 2.0;
+			texH = tex._textureHeight / 2.0;
 
 			particles = new Vector.<Particle>(maxCapacity, true);
 			geometry.faceList = new Vector.<Face>(maxCapacity * 2, true);

@@ -81,8 +81,8 @@ package de.nulldesign.nd2d.display {
 			_texture = value;
 
 			if(_texture) {
-				_width = _texture.bitmapWidth;
-				_height = _texture.bitmapHeight;
+				_width = _texture._bitmapWidth;
+				_height = _texture._bitmapHeight;
 
 				hasPremultipliedAlphaTexture = _texture.hasPremultipliedAlpha;
 				blendMode = _texture.hasPremultipliedAlpha ? BlendModePresets.NORMAL : BlendModePresets.NORMAL_NO_PREMULTIPLIED_ALPHA;
@@ -181,7 +181,7 @@ package de.nulldesign.nd2d.display {
 		override protected function hitTest():Boolean {
 			var res:Boolean = _geometry.hitTest(_mouseX, _mouseY, _width, _height);
 
-            if(res && usePixelPerfectHitTest && _texture.bitmap) {
+            if(res && usePixelPerfectHitTest && _texture._bitmap) {
                 var xCoord:Number = _mouseX + _geometry.mouseDX;
 				var yCoord:Number = _mouseY + _geometry.mouseDY;
 
@@ -190,7 +190,7 @@ package de.nulldesign.nd2d.display {
 					yCoord += _animation.frameRect.y;
 				}
 
-				return (_texture.bitmap.getPixel32(xCoord, yCoord) >> 24 & 0xFF) > 0;
+				return (_texture._bitmap.getPixel32(xCoord, yCoord) >> 24 & 0xFF) > 0;
 			}
 
             return res;
@@ -210,9 +210,9 @@ package de.nulldesign.nd2d.display {
 
 			// fall back to cheap uv scroll
 			if(usesUV && _texture && !_texture.sheet) {
-				usesUV = (_texture.bitmapWidth != _texture.textureWidth && _texture.bitmapHeight != _texture.textureHeight)
-					|| (_texture.bitmapWidth != _texture.textureWidth && _uvOffsetX != 0.0 && _uvScaleX != 1.0)
-					|| (_texture.bitmapHeight != _texture.textureHeight && _uvOffsetY != 0.0 && _uvScaleY != 1.0);
+				usesUV = (_texture._bitmapWidth != _texture._textureWidth && _texture._bitmapHeight != _texture._textureHeight)
+					|| (_texture._bitmapWidth != _texture._textureWidth && _uvOffsetX != 0.0 && _uvScaleX != 1.0)
+					|| (_texture._bitmapHeight != _texture._textureHeight && _uvOffsetY != 0.0 && _uvScaleY != 1.0);
 			}
 		}
 
@@ -229,7 +229,7 @@ package de.nulldesign.nd2d.display {
 				clipSpaceMatrix.appendScale(_animation.frameRect.width >> 1, _animation.frameRect.height >> 1, 1.0);
 				clipSpaceMatrix.appendTranslation(_animation.frameOffset.x, _animation.frameOffset.y, 0.0);
 			} else {
-				clipSpaceMatrix.appendScale(_texture.bitmapWidth >> 1, _texture.bitmapHeight >> 1, 1.0);
+				clipSpaceMatrix.appendScale(_texture._bitmapWidth >> 1, _texture._bitmapHeight >> 1, 1.0);
 			}
 
 			clipSpaceMatrix.append(worldModelMatrix);

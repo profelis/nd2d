@@ -65,10 +65,10 @@ package de.nulldesign.nd2d.materials.texture.parser {
 					x, y, width, height));
 
 				uvRects.push(new Rectangle(
-					x / texture.textureWidth,
-					y / texture.textureHeight,
-					width / texture.textureWidth,
-					height / texture.textureHeight));
+					x / texture._textureWidth,
+					y / texture._textureHeight,
+					width / texture._textureWidth,
+					height / texture._textureHeight));
 
 				if(frameWidth > 0 && frameHeight > 0) {
 					offsets.push(new Point(

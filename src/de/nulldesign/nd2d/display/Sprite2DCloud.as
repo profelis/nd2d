@@ -277,8 +277,8 @@ package de.nulldesign.nd2d.display {
 			var currentUsesUV:Boolean = false;
 			var currentUsesColor:Boolean = false;
 			var currentUsesColorOffset:Boolean = false;
-			const halfTextureWidth:Number = texture.bitmapWidth >> 1;
-			const halfTextureHeight:Number = texture.bitmapHeight >> 1;
+			const halfTextureWidth:Number = texture._bitmapWidth >> 1;
+			const halfTextureHeight:Number = texture._bitmapHeight >> 1;
 
 			for(node = childFirst; node; node = node.next) {
 				child = node as Sprite2D;

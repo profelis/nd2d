@@ -34,11 +34,13 @@ package de.nulldesign.nd2d.materials {
 	import de.nulldesign.nd2d.events.SpriteAnimationEvent;
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
 	import de.nulldesign.nd2d.materials.texture.TextureAnimation;
+    import de.nulldesign.nd2d.utils.nd2d;
 
-	import flash.events.EventDispatcher;
+    import flash.events.EventDispatcher;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 
+    use namespace nd2d;
 	/**
 	 * Dispatched when the current animation has finished.
 	 * @eventType SpriteSheetAnimationEvent.ANIMATION_FINISHED
@@ -71,7 +73,7 @@ package de.nulldesign.nd2d.materials {
 				frame = 0;
 			} else {
 				frameUV = texture.uvRect;
-				frameRect = new Rectangle(0, 0, texture.bitmapWidth, texture.bitmapHeight);
+				frameRect = new Rectangle(0, 0, texture._bitmapWidth, texture._bitmapHeight);
 				frameOffset = new Point(0, 0);
 			}
 		}
