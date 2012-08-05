@@ -31,9 +31,12 @@
 package de.nulldesign.nd2d.materials.texture.parser {
 
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
+    import de.nulldesign.nd2d.utils.nd2d;
 
-	import flash.geom.Point;
+    import flash.geom.Point;
 	import flash.geom.Rectangle;
+
+    use namespace nd2d;
 
 	public class ParserTexturePacker extends ParserBase {
 

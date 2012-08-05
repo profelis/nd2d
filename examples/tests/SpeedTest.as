@@ -41,8 +41,9 @@ package tests {
 	import de.nulldesign.nd2d.materials.texture.Texture2D;
 	import de.nulldesign.nd2d.materials.texture.TextureSheet;
 	import de.nulldesign.nd2d.utils.Statistics;
+import de.nulldesign.nd2d.utils.nd2d;
 
-	import flash.events.Event;
+import flash.events.Event;
 	import flash.geom.ColorTransform;
 
 	public class SpeedTest extends Scene2D {
@@ -131,7 +132,7 @@ package tests {
 				if(sprite && sprite.texture != tex) {
 					if(sprite.texture.bitmap) {
 						sprite.texture.bitmap.dispose();
-						sprite.texture.bitmap = null;
+						sprite.texture.nd2d::_bitmap = null;
 					}
 
 					sprite.texture.sheet = null;

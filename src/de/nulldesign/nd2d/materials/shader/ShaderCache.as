@@ -53,7 +53,7 @@ package de.nulldesign.nd2d.materials.shader {
 				shaders = cache[context] = new Dictionary();
 			}
 
-			var key:String = defines.join() + (texture ? "," + texture.textureOptions + "," + texture.hasPremultipliedAlpha : "");
+			var key:String = defines.join() + (texture ? "," + texture.textureOptions + "," + texture._hasPremultipliedAlpha : "");
 			var shader:Shader2D = shaders[key];
 
 			if(shader) {
@@ -61,7 +61,7 @@ package de.nulldesign.nd2d.materials.shader {
 			}
 
 			if(texture) {
-				defines.push("PREMULTIPLIED_ALPHA", texture.hasPremultipliedAlpha);
+				defines.push("PREMULTIPLIED_ALPHA", texture._hasPremultipliedAlpha);
 				defines.push("REPEAT_CLAMP", texture.textureOptions & TextureOption.REPEAT_CLAMP);
 			}
 

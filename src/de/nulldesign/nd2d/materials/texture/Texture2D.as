@@ -62,7 +62,7 @@ package de.nulldesign.nd2d.materials.texture {
         nd2d var _bitmap:BitmapData;
         nd2d var _compressedBitmap:ByteArray;
 
-		nd2d var sheet:TextureSheetBase;
+        public var sheet:TextureSheetBase;
 
 		/*
 		 * These sizes are needed to calculate the UV offset in a texture.
@@ -78,7 +78,7 @@ package de.nulldesign.nd2d.materials.texture {
 
 		nd2d var uvRect:Rectangle = new Rectangle(0, 0, 1, 1);
 
-        nd2d var hasPremultipliedAlpha:Boolean = true;
+        nd2d var _hasPremultipliedAlpha:Boolean = true;
         nd2d var textureFilteringOptionChanged:Boolean = true;
 
         nd2d var memoryUsed:uint = 0;
@@ -108,7 +108,7 @@ package de.nulldesign.nd2d.materials.texture {
 				var dimensions:Point = TextureHelper.getTextureDimensionsFromBitmap(bitmap);
 				tex._textureWidth = dimensions.x;
 				tex._textureHeight = dimensions.y;
-				tex.hasPremultipliedAlpha = true;
+				tex._hasPremultipliedAlpha = true;
 
 				tex.updateUvRect();
 			}
@@ -126,7 +126,7 @@ package de.nulldesign.nd2d.materials.texture {
 				tex._compressedBitmap = atf;
 				tex._textureWidth = tex._bitmapWidth = w;
 				tex._textureHeight = tex._bitmapHeight = h;
-				tex.hasPremultipliedAlpha = false;
+				tex._hasPremultipliedAlpha = false;
 
 				tex.updateUvRect();
 			}
@@ -235,6 +235,11 @@ package de.nulldesign.nd2d.materials.texture {
         public function get textureHeight():Number
         {
             return _textureHeight;
+        }
+
+        public function get hasPremultipliedAlpha():Boolean
+        {
+            return _hasPremultipliedAlpha;
         }
     }
 }

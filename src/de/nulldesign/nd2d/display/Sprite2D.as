@@ -84,8 +84,8 @@ package de.nulldesign.nd2d.display {
 				_width = _texture._bitmapWidth;
 				_height = _texture._bitmapHeight;
 
-				hasPremultipliedAlphaTexture = _texture.hasPremultipliedAlpha;
-				blendMode = _texture.hasPremultipliedAlpha ? BlendModePresets.NORMAL : BlendModePresets.NORMAL_NO_PREMULTIPLIED_ALPHA;
+				hasPremultipliedAlphaTexture = _texture._hasPremultipliedAlpha;
+				blendMode = _texture._hasPremultipliedAlpha ? BlendModePresets.NORMAL : BlendModePresets.NORMAL_NO_PREMULTIPLIED_ALPHA;
 			}
 
 			_animation.setTexture(value);
