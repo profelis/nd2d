@@ -130,9 +130,9 @@ package de.nulldesign.nd2d.materials {
 			throw new Error("You have to implement addVertex for your material");
 		}
 
-        public function fillBuffer(buffer:Vector.<Number>, v:Vertex,
-                                   uv:UV, face:Face, semanticsID:String,
-                                   floatFormat:int):void
+        protected function fillBuffer(buffer:Vector.<Number>, v:Vertex,
+                                      uv:UV, face:Face,
+                                      semanticsID:String, floatFormat:int):void
         {
             if(semanticsID == VERTEX_POSITION) {
                 buffer.push(v.x, v.y);

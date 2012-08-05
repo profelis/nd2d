@@ -25,8 +25,7 @@ public class TestGui extends World2D
     {
         super.addedToStage(event);
 
-        Statistics.enabled = true;
-        Statistics.alignRight = true;
+
     }
 }
 }
@@ -50,24 +49,18 @@ class TestScene extends Scene2D
     {
         super();
 
-        var q:Quad2D = new Quad2D(100, 100, GuiGeometry.createQuad(100, 100));
+        var q:Quad2D = new Quad2D(100, 100, GuiGeometry.createQuad());
         q.color = 0xFF000000;
         sceneGUILayer.addChild(q);
 
-        q = new Quad2D(100, 100, GuiGeometry.createQuad(100, 100));
+        q = new Quad2D(100, 100, GuiGeometry.createQuad());
         q.color = 0xFF00FF00;
-        q.x = 100;
+        q.y = 100;
         sceneGUILayer.addChild(q);
 
-        q = new Quad2D(100, 100, GuiGeometry.createQuad(100, 100));
+        q = new Quad2D(100, 100, GuiGeometry.createQuad());
         q.color = 0xFF0000FF;
-        q.y = 100;
-        sceneGUILayer.addChild(q);
-
-        q = new Quad2D(100, 100, GuiGeometry.createQuad(100, 100));
-        q.color = 0xFFFF00FF;
-        q.x = 100;
-        q.y = 100;
+        q.y = 200;
         sceneGUILayer.addChild(q);
 
         sceneGUILayer.addChild(s = new Sprite2D(Texture2D.textureFromBitmapData(new Tex().bitmapData)));

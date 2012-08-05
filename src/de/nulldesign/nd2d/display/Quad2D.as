@@ -104,6 +104,10 @@ import flash.display3D.Context3D;
 			_width = pWidth;
 			_height = pHeight;
 
+            if (geometry)
+            {
+                geometry.resize(_width, _height);
+            }
             _geometry = geometry || Geometry.createQuad(pWidth, pHeight);
 			_geometry.setMaterial(material = new Quad2DColorMaterial());
 

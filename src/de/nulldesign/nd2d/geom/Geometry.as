@@ -38,6 +38,12 @@ public class Geometry
     {
     }
 
+    public function resize(w:Number, h:Number):void
+    {
+        faceList = generateQuadFromDimensions(w, h);
+        needUpdateVertexBuffer = true;
+    }
+
     public static function createQuad(w:Number = 2, h:Number = 2):Geometry
     {
         var g:Geometry = new Geometry();

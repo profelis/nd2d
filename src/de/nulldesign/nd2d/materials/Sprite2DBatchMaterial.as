@@ -29,9 +29,6 @@
  */
 
 package de.nulldesign.nd2d.materials {
-
-    import de.nulldesign.nd2d.utils.nd2d;
-
     import de.nulldesign.nd2d.display.Camera2D;
     import de.nulldesign.nd2d.display.Node2D;
     import de.nulldesign.nd2d.display.Sprite2D;
@@ -41,6 +38,7 @@ package de.nulldesign.nd2d.materials {
     import de.nulldesign.nd2d.geom.Vertex;
     import de.nulldesign.nd2d.materials.shader.ShaderCache;
     import de.nulldesign.nd2d.utils.Statistics;
+    import de.nulldesign.nd2d.utils.nd2d;
 
     import flash.display3D.Context3D;
     import flash.display3D.Context3DProgramType;
@@ -296,9 +294,9 @@ package de.nulldesign.nd2d.materials {
 			fillBuffer(buffer, v, uv, face, VERTEX_IDX2, 1);
 		}
 
-		override public function fillBuffer(buffer:Vector.<Number>, v:Vertex,
-                                            uv:UV, face:Face,
-                                            semanticsID:String, floatFormat:int):void
+		override protected function fillBuffer(buffer:Vector.<Number>, v:Vertex,
+                                               uv:UV, face:Face,
+                                               semanticsID:String, floatFormat:int):void
         {
 			if(semanticsID == VERTEX_IDX) {
 				// va2.x	clipSpace index

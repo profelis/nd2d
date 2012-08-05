@@ -192,9 +192,9 @@ package de.nulldesign.nd2d.materials {
 			fillBuffer(buffer, v, uv, face, "PB3D_ENDCOLOR", 4);
 		}
 
-		override public function fillBuffer(buffer:Vector.<Number>, v:Vertex,
-                                            uv:UV, face:Face,
-                                            semanticsID:String, floatFormat:int):void
+		override protected function fillBuffer(buffer:Vector.<Number>, v:Vertex,
+                                               uv:UV, face:Face,
+                                               semanticsID:String, floatFormat:int):void
         {
 			super.fillBuffer(buffer, v, uv, face, semanticsID, floatFormat);
 
