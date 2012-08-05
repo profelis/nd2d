@@ -217,7 +217,7 @@ use namespace nd2d;
 
 		public var mouseEnabled:Boolean = false;
 
-		public var boundingSphereRadius:Number;
+		//public var boundingSphereRadius:Number;
 
 		protected var timeSinceStartInSeconds:Number = 0.0;
 
