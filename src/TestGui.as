@@ -25,7 +25,8 @@ public class TestGui extends World2D
     {
         super.addedToStage(event);
 
-
+        Statistics.enabled = true;
+        Statistics.alignRight = true;
     }
 }
 }
@@ -33,7 +34,7 @@ public class TestGui extends World2D
 import de.nulldesign.nd2d.display.Quad2D;
 import de.nulldesign.nd2d.display.Scene2D;
 import de.nulldesign.nd2d.display.Sprite2D;
-import de.nulldesign.nd2d.geom.GuiGeometry;
+import de.nulldesign.nd2d.geom.Geometry;
 import de.nulldesign.nd2d.materials.texture.Texture2D;
 
 import flash.events.MouseEvent;
@@ -49,16 +50,16 @@ class TestScene extends Scene2D
     {
         super();
 
-        var q:Quad2D = new Quad2D(100, 100, GuiGeometry.createQuad());
+        var q:Quad2D = new Quad2D(100, 100, Geometry.createGUIQuad());
         q.color = 0xFF000000;
         sceneGUILayer.addChild(q);
 
-        q = new Quad2D(100, 100, GuiGeometry.createQuad());
+        q = new Quad2D(100, 100, Geometry.createGUIQuad());
         q.color = 0xFF00FF00;
         q.y = 100;
         sceneGUILayer.addChild(q);
 
-        q = new Quad2D(100, 100, GuiGeometry.createQuad());
+        q = new Quad2D(100, 100, Geometry.createGUIQuad());
         q.color = 0xFF0000FF;
         q.y = 200;
         sceneGUILayer.addChild(q);
@@ -67,7 +68,7 @@ class TestScene extends Scene2D
         s.x = 100;
         s.y = 100;
 
-        sceneGUILayer.addChild(s = new Sprite2D(Texture2D.textureFromBitmapData(new Tex().bitmapData), GuiGeometry.createQuad()));
+        sceneGUILayer.addChild(s = new Sprite2D(Texture2D.textureFromBitmapData(new Tex().bitmapData), Geometry.createGUIQuad()));
         s.x = 100;
         s.y = 200;
         s.mouseEnabled = true;

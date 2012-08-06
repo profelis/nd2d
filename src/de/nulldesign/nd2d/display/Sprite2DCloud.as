@@ -143,7 +143,7 @@ package de.nulldesign.nd2d.display {
 
 		public function Sprite2DCloud(maxCapacity:uint, textureObject:Texture2D) {
 			texture = textureObject;
-			faceList = Geometry.generateQuadFromDimensions(2, 2);
+			faceList = Geometry.generateFaceList();
 
 			v1 = faceList[0].v1;
 			v2 = faceList[0].v2;

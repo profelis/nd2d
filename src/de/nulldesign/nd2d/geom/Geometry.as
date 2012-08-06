@@ -22,6 +22,8 @@ public class Geometry
     nd2d var indexBuffer:IndexBuffer3D;
     nd2d var vertexBuffer:VertexBuffer3D;
 
+    nd2d var vertexList:Vector.<Vertex>;
+
     protected var mIndexBuffer:Vector.<uint>;
     protected var mVertexBuffer:Vector.<Number>;
 
@@ -34,23 +36,92 @@ public class Geometry
 
     protected var numFloatsPerVertex:uint;
 
+    nd2d var stepsX:uint;
+    nd2d var stepsY:uint;
+
+    nd2d var kx:Number;
+    nd2d var ky:Number;
+
     public function Geometry()
     {
     }
 
     public function resize(w:Number, h:Number):void
     {
-        faceList = generateQuadFromDimensions(w, h);
+        faceList = generateFaceList(w, h, kx, ky, stepsX, stepsY, vertexList);
         needUpdateVertexBuffer = true;
     }
 
-    public static function createQuad(w:Number = 2, h:Number = 2):Geometry
+    public static function createQuad(w:Number = 2, h:Number = 2, stepsX:uint = 1, stepsY:uint = 1, storeVertexList:Boolean = false):Geometry
     {
         var g:Geometry = new Geometry();
-        g.faceList = generateQuadFromDimensions(w, h);
+        g.stepsX = stepsX;
+        g.stepsY = stepsY;
+        g.kx = -0.5;
+        g.ky = -0.5;
+        g.vertexList = storeVertexList ? new Vector.<Vertex>() : null;
+        g.faceList = generateFaceList(w, h, g.kx, g.ky, stepsX, stepsY, g.vertexList);
         g.needUpdateVertexBuffer = true;
 
         return g;
+    }
+
+    public static function createGUIQuad(w:Number = 2, h:Number = 2, stepsX:uint = 1, stepsY:uint = 1, storeVertexList:Boolean = false):Geometry
+    {
+        var g:Geometry = new Geometry();
+        g.stepsX = stepsX;
+        g.stepsY = stepsY;
+        g.vertexList = storeVertexList ? new Vector.<Vertex>() : null;
+        g.faceList = generateFaceList(w, h, g.kx = 0, g.ky = 0, stepsX, stepsY, g.vertexList);
+        g.needUpdateVertexBuffer = true;
+
+        return g;
+    }
+
+    public static function generateFaceList(width:Number = 2, height:Number = 2, kx:Number = -0.5, ky:Number = -0.5, stepsX:uint = 1, stepsY:uint = 1, vertexList:Vector.<Vertex> = null):Vector.<Face>
+    {
+        var faceList:Vector.<Face> = new Vector.<Face>();
+
+        var dx:Number = width * kx;
+        var dy:Number = height * ky;
+
+        var i:int;
+        var m:int;
+
+        var ar:Array = [];
+        var v:Vertex;
+
+        var uv:Array = [];
+        var u:UV;
+
+        var sx:Number = width / stepsX;
+        var sy:Number = height / stepsY;
+
+        for(i = 0; i <= stepsX; i++) {
+            ar.push([]);
+            uv.push([]);
+
+            for(j = 0; j <= stepsY; j++) {
+                var x:Number = i * sx;
+                var y:Number = j * sy;
+
+                v = new Vertex(x + dx, y + dy, 0.0);
+                if (vertexList) vertexList.push(v);
+                ar[i].push(v);
+
+                u = new UV(x * 0.5, y * 0.5);
+                uv[i].push(u);
+            }
+        }
+
+        for(i = 1, m = ar.length; i < m; i++) {
+            for(var j:int = 1, n:int = ar[i].length; j < n; j++) {
+                faceList.push(new Face(ar[i - 1][j - 1], ar[i - 1][j], ar[i][j], uv[i - 1][j - 1], uv[i - 1][j], uv[i][j]));
+                faceList.push(new Face(ar[i - 1][j - 1], ar[i][j], ar[i][j - 1], uv[i - 1][j - 1], uv[i][j], uv[i][j - 1]));
+            }
+        }
+
+        return faceList;
     }
 
     nd2d var mouseDX:int = 0;
@@ -62,10 +133,10 @@ public class Geometry
             return false;
         }
 
-        mouseDX = w >> 1;
-        mouseDY = h >> 1;
+        mouseDX = -kx * w;
+        mouseDY = -ky * h;
 
-        return (mx >= -mouseDX && mx <= mouseDX && my >= -mouseDY && my <= mouseDY);
+        return (mx >= -mouseDX && mx <= w - mouseDX && my >= -mouseDY && my <= h + mouseDY);
     }
 
     public function handleDeviceLoss():void {
@@ -94,6 +165,7 @@ public class Geometry
         mIndexBuffer = null;
         mVertexBuffer = null;
 
+        vertexList = null;
         faceList = null;
         needUploadVertexBuffer = false;
     }
@@ -112,7 +184,7 @@ public class Geometry
     }
 
     public function modifyColorInBuffer(bufferIdx:uint, r:Number, g:Number, b:Number, a:Number):void {
-        if(!mVertexBuffer || mVertexBuffer.length == 0) {
+        if(!mVertexBuffer || mVertexBuffer.length == 0 || numFloatsPerVertex < 6) {
             return;
         }
 
@@ -254,37 +326,6 @@ public class Geometry
         g.needUpdateVertexBuffer = true;
 
         return g;
-    }
-
-    public static function generateQuadFromDimensions(width:Number, height:Number):Vector.<Face>
-    {
-        var faceList:Vector.<Face> = new Vector.<Face>(2, true);
-
-        var texW:Number = width * 0.5;
-        var texH:Number = height * 0.5;
-        var uv1:UV;
-        var uv2:UV;
-        var uv3:UV;
-        var uv4:UV;
-        var v1:Vertex;
-        var v2:Vertex;
-        var v3:Vertex;
-        var v4:Vertex;
-
-        uv1 = new UV(0, 0);
-        uv2 = new UV(1, 0);
-        uv3 = new UV(1, 1);
-        uv4 = new UV(0, 1);
-
-        v1 = new Vertex(-texW, -texH, 0.0);
-        v2 = new Vertex(texW, -texH, 0.0);
-        v3 = new Vertex(texW, texH, 0.0);
-        v4 = new Vertex(-texW, texH, 0.0);
-
-        faceList[0] = new Face(v1, v2, v3, uv1, uv2, uv3);
-        faceList[1] = new Face(v1, v3, v4, uv1, uv3, uv4);
-
-        return faceList;
     }
 }
 }

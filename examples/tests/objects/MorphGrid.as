@@ -54,14 +54,16 @@ package tests.objects {
 
 			var v:Vertex;
 
-			for(var i:int = 0; i < vertexList.length; i++) {
+            var vertexList:Vector.<Vertex> = _geometry.vertexList;
 
-				yPos = Math.floor(i / (stepsX + 1));
-				xPos = i % (stepsY + 1);
+            for(var i:int = 0; i < vertexList.length; i++) {
+
+				yPos = Math.floor(i / (_geometry.stepsX + 1));
+				xPos = i % (_geometry.stepsY + 1);
 
 				v = vertexList[i];
 
-				if(xPos > 0 && yPos > 0 && xPos < stepsX && yPos < stepsY) {
+				if(xPos > 0 && yPos > 0 && xPos < _geometry.stepsX && yPos < _geometry.stepsY) {
 
 					newX = v.x + v.x * Math.sin(v.length * 10.0 + timeSinceStartInSeconds * 2.0) * strength;
 					newY = v.y + v.y * Math.cos(v.length * 10.0 + timeSinceStartInSeconds * 2.0) * strength;
