@@ -37,7 +37,10 @@ import de.nulldesign.nd2d.display.Sprite2D;
 import de.nulldesign.nd2d.geom.Geometry;
 import de.nulldesign.nd2d.materials.texture.Texture2D;
 
+import flash.display.BitmapData;
+
 import flash.events.MouseEvent;
+import flash.geom.Point;
 
 class TestScene extends Scene2D
 {
@@ -64,11 +67,17 @@ class TestScene extends Scene2D
         q.y = 200;
         sceneGUILayer.addChild(q);
 
-        sceneGUILayer.addChild(s = new Sprite2D(Texture2D.textureFromBitmapData(new Tex().bitmapData)));
+        var bitmap:BitmapData = new Tex().bitmapData;
+
+        sceneGUILayer.addChild(s = new Sprite2D(Texture2D.textureFromBitmapData(bitmap)));
         s.x = 100;
         s.y = 100;
+        s.pivot = new Point(-bitmap.width*0.5, -bitmap.height*0.5);
+        s.mouseEnabled = true;
+        s.addEventListener(MouseEvent.MOUSE_OVER, onMouseOver);
+        s.addEventListener(MouseEvent.MOUSE_OUT, onMouseOut);
 
-        sceneGUILayer.addChild(s = new Sprite2D(Texture2D.textureFromBitmapData(new Tex().bitmapData), Geometry.createGUIQuad()));
+        sceneGUILayer.addChild(s = new Sprite2D(Texture2D.textureFromBitmapData(bitmap), Geometry.createGUIQuad()));
         s.x = 100;
         s.y = 200;
         s.mouseEnabled = true;
@@ -78,11 +87,11 @@ class TestScene extends Scene2D
 
     private function onMouseOver(event:MouseEvent):void
     {
-        s.tint = 0xFF0000;
+        (event.currentTarget as Sprite2D).tint = 0xFF0000;
     }
 
     private function onMouseOut(event:MouseEvent):void
     {
-        s.tint = 0xFFFFFF;
+        (event.currentTarget as Sprite2D).tint = 0xFFFFFF;
     }
 }
