@@ -103,7 +103,7 @@ package de.nulldesign.nd2d.display {
 			}
 
 			// resize GUI camera if needed
-			if(sceneGUICamera.sceneWidth != camera.sceneWidth) {
+			if(sceneGUICamera.sceneWidth != camera.sceneWidth || sceneGUICamera.sceneHeight != camera.sceneHeight) {
 				sceneGUICamera.resizeCameraStage(camera.sceneWidth, camera.sceneHeight);
 			}
 

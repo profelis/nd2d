@@ -225,6 +225,7 @@ public class Geometry
 
     protected function generateBufferData(context:Context3D):void {
 
+        startTri = 0;
         numTris = faceList.length;
 
         var i:int;
