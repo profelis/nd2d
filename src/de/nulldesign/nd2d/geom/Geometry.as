@@ -46,6 +46,31 @@ public class Geometry
     {
     }
 
+    public function clone(to:Geometry = null, cloneFaces:Boolean = false):Geometry
+    {
+        to ||= new Geometry();
+        to.faceList = faceList;
+        to.needUpdateVertexBuffer = true;
+
+        to.stepsX = stepsX;
+        to.stepsY = stepsY;
+        to.kx = kx;
+        to.ky = ky;
+
+        if (cloneFaces)
+        {
+            to.faceList = new Vector.<Face>(faceList.length);
+            var i:int = 0;
+            for each (var f:Face in faceList) to.faceList[i++] = f.clone();
+        }
+        else
+        {
+            to.faceList = faceList;
+        }
+
+        return to;
+    }
+
     public function resize(w:Number, h:Number):void
     {
         faceList = generateFaceList(w, h, kx, ky, stepsX, stepsY, vertexList);

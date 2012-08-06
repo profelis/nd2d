@@ -54,12 +54,12 @@ class TestScene extends Scene2D
         q.color = 0xFF000000;
         sceneGUILayer.addChild(q);
 
-        q = new Quad2D(100, 100, Geometry.createGUIQuad());
+        q = new Quad2D(100, 100, q.geometry.clone());
         q.color = 0xFF00FF00;
         q.y = 100;
         sceneGUILayer.addChild(q);
 
-        q = new Quad2D(100, 100, Geometry.createGUIQuad());
+        q = new Quad2D(100, 100, q.geometry.clone());
         q.color = 0xFF0000FF;
         q.y = 200;
         sceneGUILayer.addChild(q);

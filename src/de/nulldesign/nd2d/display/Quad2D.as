@@ -156,5 +156,10 @@ import flash.display3D.Context3D;
 
 			super.dispose();
 		}
-	}
+
+        public function get geometry():Geometry
+        {
+            return _geometry;
+        }
+    }
 }
