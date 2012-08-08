@@ -73,6 +73,7 @@ package tests {
 				s.y = NumberUtil.random(100.0, stage.stageHeight - 100.0);
 				s.rotation = NumberUtil.random(0.0, 360.0);
 				s.mouseEnabled = true;
+				s.usePixelPerfectHitTest = true;
 				s.addEventListener(MouseEvent.CLICK, spriteClick);
 				addChild(s);
 			}
@@ -83,6 +84,7 @@ package tests {
 			s.y = stage.stageHeight - s.height * 0.5;
 			s.tint = 0xFF9900;
 			s.mouseEnabled = true;
+			s.usePixelPerfectHitTest = true;
 			s.addEventListener(MouseEvent.CLICK, guiLayerItemClick);
 			sceneGUILayer.addChild(s);
 
@@ -112,9 +114,9 @@ package tests {
 			back.height = camera.sceneHeight * 5.0;
 
 			if(targetNode) {
-				camera.x += ((targetNode.x - camera.sceneWidth * 0.5) - camera.x) * 0.05;
-				camera.y += ((targetNode.y - camera.sceneHeight * 0.5) - camera.y) * 0.05;
-				camera.rotation += (-targetNode.rotation - camera.rotation) * 0.05;
+				camera.x += ((targetNode.x - camera.sceneWidth * 0.5) - camera.x) * elapsed * 2;
+				camera.y += ((targetNode.y - camera.sceneHeight * 0.5) - camera.y) * elapsed * 2;
+				camera.rotation += (-targetNode.rotation - camera.rotation) * elapsed * 2;
 			}
 		}
 	}
