@@ -34,6 +34,7 @@ package de.nulldesign.nd2d.display {
     import de.nulldesign.nd2d.geom.Vertex;
 	import de.nulldesign.nd2d.materials.BlendModePresets;
 	import de.nulldesign.nd2d.materials.Quad2DColorMaterial;
+import de.nulldesign.nd2d.utils.Statistics;
 import de.nulldesign.nd2d.utils.nd2d;
 
 import flash.display3D.Context3D;
@@ -134,6 +135,13 @@ import flash.display3D.Context3D;
         }
 
         override public function draw(context:Context3D, camera:Camera2D):void {
+
+            if (culled)
+            {
+                Statistics.nodesCulled++;
+                return;
+            }
+
             _geometry.update(context);
 
             material.blendMode = blendMode;

@@ -195,18 +195,18 @@ use namespace nd2d;
 
         nd2d var hasPremultipliedAlphaTexture:Boolean = true;
 
-		public var childCount:uint = 0;
-		public var childFirst:Node2D = null;
-		public var childLast:Node2D = null;
+        nd2d var childCount:uint = 0;
+        public var childFirst:Node2D = null;
+        public var childLast:Node2D = null;
 
-		public var prev:Node2D = null;
-		public var next:Node2D = null;
+        public var prev:Node2D = null;
+        public var next:Node2D = null;
 
-		public var batchParent:Sprite2DBatch = null;
+        nd2d var batchParent:Sprite2DBatch = null;
 
-		public var usesUV:Boolean = false;
-		public var usesColor:Boolean = false;
-		public var usesColorOffset:Boolean = false;
+        nd2d var usesUV:Boolean = false;
+        nd2d var usesColor:Boolean = false;
+        nd2d var usesColorOffset:Boolean = false;
 
 		public var vx:Number;
 		public var vy:Number;
@@ -759,6 +759,8 @@ use namespace nd2d;
 					|| point.x - radius > camera.sceneWidth
 					|| point.y - radius > camera.sceneHeight;
 			}
+
+            //if (parent && parent.scrollRect) TODO: check scroll rect
 		}
 
 		/**

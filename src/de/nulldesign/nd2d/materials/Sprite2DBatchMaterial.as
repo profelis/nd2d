@@ -246,7 +246,7 @@ package de.nulldesign.nd2d.materials {
 							drawCurrentBatch(context, geometry);
 						}
 					} else {
-						Statistics.spritesCulled++;
+						Statistics.nodesCulled++;
 					}
 				}
 

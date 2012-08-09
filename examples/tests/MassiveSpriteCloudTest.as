@@ -88,7 +88,7 @@ package tests {
 
 				spriteCloud.addChild(s);
 
-				if(spriteCloud.childCount == 1) {   // alpha, tint & scale test for sprites in clouds
+				if(spriteCloud.numChildren == 1) {   // alpha, tint & scale test for sprites in clouds
 					s.alpha = 0.5;
 					s.tint = 0x00FF00;
 					s.scaleX = s.scaleY = 2.0;

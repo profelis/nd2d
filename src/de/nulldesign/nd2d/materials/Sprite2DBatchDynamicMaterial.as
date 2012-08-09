@@ -225,7 +225,7 @@ package de.nulldesign.nd2d.materials {
 							needInit = true;
 						}
 					} else {
-						Statistics.spritesCulled++;
+						Statistics.nodesCulled++;
 					}
 				}
                 }

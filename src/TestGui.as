@@ -55,6 +55,8 @@ class TestScene extends Scene2D
 
         var q:Quad2D = new Quad2D(100, 100, Geometry.createGUIQuad());
         q.color = 0xFF000000;
+        q.useFrustumCulling = true;
+        q.y = 1000;
         sceneGUILayer.addChild(q);
 
         q = new Quad2D(100, 100, q.geometry.clone());
@@ -76,6 +78,9 @@ class TestScene extends Scene2D
         s.mouseEnabled = true;
         s.addEventListener(MouseEvent.MOUSE_OVER, onMouseOver);
         s.addEventListener(MouseEvent.MOUSE_OUT, onMouseOut);
+
+        s.useFrustumCulling = true;
+        s.x = -100;
 
         sceneGUILayer.addChild(s = new Sprite2D(Texture2D.textureFromBitmapData(bitmap), Geometry.createGUIQuad()));
         s.x = 100;

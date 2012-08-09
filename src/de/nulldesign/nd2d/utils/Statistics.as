@@ -110,7 +110,7 @@ package de.nulldesign.nd2d.utils {
 		/**
 		 * Total culled sprites.
 		 */
-		public static var spritesCulled:uint = 0;
+		public static var nodesCulled:uint = 0;
 
 		/**
 		 * Total drawn tringles. Mostly 2 triangles per sprite.
@@ -292,7 +292,8 @@ package de.nulldesign.nd2d.utils {
 					"<mem>mem: " + memoryDisplay + "</mem>" +
 					"<textures>tex: " + textures + " (" + textureDisplay + ")</textures>" +
 					"<draws>draws: " + drawCalls + "</draws>" +
-					"<sprites>sprites: " + sprites + (spritesCulled ? " / " + (sprites + spritesCulled) : "") + "</sprites>" +
+					"<sprites>sprites: " + sprites + (nodesCulled ? " / " + (sprites + nodesCulled) : "") + "</sprites>" +
+					"<sprites>culled: " + nodesCulled + "</sprites>" +
 					"<tris>tris: " + triangles + "</tris>" +
 					"</xml>";
 			}
@@ -342,7 +343,7 @@ package de.nulldesign.nd2d.utils {
 			sprites = 0;
 			triangles = 0;
 			drawCalls = 0;
-			spritesCulled = 0;
+			nodesCulled = 0;
 		}
 
 		/**

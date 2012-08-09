@@ -139,13 +139,13 @@ package de.nulldesign.nd2d.display {
 				return;
 			}
 
-            _geometry.update(context);
-
 			if(culled) {
-				Statistics.spritesCulled++;
+				Statistics.nodesCulled++;
 
 				return;
 			}
+
+            _geometry.update(context);
 
 			_material.blendMode = blendMode;
 			_material.scrollRect = worldScrollRect;
