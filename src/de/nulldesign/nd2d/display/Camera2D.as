@@ -55,7 +55,12 @@ package de.nulldesign.nd2d.display {
 		protected var _sceneWidth:Number;
 		protected var _sceneHeight:Number;
 
-		protected var invalidated:Boolean = true;
+		protected var invalidate:Boolean = true;
+
+		/**
+		 * @private
+		 */
+		public var invalidateCount:uint;
 
 		public function Camera2D(w:Number, h:Number) {
 			resizeCameraStage(w, h);
@@ -66,9 +71,10 @@ package de.nulldesign.nd2d.display {
 				return;
 			}
 
+			invalidate = true;
+
 			_sceneWidth = width;
 			_sceneHeight = height;
-			invalidated = true;
 
 			orthoProjectionMatrix = makeOrtographicMatrix(0, width, 0, height);
 
@@ -156,8 +162,9 @@ package de.nulldesign.nd2d.display {
 		}
 
 		public function getViewProjectionMatrix(useOrthoMatrix:Boolean = true):Matrix3D {
-			if(invalidated) {
-				invalidated = false;
+			if(invalidate) {
+				invalidate = false;
+				invalidateCount++;
 
 				viewMatrix.identity();
 				viewMatrix.appendTranslation(-sceneWidth * 0.5 - _x, -sceneHeight * 0.5 - _y, 0.0);
@@ -182,48 +189,56 @@ package de.nulldesign.nd2d.display {
 			zoom = 1;
 		}
 
-		private var _x:Number = 0.0;
+		protected var _x:Number = 0.0;
 
 		public function get x():Number {
 			return _x;
 		}
 
 		public function set x(value:Number):void {
-			invalidated = true;
-			_x = value;
+			if(_x != value) {
+				_x = value;
+				invalidate = true;
+			}
 		}
 
-		private var _y:Number = 0.0;
+		protected var _y:Number = 0.0;
 
 		public function get y():Number {
 			return _y;
 		}
 
 		public function set y(value:Number):void {
-			invalidated = true;
-			_y = value;
+			if(_y != value) {
+				_y = value;
+				invalidate = true;
+			}
 		}
 
-		private var _zoom:Number = 1.0;
+		protected var _zoom:Number = 1.0;
 
 		public function get zoom():Number {
 			return _zoom;
 		}
 
 		public function set zoom(value:Number):void {
-			invalidated = true;
-			_zoom = value;
+			if(_zoom != value) {
+				_zoom = value;
+				invalidate = true;
+			}
 		}
 
-		private var _rotation:Number = 0.0;
+		protected var _rotation:Number = 0.0;
 
 		public function get rotation():Number {
 			return _rotation;
 		}
 
 		public function set rotation(value:Number):void {
-			invalidated = true;
-			_rotation = value;
+			if(_rotation != value) {
+				_rotation = value;
+				invalidate = true;
+			}
 		}
 
 		public function get sceneWidth():Number {

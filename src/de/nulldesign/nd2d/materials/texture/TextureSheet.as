@@ -86,9 +86,9 @@ package de.nulldesign.nd2d.materials.texture {
 		/**
 		 * Adds a new animation to this sheet.
 		 *
-		 * <pre>
+		 * <listing>
 		 * atlas.addAnimation("shoot", [4, 5, 6, 5, 6, 7]);
-		 * </pre>
+		 * </listing>
 		 *
 		 * @param name			Animation name
 		 * @param keyFrames		Integer array containing the frame indices

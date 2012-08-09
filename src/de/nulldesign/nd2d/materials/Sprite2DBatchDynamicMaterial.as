@@ -153,66 +153,79 @@ package de.nulldesign.nd2d.materials {
 					childNode.updateClipSpace();
 				}
 
+				if(childNode.useFrustumCulling && childNode.invalidateCullingCount != camera.invalidateCount) {
+					childNode.updateCulling();
+				}
+
 				child = childNode as Sprite2D;
 
 				if(child) {
+					if(!child.culled) {
+						// we can only batch Sprite2DMaterial as we don't know about the changes of derivates
+						if(!child.material || Object(child.material).constructor == Sprite2DMaterial) {
+							usesUV = child.usesUV;
+							usesColor = child.usesColor;
+							usesColorOffset = child.usesColorOffset;
 					// we can only batch Sprite2DMaterial as we don't know about the changes of derivates
 					if(!child._material || Object(child._material).constructor == Sprite2DMaterial) {
 						usesUV = child.usesUV;
 						usesColor = child.usesColor;
 						usesColorOffset = child.usesColorOffset;
 
-						currentTexture = child._texture;
-						currentBlendMode = child.blendMode;
+							currentTexture = child.texture;
+							currentBlendMode = child.blendMode;
 
-						if(needInit) {
-							prepareForRender(context, geometry);
-						} else {
-							updateProgram(context, geometry);
+							if(needInit) {
+								prepareForRender(context);
+							} else {
+								updateProgram(context);
+							}
+
+							context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX,
+								constantsGlobal + batchLen * constantsPerMatrix, child.clipSpaceMatrix, true);
+
+							programConstants[idx++] = child.combinedColorTransform.redMultiplier;
+							programConstants[idx++] = child.combinedColorTransform.greenMultiplier;
+							programConstants[idx++] = child.combinedColorTransform.blueMultiplier;
+							programConstants[idx++] = child.combinedColorTransform.alphaMultiplier;
+
+							programConstants[idx++] = child.combinedColorTransform.redOffset;
+							programConstants[idx++] = child.combinedColorTransform.greenOffset;
+							programConstants[idx++] = child.combinedColorTransform.blueOffset;
+							programConstants[idx++] = child.combinedColorTransform.alphaOffset;
+
+							programConstants[idx++] = child.animation.frameUV.x;
+							programConstants[idx++] = child.animation.frameUV.y;
+							programConstants[idx++] = child.animation.frameUV.width;
+							programConstants[idx++] = child.animation.frameUV.height;
+
+							programConstants[idx++] = child.uvOffsetX;
+							programConstants[idx++] = child.uvOffsetY;
+							programConstants[idx++] = child.uvScaleX;
+							programConstants[idx++] = child.uvScaleY;
+
+							batchLen++;
+
+							Statistics.sprites++;
+
+							if(batchLen == BATCH_SIZE) {
+								drawCurrentBatch(context);
+							}
 						}
+						// custom material, mask, blur, etc.
+						else {
+							drawCurrentBatch(context);
 
-						context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX,
-							constantsGlobal + batchLen * constantsPerMatrix, child.clipSpaceMatrix, true);
+							if(!needInit) {
+								clearAfterRender(context);
+							}
 
-						programConstants[idx++] = child.combinedColorTransform.redMultiplier;
-						programConstants[idx++] = child.combinedColorTransform.greenMultiplier;
-						programConstants[idx++] = child.combinedColorTransform.blueMultiplier;
-						programConstants[idx++] = child.combinedColorTransform.alphaMultiplier;
+							child.draw(context, camera);
 
-						programConstants[idx++] = child.combinedColorTransform.redOffset;
-						programConstants[idx++] = child.combinedColorTransform.greenOffset;
-						programConstants[idx++] = child.combinedColorTransform.blueOffset;
-						programConstants[idx++] = child.combinedColorTransform.alphaOffset;
-
-						programConstants[idx++] = child._animation.frameUV.x;
-						programConstants[idx++] = child._animation.frameUV.y;
-						programConstants[idx++] = child._animation.frameUV.width;
-						programConstants[idx++] = child._animation.frameUV.height;
-
-						programConstants[idx++] = child.uvOffsetX;
-						programConstants[idx++] = child.uvOffsetY;
-						programConstants[idx++] = child.uvScaleX;
-						programConstants[idx++] = child.uvScaleY;
-
-						batchLen++;
-
-						Statistics.sprites++;
-
-						if(batchLen == BATCH_SIZE) {
-							drawCurrentBatch(context, geometry);
+							needInit = true;
 						}
-					}
-					// custom material, mask, blur, etc.
-					else {
-						drawCurrentBatch(context, geometry);
-
-						if(!needInit) {
-							clearAfterRender(context);
-						}
-
-						child.draw(context, camera);
-
-						needInit = true;
+					} else {
+						Statistics.spritesCulled++;
 					}
 				}
 

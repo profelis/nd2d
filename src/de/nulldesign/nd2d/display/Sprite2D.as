@@ -30,6 +30,8 @@
 
 package de.nulldesign.nd2d.display {
 
+	import de.nulldesign.nd2d.geom.Face;
+	import de.nulldesign.nd2d.materials.BlendModePresets;
     import de.nulldesign.nd2d.geom.Geometry;
     import de.nulldesign.nd2d.materials.BlendModePresets;
 	import de.nulldesign.nd2d.materials.Sprite2DMaskMaterial;
@@ -137,7 +139,11 @@ package de.nulldesign.nd2d.display {
 				return;
 			}
 
-            _geometry.update(context);
+			if(culled) {
+				Statistics.spritesCulled++;
+
+				return;
+			}
 
 			_material.blendMode = blendMode;
 			_material.scrollRect = worldScrollRect;
@@ -225,11 +231,11 @@ package de.nulldesign.nd2d.display {
 
 			clipSpaceMatrix.identity();
 
-			if(_texture.sheet) {
-				clipSpaceMatrix.appendScale(_animation.frameRect.width >> 1, _animation.frameRect.height >> 1, 1.0);
-				clipSpaceMatrix.appendTranslation(_animation.frameOffset.x, _animation.frameOffset.y, 0.0);
+			if(texture.sheet) {
+				clipSpaceMatrix.appendScale(animation.frameRect.width * 0.5, animation.frameRect.height * 0.5, 1.0);
+				clipSpaceMatrix.appendTranslation(animation.frameOffset.x, animation.frameOffset.y, 0.0);
 			} else {
-				clipSpaceMatrix.appendScale(_texture._bitmapWidth >> 1, _texture._bitmapHeight >> 1, 1.0);
+				clipSpaceMatrix.appendScale(texture.bitmapWidth * 0.5, texture.bitmapHeight * 0.5, 1.0);
 			}
 
 			clipSpaceMatrix.append(worldModelMatrix);

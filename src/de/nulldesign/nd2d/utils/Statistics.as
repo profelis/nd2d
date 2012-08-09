@@ -108,6 +108,11 @@ package de.nulldesign.nd2d.utils {
 		public static var sprites:uint = 0;
 
 		/**
+		 * Total culled sprites.
+		 */
+		public static var spritesCulled:uint = 0;
+
+		/**
 		 * Total drawn tringles. Mostly 2 triangles per sprite.
 		 */
 		public static var triangles:uint = 0;
@@ -171,7 +176,7 @@ package de.nulldesign.nd2d.utils {
 
 		private function init():void {
 			graphics.beginFill(0x000000, 0.5);
-			graphics.drawRoundRect(0, 0, 80, 120, 10);
+			graphics.drawRoundRect(0, 0, 90, 120, 10);
 			graphics.endFill();
 
 			resize(null);
@@ -287,7 +292,7 @@ package de.nulldesign.nd2d.utils {
 					"<mem>mem: " + memoryDisplay + "</mem>" +
 					"<textures>tex: " + textures + " (" + textureDisplay + ")</textures>" +
 					"<draws>draws: " + drawCalls + "</draws>" +
-					"<sprites>sprites: " + sprites + "</sprites>" +
+					"<sprites>sprites: " + sprites + (spritesCulled ? " / " + (sprites + spritesCulled) : "") + "</sprites>" +
 					"<tris>tris: " + triangles + "</tris>" +
 					"</xml>";
 			}
@@ -337,6 +342,7 @@ package de.nulldesign.nd2d.utils {
 			sprites = 0;
 			triangles = 0;
 			drawCalls = 0;
+			spritesCulled = 0;
 		}
 
 		/**

@@ -35,7 +35,7 @@ package de.nulldesign.nd2d.utils {
 		/**
 		 * Forces a number into a specified range.
 		 *
-		 * <pre>
+		 * <listing>
 		 * // 1.5
 		 * trace( NumberUtil.clamp(1.5, 1.0, 2.0) );
 		 *
@@ -44,7 +44,7 @@ package de.nulldesign.nd2d.utils {
 		 *
 		 * // 2
 		 * trace( NumberUtil.clamp(2.5, 1.0, 2.0) );
-		 * </pre>
+		 * </listing>
 		 *
 		 * @param value
 		 * @param min
@@ -58,13 +58,13 @@ package de.nulldesign.nd2d.utils {
 		/**
 		 * Mathematical modulo for negative numbers.
 		 *
-		 * <pre>
+		 * <listing>
 		 * // -1
 		 * trace( -1 % 6 );
 		 *
 		 * // 5
 		 * trace( NumberUtil.mod(-1, 6) );
-		 * </pre>
+		 * </listing>
 		 *
 		 * @param a
 		 * @param n
@@ -75,7 +75,8 @@ package de.nulldesign.nd2d.utils {
 		}
 
 		/**
-		 * Generates a pseudo-random number between <em>min</em> and <em>max</em>.
+		 * Generates a pseudo-random number between <code>min</code> and
+		 * <code>max</code>.
 		 *
 		 * @param min
 		 * @param max
@@ -88,7 +89,7 @@ package de.nulldesign.nd2d.utils {
 		/**
 		 * Rounding to a specified precision.
 		 *
-		 * <pre>
+		 * <listing>
 		 * // 1
 		 * trace( Math.round(1.23456) );
 		 *
@@ -97,7 +98,7 @@ package de.nulldesign.nd2d.utils {
 		 *
 		 * // 1.235
 		 * trace( NumberUtil.roundTo(1.23456, 0.001) );
-		 * </pre>
+		 * </listing>
 		 *
 		 * @param number
 		 * @param precision
@@ -116,7 +117,7 @@ package de.nulldesign.nd2d.utils {
 		/**
 		 * Rounding to a specified increment.
 		 *
-		 * <pre>
+		 * <listing>
 		 * // 1
 		 * trace( NumberUtil.roundTo(1.16, 0.5) );
 		 *
@@ -125,7 +126,7 @@ package de.nulldesign.nd2d.utils {
 		 *
 		 * // 2
 		 * trace( NumberUtil.roundTo(1.84, 0.5) );
-		 * </pre>
+		 * </listing>
 		 *
 		 * @param number
 		 * @param increment
@@ -140,8 +141,8 @@ package de.nulldesign.nd2d.utils {
 		}
 
 		/**
-		 * Like Math.cos() but scales the result to specified <em>min</em> and
-		 * <em>max</em>.
+		 * Like Math.cos() but scales the result to specified <code>min</code> and
+		 * <code>max</code>.
 		 *
 		 * @param angleRadians
 		 * @param min
@@ -155,8 +156,8 @@ package de.nulldesign.nd2d.utils {
 		}
 
 		/**
-		 * Like Math.sin() but scales the result to specified <em>min</em> and
-		 * <em>max</em>.
+		 * Like Math.sin() but scales the result to specified <code>min</code> and
+		 * <code>max</code>.
 		 *
 		 * @param angleRadians
 		 * @param min
