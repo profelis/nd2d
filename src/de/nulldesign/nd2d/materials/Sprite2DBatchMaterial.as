@@ -213,7 +213,7 @@ package de.nulldesign.nd2d.materials {
 						usesColor = child.usesColor;
 						usesColorOffset = child.usesColorOffset;
 
-						updateProgram(context);
+						updateProgram(context, geometry);
 
 						context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX,
 							constantsGlobal + batchLen * constantsPerMatrix, child.clipSpaceMatrix, true);
@@ -243,7 +243,7 @@ package de.nulldesign.nd2d.materials {
 						Statistics.sprites++;
 
 						if(batchLen == BATCH_SIZE) {
-							drawCurrentBatch(context);
+							drawCurrentBatch(context, geometry);
 						}
 					} else {
 						Statistics.spritesCulled++;

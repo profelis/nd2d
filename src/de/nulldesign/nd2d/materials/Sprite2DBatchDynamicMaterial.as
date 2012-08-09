@@ -176,9 +176,9 @@ package de.nulldesign.nd2d.materials {
 							currentBlendMode = child.blendMode;
 
 							if(needInit) {
-								prepareForRender(context);
+								prepareForRender(context, geometry);
 							} else {
-								updateProgram(context);
+								updateProgram(context, geometry);
 							}
 
 							context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX,
@@ -209,12 +209,12 @@ package de.nulldesign.nd2d.materials {
 							Statistics.sprites++;
 
 							if(batchLen == BATCH_SIZE) {
-								drawCurrentBatch(context);
+								drawCurrentBatch(context, geometry);
 							}
 						}
 						// custom material, mask, blur, etc.
 						else {
-							drawCurrentBatch(context);
+							drawCurrentBatch(context, geometry);
 
 							if(!needInit) {
 								clearAfterRender(context);
@@ -228,6 +228,7 @@ package de.nulldesign.nd2d.materials {
 						Statistics.spritesCulled++;
 					}
 				}
+                }
 
 				processAndRenderNodes(context, geometry, childNode.childFirst);
 

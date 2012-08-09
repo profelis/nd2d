@@ -139,6 +139,8 @@ package de.nulldesign.nd2d.display {
 				return;
 			}
 
+            _geometry.update(context);
+
 			if(culled) {
 				Statistics.spritesCulled++;
 
